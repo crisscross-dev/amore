@@ -1,0 +1,221 @@
+/* ================================
+   Admission Detail View
+================================= */
+
+:where(.admission-detail-header, .admissions-detail__header) {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #20c997 100%);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3);
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    color: #fff;
+}
+
+:where(.admission-detail-header h1, .admissions-detail__header-title) {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+:where(.admission-detail-header .text-muted, .admissions-detail__header-subtitle) {
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+:where(.admission-detail-header .badge, .admissions-detail__header-badge) {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+:where(.admission-header-status, .admissions-detail__header-status) {
+    flex-shrink: 0;
+}
+
+:where(.info-card, .admissions-detail__card) {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    transition: all 0.3s ease;
+    background: var(--color-surface);
+}
+
+:where(.info-card:hover, .admissions-detail__card:hover) {
+    box-shadow: 0 10px 30px rgba(25, 135, 84, 0.15);
+    transform: translateY(-3px);
+}
+
+:where(.info-card-header, .admissions-detail__card-header) {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #20c997 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    border: none;
+    padding: 1.5rem;
+}
+
+:where(.info-card-header h5,
+       .info-card-header span,
+       .admissions-detail__card-title) {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+:where(.info-card-body, .admissions-detail__card-body) {
+    padding: 2rem 1.5rem;
+}
+
+:where(.info-grid, .admissions-detail__grid) {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.25rem;
+}
+
+:where(.info-item, .admissions-detail__grid-item) {
+    display: flex;
+    flex-direction: column;
+}
+
+:where(.info-item.full-width, .admissions-detail__grid-item--full) {
+    grid-column: 1 / -1;
+}
+
+:where(.info-item label, .admissions-detail__grid-label) {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+}
+
+:where(.info-value, .admissions-detail__grid-value) {
+    font-size: 1rem;
+    color: #2c3e50;
+    font-weight: 500;
+}
+
+:where(.parent-section, .admissions-detail__parent-section) {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+:where(.parent-section h6, .admissions-detail__parent-title) {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--color-primary);
+    margin-bottom: 1rem;
+}
+
+:where(.timeline, .admissions-detail__timeline) {
+    position: relative;
+    padding-left: 0;
+}
+
+:where(.timeline-item, .admissions-detail__timeline-item) {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+:where(.timeline-item:not(:last-child)::before,
+       .admissions-detail__timeline-item:not(:last-child)::before) {
+    content: '';
+    position: absolute;
+    left: 19px;
+    top: 40px;
+    bottom: -20px;
+    width: 2px;
+    background: #dee2e6;
+}
+
+:where(.timeline-icon, .admissions-detail__timeline-icon) {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    z-index: 1;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.timeline-icon-primary,
+.admissions-detail__timeline-icon--primary {
+    background: var(--color-primary);
+    color: #fff;
+}
+
+.timeline-icon-success,
+.admissions-detail__timeline-icon--success {
+    background: #10b981;
+    color: #fff;
+}
+
+.timeline-icon-danger,
+.admissions-detail__timeline-icon--danger {
+    background: #dc3545;
+    color: #fff;
+}
+
+:where(.timeline-content, .admissions-detail__timeline-content) {
+    flex: 1;
+    padding-top: 0.25rem;
+}
+
+:where(.timeline-title, .admissions-detail__timeline-title) {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+:where(.timeline-date, .admissions-detail__timeline-date) {
+    font-size: 0.85rem;
+    color: var(--color-gray-600);
+}
+
+:where(.timeline-meta, .admissions-detail__timeline-meta) {
+    font-size: 0.8rem;
+    color: var(--color-gray-600);
+    font-style: italic;
+    margin-top: 0.25rem;
+}
+
+:where(.quick-info-item, .admissions-detail__quick-info) {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+:where(.quick-info-item i, .admissions-detail__quick-icon) {
+    font-size: 1.5rem;
+}
+
+:where(.quick-info-label, .admissions-detail__quick-label) {
+    font-size: 0.8rem;
+    color: var(--color-gray-600);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+:where(.quick-info-value, .admissions-detail__quick-value) {
+    font-size: 1rem;
+    color: #2c3e50;
+    font-weight: 600;
+}

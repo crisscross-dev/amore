@@ -1,0 +1,505 @@
+/* ================================
+   Calendar Specific Styles
+================================= */
+
+/* Calendar Table */
+.calendar-table {
+    font-size: 0.9rem;
+}
+
+.calendar-table thead th {
+    padding: 12px;
+    font-weight: 600;
+    background-color: var(--color-primary);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Calendar Days */
+.calendar-day {
+    height: 80px;
+    vertical-align: top;
+    padding: 8px;
+    position: relative;
+    cursor: pointer;
+    transition: background-color var(--transition-fast);
+    border: 1px solid var(--color-gray-300);
+}
+
+.calendar-day:hover:not(.empty) {
+    background-color: rgba(25, 135, 84, 0.05);
+}
+
+.calendar-day.empty {
+    background-color: var(--color-gray-100);
+    cursor: default;
+}
+
+.calendar-day.today {
+    background-color: rgba(25, 135, 84, 0.1);
+    border: 2px solid var(--color-primary) !important;
+}
+
+.calendar-day .day-number {
+    font-weight: 600;
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.calendar-day.today .day-number {
+    color: var(--color-primary);
+    font-weight: 700;
+}
+
+.calendar-day.has-event {
+    background-color: rgba(25, 135, 84, 0.03);
+}
+
+.calendar-day.has-event:hover {
+    background-color: rgba(25, 135, 84, 0.08);
+}
+
+/* Event Indicators */
+.event-indicator {
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.event-indicator i {
+    font-size: 6px;
+}
+
+.event-indicator .badge {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+}
+
+/* Legend */
+.legend-box {
+    width: 20px;
+    height: 20px;
+    border-radius: var(--border-radius-sm);
+    opacity: 0.1;
+    border: 2px solid var(--color-primary);
+}
+
+/* Calendar Grid for Better Layout */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    border: 1px solid var(--color-gray-300);
+}
+
+.calendar-day-header {
+    background-color: var(--color-primary);
+    color: white;
+    padding: 12px;
+    text-align: center;
+    font-weight: 600;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Day Link */
+.day-link {
+    display: block;
+    height: 100%;
+    width: 100%;
+    text-decoration: none;
+    color: inherit;
+    padding: 8px;
+}
+
+.day-link:hover {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* Calendar Navigation */
+#calendar-loader {
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Upcoming Events List */
+.upcoming-event-item {
+    padding: 12px;
+    border-left: 4px solid var(--color-primary);
+    background-color: var(--color-gray-100);
+    border-radius: var(--border-radius-md);
+    margin-bottom: 12px;
+    transition: all var(--transition-fast);
+}
+
+.upcoming-event-item:hover {
+    background-color: var(--color-gray-200);
+    transform: translateX(4px);
+}
+
+.upcoming-event-item .event-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--border-radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+/* Event Type Colors */
+.event-type-meeting {
+    background-color: #007bff15;
+    color: #007bff;
+}
+
+.event-type-deadline {
+    background-color: #dc354515;
+    color: #dc3545;
+}
+
+.event-type-exam {
+    background-color: #6f42c115;
+    color: #6f42c1;
+}
+
+.event-type-holiday {
+    background-color: #fd7e1415;
+    color: #fd7e14;
+}
+
+.event-type-sports {
+    background-color: #19875415;
+    color: #198754;
+}
+
+/* Calendar Form Styles */
+.calendar-form-group {
+    margin-bottom: 1.5rem;
+}
+
+.calendar-form-label {
+    font-weight: 600;
+    color: var(--color-gray-700);
+    margin-bottom: 0.5rem;
+}
+
+.calendar-form-control {
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--color-gray-300);
+    padding: 0.75rem;
+    transition: all var(--transition-fast);
+}
+
+.calendar-form-control:focus {
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 0.2rem rgba(25, 135, 84, 0.25);
+}
+
+/* Event Details Card */
+.event-details-card {
+    border-left: 4px solid var(--color-primary);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-fast);
+}
+
+.event-details-card:hover {
+    box-shadow: var(--shadow-lg);
+}
+
+.event-details-header {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: white;
+    padding: 1rem;
+    border-radius: var(--border-radius-md) var(--border-radius-md) 0 0;
+}
+
+/* Responsive Calendar Styles */
+@media (max-width: 768px) {
+    .calendar-day {
+        height: 60px;
+        padding: 4px;
+    }
+    
+    .calendar-day .day-number {
+        font-size: 0.85rem;
+    }
+    
+    .calendar-table {
+        font-size: 0.8rem;
+    }
+    
+    .calendar-day-header {
+        padding: 8px;
+        font-size: 0.85rem;
+    }
+    
+    .event-indicator {
+        bottom: 4px;
+    }
+    
+    .upcoming-event-item {
+        padding: 8px;
+    }
+    
+    .upcoming-event-item .event-icon {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .calendar-day {
+        height: 50px;
+        padding: 2px;
+    }
+    
+    .calendar-day .day-number {
+        font-size: 0.75rem;
+    }
+    
+    .calendar-day-header {
+        padding: 6px;
+        font-size: 0.75rem;
+    }
+    
+    .event-indicator i {
+        font-size: 4px;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .calendar-day:hover {
+        background-color: transparent !important;
+    }
+    
+    .sidebar,
+    .mobile-profile,
+    .btn {
+        display: none !important;
+    }
+    
+    .calendar-table {
+        page-break-inside: avoid;
+    }
+}
+
+/* Loading State */
+.calendar-loading {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.calendar-loading::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 40px;
+    height: 40px;
+    border: 4px solid var(--color-gray-300);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* Empty State */
+.calendar-empty-state {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.calendar-empty-state i {
+    font-size: 4rem;
+    color: var(--color-gray-400);
+    margin-bottom: 1rem;
+}
+
+.calendar-empty-state h5 {
+    color: var(--color-gray-600);
+    margin-bottom: 0.5rem;
+}
+
+.calendar-empty-state p {
+    color: var(--color-gray-500);
+    margin-bottom: 1.5rem;
+}
+
+/* ================================
+   Clickable Upcoming Events (Navigate to Month)
+================================= */
+
+/* Highlighted calendar day when clicked from upcoming events */
+.calendar-day.highlighted {
+    border: 3px solid #ffc107 !important; /* Bootstrap warning color */
+    background-color: rgba(255, 193, 7, 0.15) !important;
+    box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.25);
+    transition: all 0.2s ease;
+}
+
+.calendar-day.highlighted .day-number {
+    color: #ffc107;
+    font-weight: 700;
+}
+
+/* Remove Highlight Button */
+#calendar-remove-highlight-btn {
+    background-color: #ffc107;
+    border-color: #ffc107;
+    color: #000;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+#calendar-remove-highlight-btn:hover {
+    background-color: #ffb800;
+    border-color: #ffb800;
+    color: #000;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.3);
+}
+
+#calendar-remove-highlight-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(255, 193, 7, 0.2);
+}
+
+/* Fade-in animation for remove highlight button */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Make upcoming event items clickable */
+.upcoming-event-item {
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+}
+
+.upcoming-event-item:hover {
+    background-color: rgba(25, 135, 84, 0.05);
+    transform: translateX(4px);
+}
+
+.upcoming-event-item:active {
+    background-color: rgba(25, 135, 84, 0.1);
+    transform: translateX(2px);
+}
+
+/* Keyboard focus for accessibility */
+.upcoming-event-item:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    background-color: rgba(25, 135, 84, 0.05);
+}
+
+/* Navigation indicator */
+.upcoming-event-item::after {
+    content: '\f105'; /* FontAwesome chevron-right */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--color-primary);
+    opacity: 0;
+    transition: opacity 0.2s ease, right 0.2s ease;
+}
+
+.upcoming-event-item {
+    position: relative;
+}
+
+.upcoming-event-item:hover::after {
+    opacity: 1;
+    right: 15px;
+}
+
+/* ================================
+   Announcement Items in Calendar
+================================= */
+
+/* Announcement item styling */
+.announcement-item {
+    position: relative;
+    transition: all 0.3s ease;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.announcement-item:hover {
+    background-color: rgba(25, 135, 84, 0.05);
+    transform: translateX(4px);
+}
+
+/* Priority indicator bar */
+.announcement-item {
+    border-left: 4px solid transparent;
+    padding-left: 8px;
+}
+
+/* Announcement badge styling */
+.announcement-item .badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Section headers */
+.list-group-item.bg-light {
+    background-color: rgba(25, 135, 84, 0.05) !important;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.5rem;
+    border-radius: 6px;
+}
+
+/* Combined view button styling */
+.btn-outline-success.flex-fill {
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+}
+
+/* Announcement icon backgrounds */
+.announcement-item .rounded {
+    border-radius: 10px !important;
+    transition: transform 0.2s ease;
+}
+
+.announcement-item:hover .rounded {
+    transform: scale(1.05);
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+    .announcement-item .d-flex {
+        flex-direction: column;
+    }
+    
+    .announcement-item .rounded {
+        margin-bottom: 0.5rem;
+    }
+}

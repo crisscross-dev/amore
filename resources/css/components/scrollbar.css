@@ -1,0 +1,48 @@
+/* ================================
+   Custom Scrollbar Styles
+================================= */
+
+/* Force scrollbar to always be visible */
+html {
+    overflow-y: scroll;
+}
+/* 
+body {
+    overflow-y: scroll;
+} */
+
+/* Webkit browsers (Chrome, Edge, Safari) */
+::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--color-gray-100);
+    border-radius: var(--border-radius-lg);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--color-primary);
+    border-radius: var(--border-radius-lg);
+    border: 2px solid var(--color-gray-100);
+    transition: background var(--transition-fast);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--color-primary-dark);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: auto;
+    scrollbar-color: var(--color-primary) var(--color-gray-100);
+}
+
+/* Scrollable containers */
+.scrollable {
+    overflow-y: auto;
+}
+
+.scrollable-x {
+    overflow-x: auto;
+}

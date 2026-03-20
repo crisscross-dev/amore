@@ -1,0 +1,105 @@
+/* ================================
+   Enrollment Pages Styles
+================================= */
+
+.enrollment_section {
+    z-index: var(--z-dropdown);
+    height: 70vh;
+    overflow-y: auto;
+    padding: var(--spacing-lg);
+    margin: var(--spacing-xl) 0;
+}
+
+/* Enrollment Form Container */
+.enrollment-form-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+/* Profile Picture Container */
+.enrollment-profile-pic-container {
+    width: 120px;
+    height: 120px;
+    border: 1px solid var(--color-gray-300);
+    border-radius: var(--border-radius-lg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--color-light);
+    margin-bottom: var(--spacing-sm);
+}
+
+.enrollment-profile-pic-img {
+    display: none;
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: var(--border-radius-md);
+}
+
+.enrollment-profile-pic-img.show {
+    display: block;
+}
+
+/* Enrollment Sections */
+.enrollment-section-title {
+    color: var(--color-primary);
+    border-bottom: 2px solid var(--color-primary);
+    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-lg);
+}
+
+.form-section {
+    background-color: #fff;
+    padding: var(--spacing-lg);
+    border-radius: var(--border-radius-md);
+    margin-bottom: var(--spacing-lg);
+    box-shadow: var(--shadow-sm);
+}
+
+/* Enrollment Header */
+.enrollment-header {
+    text-align: center;
+    padding: var(--spacing-xl) 0;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    color: #fff;
+    border-radius: var(--border-radius-lg) var(--border-radius-lg) 0 0;
+}
+
+/* File Upload Preview */
+.file-preview-container {
+    margin-top: var(--spacing-sm);
+    padding: var(--spacing-md);
+    border: 1px dashed var(--color-gray-400);
+    border-radius: var(--border-radius-md);
+    text-align: center;
+}
+
+.file-preview-container img {
+    max-width: 200px;
+    max-height: 200px;
+    object-fit: contain;
+    margin: 0 auto;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .enrollment_section {
+        height: auto;
+        padding: var(--spacing-md);
+    }
+    
+    .enrollment-profile-pic-container {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .enrollment-profile-pic-img {
+        width: 80px;
+        height: 80px;
+    }
+    
+    .form-section {
+        padding: var(--spacing-md);
+    }
+}

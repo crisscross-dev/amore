@@ -1,0 +1,48 @@
+.btn-general {
+    font-size: clamp(13px, 1.2vw, 15px);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 5px; /* was 6px → now slightly rounder */
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-decoration: none;
+}
+
+.btn-general:active {
+    transform: scale(0.96); /* press down effect */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* reduce shadow when pressed */
+}
+
+.btn-green {
+    background: linear-gradient(to bottom right, #2e8b57, #3cb371); /* forest green → medium sea green */
+    color: #fff;
+}
+.btn-green:hover {
+    background: linear-gradient(to top left, #4caf50, #006400); /* brighter green → dark green */
+    transform: translateY(-2px); /* slight upward lift */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* subtle shadow */
+}
+
+
+.btn-blue {
+    background: linear-gradient(to bottom right, #1e5799, #207cca);
+    color: #fff;
+}
+.btn-blue:hover {
+    background: linear-gradient(to top left, #3399ff, #003366);
+    transform: translateY(-2px); /* slight upward lift */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* subtle shadow */
+}
+
+/* Size modifiers */
+.btn-xsm { padding: 4px 8px; font-size: 0.75rem; }
+.btn-sm { padding: 6px 10px; font-size: 0.75rem; }
+.btn-lg { 
+    padding: 5px 10px; 
+    font-size: 1rem; 
+    border-radius: 9px; 
+}

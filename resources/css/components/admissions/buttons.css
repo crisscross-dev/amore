@@ -1,0 +1,66 @@
+/* ================================
+   Admissions Button Overrides
+================================= */
+
+:where(.admissions-container .btn,
+       .admission-detail-container .btn,
+       .admissions-dashboard .btn,
+       .admissions-detail .btn) {
+    font-weight: 700;
+    padding: 0.625rem 1.5rem;
+    border-radius: 10px;
+    transition: var(--transition-base);
+}
+
+:where(.admissions-container .btn-success,
+       .admission-detail-container .btn-success,
+       .admissions-dashboard .btn-success,
+       .admissions-detail .btn-success) {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(25, 135, 84, 0.2);
+}
+
+:where(.admissions-container .btn-success:hover,
+       .admission-detail-container .btn-success:hover,
+       .admissions-dashboard .btn-success:hover,
+       .admissions-detail .btn-success:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(25, 135, 84, 0.4);
+}
+
+:where(.admissions-container .btn-outline-secondary,
+       .admission-detail-container .btn-outline-secondary,
+       .admissions-dashboard .btn-outline-secondary,
+       .admissions-detail .btn-outline-secondary) {
+    border: 2px solid var(--color-secondary);
+    color: var(--color-secondary);
+    background: transparent;
+}
+
+:where(.admissions-container .btn-outline-secondary:hover,
+       .admission-detail-container .btn-outline-secondary:hover,
+       .admissions-dashboard .btn-outline-secondary:hover,
+       .admissions-detail .btn-outline-secondary:hover) {
+    background: var(--color-secondary);
+    color: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3);
+}
+
+:where(.admissions-container .btn-danger,
+       .admission-detail-container .btn-danger,
+       .admissions-dashboard .btn-danger,
+       .admissions-detail .btn-danger) {
+    background: linear-gradient(135deg, var(--color-danger) 0%, var(--color-danger-soft) 100%);
+    border: none;
+    box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2);
+}
+
+:where(.admissions-container .btn-danger:hover,
+       .admission-detail-container .btn-danger:hover,
+       .admissions-dashboard .btn-danger:hover,
+       .admissions-detail .btn-danger:hover) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(220, 53, 69, 0.4);
+}

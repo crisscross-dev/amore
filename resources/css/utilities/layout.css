@@ -1,0 +1,65 @@
+/* ================================
+   Layout Utility Classes (Bootstrap-friendly)
+================================= */
+
+/* Flex utilities */
+.u-flex { display: flex !important; }
+.u-inline-flex { display: inline-flex !important; }
+.u-flex-column { flex-direction: column !important; }
+.u-flex-row { flex-direction: row !important; }
+.u-flex-wrap { flex-wrap: wrap !important; }
+.u-flex-nowrap { flex-wrap: nowrap !important; }
+.u-items-center { align-items: center !important; }
+.u-items-start { align-items: flex-start !important; }
+.u-items-end { align-items: flex-end !important; }
+.u-justify-center { justify-content: center !important; }
+.u-justify-between { justify-content: space-between !important; }
+.u-justify-around { justify-content: space-around !important; }
+.u-justify-end { justify-content: flex-end !important; }
+
+/* Grid utilities */
+.u-grid { display: grid !important; }
+.u-grid-auto { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important; gap: var(--spacing-lg) !important; }
+.u-grid-2 { display: grid !important; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)) !important; gap: var(--spacing-lg) !important; }
+
+/* Positioning */
+.u-position-center {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Width helpers */
+.u-w-100 { width: 100% !important; }
+.u-max-w-md { max-width: 540px !important; }
+.u-max-w-lg { max-width: 720px !important; }
+.u-max-w-xl { max-width: 960px !important; }
+
+/* Content containers */
+.u-section {
+    padding-top: var(--spacing-xl) !important;
+    padding-bottom: var(--spacing-xl) !important;
+}
+
+.u-section--dense {
+    padding-top: var(--spacing-lg) !important;
+    padding-bottom: var(--spacing-lg) !important;
+}
+
+.u-section--spacious {
+    padding-top: var(--spacing-2xl) !important;
+    padding-bottom: var(--spacing-2xl) !important;
+}
+
+/* Responsive helpers */
+@media (min-width: 768px) {
+    .u-flex-md-row { flex-direction: row !important; }
+    .u-flex-md-column { flex-direction: column !important; }
+    .u-items-md-center { align-items: center !important; }
+    .u-justify-md-between { justify-content: space-between !important; }
+}
+
+@media (min-width: 992px) {
+    .u-grid-lg-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
+    .u-grid-lg-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) !important; }
+}

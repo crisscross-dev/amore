@@ -1,0 +1,173 @@
+/* (Imports follow; custom rules moved to end to satisfy @import ordering) */
+/* ================================
+   Amore Academy - Main Stylesheet
+   Vite Bundled CSS
+================================= */
+
+/* External Libraries */
+/* @import 'bootstrap/dist/css/bootstrap.min.css';
+@import '@fortawesome/fontawesome-free/css/all.min.css';
+@import 'bootstrap-icons/font/bootstrap-icons.css';
+
+/* Base Styles */
+@import "./base/variables.css";
+@import "./base/reset.css";
+@import "./base/typography.css";
+
+/* Component Styles */
+@import "./components/scrollbar.css";
+@import "./components/buttons.css";
+@import "./components/cards.css";
+@import "./components/forms.css";
+@import "./components/alerts.css";
+@import "./components/navigation.css";
+@import "./components/calendar.css";
+@import "./components/event-details.css";
+@import "./components/announcements.css";
+@import "./navbar.css";
+@import "./components/admissions.css";
+
+/* Layout Styles */
+@import "./layouts/auth.css";
+@import "./layouts/dashboard.css";
+@import "./layouts/dashboard-roles/dashboard-student.css";
+@import "./layouts/dashboard-roles/dashboard-faculty.css";
+@import "./layouts/dashboard-roles/dashboard-admin.css";
+@import "./layouts/edit-profile.css";
+@import "./layouts/enrollment.css";
+@import "./layouts/welcome.css";
+@import "./layouts/add-event.css";
+@import "./layouts/admission.css";
+
+/* Utility Classes */
+@import "./utilities/colors.css";
+@import "./utilities/spacing.css";
+@import "./utilities/layout.css";
+*/
+
+/* Legacy styles - will be removed after migration */
+.form_login {
+    height: 35vh;
+}
+
+/* Homepage and Navbar integration (after imports for correct precedence) */
+html,
+body {
+    scroll-behavior: smooth;
+    scroll-padding-top: 110px; /* offset for sticky navbar */
+    /* Homepage background image (served from public/images) */
+    background: url("/images/background.png") no-repeat center center fixed;
+    background-size: cover;
+}
+
+.navbar,
+.navbar-custom {
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background-color: transparent;
+}
+
+.navbar-custom.scrolled {
+    background-color: rgba(24, 65, 31, 0.85);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+    transition:
+        background-color 0.3s ease,
+        box-shadow 0.3s ease;
+}
+
+.navbar-custom.scrolled:hover {
+    background-color: rgba(24, 65, 31, 0.95);
+}
+
+/* Global app shell: fixed header + fixed sidebar + scrollable main content */
+.has-app-shell {
+    height: 100vh;
+    overflow: hidden;
+}
+
+.has-app-shell .app-global-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1050;
+}
+
+.has-app-shell {
+    --app-header-height: 88px;
+    --app-sidebar-width: 300px;
+}
+
+.has-app-shell .app-shell-layout {
+    height: 100vh;
+    padding-top: var(--app-header-height);
+}
+
+.has-app-shell .app-shell-sidebar {
+    position: fixed;
+    top: var(--app-header-height);
+    left: 0;
+    width: var(--app-sidebar-width);
+    height: calc(100vh - var(--app-header-height));
+    padding: 1rem;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 1040;
+}
+
+.has-app-shell .app-shell-sidebar .profile-sidebar {
+    height: 100%;
+    margin: 0;
+}
+
+.has-app-shell .app-shell-main {
+    margin-left: var(--app-sidebar-width);
+    height: calc(100vh - var(--app-header-height));
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.has-app-shell .app-shell-content {
+    min-height: 100%;
+    padding: 1rem 1.25rem 1.5rem;
+}
+
+@media (max-width: 767.98px) {
+    .has-app-shell {
+        overflow: auto;
+        height: auto;
+    }
+
+    .has-app-shell .app-shell-layout {
+        padding-top: 0;
+        height: auto;
+    }
+
+    .has-app-shell .app-global-header {
+        position: sticky;
+    }
+
+    .has-app-shell .app-shell-main {
+        margin-left: 0;
+        height: auto;
+        overflow: visible;
+    }
+}
+
+.contacts-footer {
+    background-color: rgba(0, 0, 0, 0.2);
+    color: #fff;
+}
+
+/* Ensure section headings don't get hidden under sticky header */
+#about,
+#news,
+#faculty,
+#gallery,
+#contacts {
+    scroll-margin-top: 120px;
+}

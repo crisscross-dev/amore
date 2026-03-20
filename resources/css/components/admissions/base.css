@@ -1,0 +1,161 @@
+/* ================================
+   Admissions Dashboard Base Layout
+================================= */
+
+:where(.admissions-container, .admissions-dashboard) {
+    padding: 0;
+}
+
+:where(.admission-detail-container, .admissions-detail) {
+    padding: 0;
+}
+
+:where(.page-header, .admissions-dashboard__header) {
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 10px 30px rgba(25, 135, 84, 0.3);
+    color: #fff;
+}
+
+:where(.page-header h1, .admissions-dashboard__header-title) {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: #fff;
+    margin: 0;
+}
+
+:where(.page-header .text-muted, .admissions-dashboard__header-subtitle) {
+    margin-top: 0.5rem;
+    font-size: 0.95rem;
+    color: rgba(255, 255, 255, 0.85) !important;
+}
+
+:where(.admissions-card, .admissions-dashboard__card) {
+    border: none;
+    border-radius: 20px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    margin-bottom: 2rem;
+    background: var(--color-surface);
+}
+
+:where(.admissions-card .card-header, .admissions-dashboard__card-header) {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #20c997 100%);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.2rem;
+    border: none;
+    padding: 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+}
+
+:where(.admissions-card .card-header h5,
+       .admissions-card .card-header span,
+       .admissions-dashboard__card-header-title) {
+    margin: 0;
+    font-weight: 600;
+    font-size: 1.2rem;
+    color: #fff;
+}
+
+:where(.admissions-card .card-body, .admissions-dashboard__card-body) {
+    padding: 2rem 1.5rem;
+}
+
+:where(.status-badge, .admissions-dashboard__status-badge) {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-pending {
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+}
+
+.status-approved {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #10b981;
+}
+
+.status-rejected {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+.status-waitlisted {
+    background: #e9ecef;
+    color: #495057;
+    border: 1px solid #adb5bd;
+}
+
+:where(.bulk-actions-bar, .admissions-dashboard__bulk-actions) {
+    background: linear-gradient(135deg, var(--color-primary) 0%, #146c43 100%);
+    color: #fff;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 12px rgba(25, 135, 84, 0.3);
+}
+
+:where(.bulk-actions-content, .admissions-dashboard__bulk-actions-content) {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+:where(.bulk-actions-info, .admissions-dashboard__bulk-actions-info) {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+:where(.bulk-actions-info i, .admissions-dashboard__bulk-actions-icon) {
+    font-size: 1.25rem;
+}
+
+:where(.bulk-actions-buttons, .admissions-dashboard__bulk-actions-buttons) {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+:where(.bulk-actions-buttons .btn, .admissions-dashboard__bulk-actions-buttons .btn) {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+}
+
+:where(.bulk-select-all, .admissions-dashboard__bulk-select-all) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+:where(.bulk-select-all .form-check-input, .admissions-dashboard__bulk-select-all-input) {
+    width: 1.2rem;
+    height: 1.2rem;
+    cursor: pointer;
+}
+
+:where(.bulk-select-all .form-check-label, .admissions-dashboard__bulk-select-all-label) {
+    cursor: pointer;
+    font-weight: 500;
+}

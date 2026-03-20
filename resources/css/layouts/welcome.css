@@ -1,0 +1,62 @@
+/* ================================
+   Welcome/Landing Page Styles
+================================= */
+
+/* Hero Section */
+.content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: calc(100vh - 200px);
+    position: relative;
+    z-index: 2;
+    color: #fff;
+}
+
+
+/* Welcome Heading */
+.content .heading {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: var(--spacing-xl);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* Toast Container */
+.popup-toast-container {
+    z-index: var(--z-tooltip);
+}
+
+/* Student Edit Container */
+.student-edit-center-container {
+    min-height: 60vh;
+}
+
+/* Hero Content Animation */
+#hero-content {
+    animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .content .heading {
+        font-size: 2rem;
+    }
+    
+    .content {
+        min-height: calc(100vh - 150px);
+        padding: 0 var(--spacing-lg);
+    }
+}

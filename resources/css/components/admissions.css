@@ -1,0 +1,9 @@
+/* Admissions Dashboard Component */
+@import './admissions/base.css';
+@import './admissions/stats.css';
+@import './admissions/filters.css';
+@import './admissions/list.css';
+@import './admissions/detail.css';
+@import './admissions/buttons.css';
+@import './admissions/responsive.css';
+

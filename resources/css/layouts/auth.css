@@ -1,0 +1,104 @@
+/* ================================
+   Authentication Pages Styles (Login & Register)
+================================= */
+
+/* Registration Container */
+.register-container {
+    padding: var(--spacing-2xl) 0;
+}
+
+/* Login Container */
+.login-center-container {
+    min-height: 100vh;
+    padding: var(--spacing-xl) 0;
+}
+
+.login-back-link {
+    font-size: var(--font-size-sm);
+    text-decoration: none;
+    font-weight: 600;
+    color: var(--color-secondary);
+    transition: var(--transition-fast);
+}
+
+.login-back-link:hover {
+    text-decoration: underline;
+    color: var(--color-primary);
+}
+
+.login-form {
+    max-width: 500px;
+    margin: 0 auto;
+    border-radius: var(--border-radius-xl);
+    background: var(--color-surface);
+}
+
+/* Form Logo */
+.form-logo {
+    width: 120px;
+    height: auto;
+    margin-bottom: var(--spacing-lg);
+}
+
+/* Password Strength Indicator */
+.password-strength-container {
+    margin-bottom: var(--spacing-md);
+}
+
+.password-strength-bar {
+    height: 6px;
+    border-radius: var(--border-radius-md);
+    overflow: hidden;
+}
+
+/* Auth Card Styling */
+.auth-card {
+    max-width: 600px;
+    margin: 0 auto;
+    border-radius: var(--border-radius-xl);
+    background: var(--color-surface);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Auth Form Headings */
+.auth-heading,
+.auth-card .heading,
+.login-form .heading {
+    font-family: var(--font-family-heading);
+    color: var(--color-primary-dark);
+    font-weight: 700;
+    margin-bottom: var(--spacing-md);
+}
+
+.login-button {
+    font-weight: 600;
+    padding: 0.75rem;
+    border-radius: var(--border-radius-md);
+}
+
+.auth-card .alert {
+    border-radius: var(--border-radius-md);
+}
+
+.auth-card .input-group .btn-outline-secondary {
+    border-color: var(--color-gray-300);
+    color: var(--color-gray-600);
+}
+
+.auth-card .input-group .btn-outline-secondary:hover {
+    background-color: var(--color-gray-100);
+    border-color: var(--color-gray-400);
+    color: var(--color-gray-700);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .register-container,
+    .login-center-container {
+        padding: var(--spacing-lg) 0;
+    }
+    
+    .form-logo {
+        width: 80px;
+    }
+}

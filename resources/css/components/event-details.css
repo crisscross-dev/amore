@@ -1,0 +1,276 @@
+/* ================================
+   Event Details Page Styles
+================================= */
+
+/* Event Detail Card */
+.event-detail-card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.event-detail-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Icon Box for Info Sections */
+.icon-box {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+.icon-box i {
+    font-size: 1.1rem;
+}
+
+/* Event Info Section */
+.event-info-section {
+    background-color: rgba(25, 135, 84, 0.03);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.event-info-section strong {
+    color: #198754;
+}
+
+/* Event Description */
+.event-description {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 10px;
+    border-left: 3px solid #198754;
+}
+
+.event-description p {
+    color: #495057;
+    line-height: 1.6;
+}
+
+/* ================================
+   Event Edit Page Styles
+================================= */
+
+/* Event Info Item */
+.event-info-item small {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+.event-info-item strong {
+    color: #198754;
+    font-size: 0.95rem;
+}
+
+/* Guidelines List */
+.guidelines-list {
+    list-style: none;
+    padding: 0;
+}
+
+.guidelines-list li {
+    padding: 0.5rem 0;
+    display: flex;
+    align-items: start;
+    line-height: 1.5;
+}
+
+.guidelines-list li:not(:last-child) {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* Form Styling */
+.activity-card .form-label {
+    font-weight: 600;
+    color: #198754;
+    margin-bottom: 0.5rem;
+}
+
+.activity-card .form-control,
+.activity-card .form-select {
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.activity-card .form-control:focus,
+.activity-card .form-select:focus {
+    border-color: #198754;
+    box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.15);
+}
+
+.activity-card .form-check-input {
+    width: 1.5rem;
+    height: 1.5rem;
+    border: 2px solid #198754;
+    cursor: pointer;
+}
+
+.activity-card .form-check-input:checked {
+    background-color: #198754;
+    border-color: #198754;
+}
+
+.activity-card .form-check-label {
+    margin-left: 0.5rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+/* Delete Modal Styling */
+.modal-content {
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.modal-header {
+    padding: 1.5rem;
+}
+
+.modal-body .fa-trash-alt {
+    animation: shake 2s infinite;
+}
+
+@keyframes shake {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-5deg); }
+    75% { transform: rotate(5deg); }
+}
+
+/* Button Hover Effects */
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(25, 135, 84, 0.3);
+}
+
+.btn-outline-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(220, 53, 69, 0.3);
+}
+
+.btn-outline-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(108, 117, 125, 0.3);
+}
+
+/* Event Type Badge */
+.event-detail-card .card-header {
+    background-color: rgba(25, 135, 84, 0.05);
+    border-bottom: 2px solid rgba(25, 135, 84, 0.1);
+}
+
+/* Action Buttons */
+.event-detail-card .card-footer .btn-success {
+    background-color: #198754;
+    border-color: #198754;
+    transition: all 0.3s ease;
+}
+
+.event-detail-card .card-footer .btn-success:hover {
+    background-color: #157347;
+    border-color: #146c43;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(25, 135, 84, 0.3);
+}
+
+.event-detail-card .card-footer .btn-outline-danger {
+    transition: all 0.3s ease;
+}
+
+.event-detail-card .card-footer .btn-outline-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* No Events State */
+.activity-card .fa-calendar-times {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 0.3;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .event-detail-card {
+        margin-bottom: 1rem;
+    }
+
+    .icon-box {
+        width: 35px;
+        height: 35px;
+    }
+
+    .icon-box i {
+        font-size: 1rem;
+    }
+
+    .event-info-section {
+        padding: 0.75rem;
+    }
+
+    .event-description {
+        padding: 0.75rem;
+    }
+}
+
+/* Loading Animation for Events */
+.event-detail-card {
+    animation: fadeInUp 0.5s ease-out;
+}
+
+.event-detail-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.event-detail-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.event-detail-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.event-detail-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Back Button Mobile */
+@media (max-width: 991px) {
+    .btn-outline-success.w-100 {
+        background-color: transparent;
+        color: #198754;
+        border: 2px solid #198754;
+        font-weight: 500;
+        padding: 0.75rem;
+    }
+
+    .btn-outline-success.w-100:hover {
+        background-color: #198754;
+        color: white;
+    }
+}

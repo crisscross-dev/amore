@@ -1,0 +1,38 @@
+/* Reusable Button Link */
+.btn-link {
+    font-size: clamp(13px, 1.2vw, 15px);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border: none;
+    border-radius: 5px; /* was 6px → now slightly rounder */
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-decoration: none;
+}
+
+
+.btn-green {
+    background: #3cb371; /* forest green → medium sea green */
+    color: #fff;
+}
+
+
+.btn-green:hover {
+    background:  #1f6f45; /* brighter green → dark green */
+    color: #fff;
+    transform: translateY(-2px); /* slight upward lift */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* subtle shadow */
+}
+
+/* Size modifiers */
+.btn-xsm { padding: 4px 8px; font-size: 0.75rem; }
+.btn-sm { padding: 6px 10px; font-size: 0.75rem; }
+.btn-m { padding: 8px 12px; font-size: 0.90rem; }
+.btn-lg { 
+    padding: 5px 10px; 
+    font-size: 1rem; 
+    border-radius: 9px; 
+}

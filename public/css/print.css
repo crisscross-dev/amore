@@ -1,0 +1,120 @@
+/* Print Styles for PDF Export */
+@media print {
+    /* Hide elements that shouldn't be in PDF */
+    .sidebar,
+    .btn:not(.print-only),
+    .alert,
+    .no-print,
+    nav,
+    footer {
+        display: none !important;
+    }
+
+    /* Reset layout for print */
+    body {
+        background: white !important;
+        color: black !important;
+        font-size: 12pt;
+    }
+
+    main {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .dashboard-container,
+    .container-fluid {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .row {
+        display: block !important;
+    }
+
+    .col-lg-9, .col-md-8 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* Card styles for print */
+    .welcome-card,
+    .faculty-management-card {
+        background: white !important;
+        border: 1px solid #ddd !important;
+        box-shadow: none !important;
+        page-break-inside: avoid;
+        margin-bottom: 20px;
+    }
+
+    /* Table styles */
+    table {
+        width: 100% !important;
+        border-collapse: collapse !important;
+        page-break-inside: auto;
+    }
+
+    thead {
+        display: table-header-group;
+    }
+
+    tr {
+        page-break-inside: avoid;
+        page-break-after: auto;
+    }
+
+    th, td {
+        border: 1px solid #ddd !important;
+        padding: 8px !important;
+        color: black !important;
+    }
+
+    th {
+        background-color: #f8f9fa !important;
+        font-weight: bold !important;
+    }
+
+    /* Badge styles */
+    .badge {
+        border: 1px solid #000 !important;
+        color: #000 !important;
+        background: #f0f0f0 !important;
+    }
+
+    /* Links */
+    a {
+        color: black !important;
+        text-decoration: none !important;
+    }
+
+    /* Headers */
+    h1, h2, h3, h4, h5, h6 {
+        color: black !important;
+        page-break-after: avoid;
+    }
+
+    /* Icons - make them visible */
+    .fas, .far, .fab {
+        color: black !important;
+    }
+
+    /* Force page breaks */
+    .page-break {
+        page-break-after: always;
+    }
+
+    /* Print header/footer */
+    @page {
+        margin: 1.5cm;
+        @top-center {
+            content: "Amore Academy - Report";
+        }
+        @bottom-right {
+            content: "Page " counter(page) " of " counter(pages);
+        }
+    }
+}

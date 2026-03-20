@@ -1,0 +1,38 @@
+/* ================================
+   Auth Pages - Standalone Stylesheet
+   For forgot-password and reset-password pages
+================================= */
+
+/* Import base styles needed for auth pages */
+@import './base/variables.css';
+@import './base/reset.css';
+@import './base/typography.css';
+
+/* Import component styles needed for auth pages */
+@import './components/buttons.css';
+@import './components/forms.css';
+@import './components/alerts.css';
+
+/* Import auth layout styles */
+@import './layouts/auth.css';
+
+/* Import utility classes */
+@import './utilities/colors.css';
+@import './utilities/spacing.css';
+@import './utilities/layout.css';
+
+/* Animation for form appearance */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate__fadeIn {
+    animation: fadeIn 0.5s ease-in-out;
+}
