@@ -69,7 +69,9 @@
 }
 
 .faculty-management-table tbody tr {
-    transition: background 0.2s ease, transform 0.2s ease;
+    transition:
+        background 0.2s ease,
+        transform 0.2s ease;
 }
 
 .faculty-management-table tbody tr:hover {
@@ -155,4 +157,78 @@
 
 .back-link:hover {
     color: #0f5132;
+}
+
+.faculty-management-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.faculty-inline-filters {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-right: auto;
+}
+
+.faculty-inline-filters .form-control,
+.faculty-inline-filters .form-select {
+    min-width: 180px;
+}
+
+.faculty-inline-filters .form-control {
+    min-width: 240px;
+}
+
+@media (max-width: 767.98px) {
+    .faculty-inline-filters {
+        width: 100%;
+        margin-right: 0;
+        flex-wrap: wrap;
+    }
+
+    .faculty-inline-filters .form-control,
+    .faculty-inline-filters .form-select {
+        width: 100%;
+        min-width: 0;
+    }
+}
+
+.faculty-assignments-pagination .pagination {
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.faculty-assignments-pagination .page-link {
+    min-width: 42px;
+    min-height: 38px;
+    padding: 0.4rem 0.85rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f7a4f;
+}
+
+.faculty-assignments-pagination .page-item:first-child .page-link,
+.faculty-assignments-pagination .page-item:last-child .page-link {
+    min-width: 76px;
+}
+
+.faculty-assignments-pagination .page-item.disabled .page-link {
+    color: #6c757d;
+    opacity: 0.8;
+}
+
+.faculty-assignments-pagination .page-item.active .page-link {
+    color: #fff;
+}
+
+.faculty-assignments-pagination .page-link:hover {
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }

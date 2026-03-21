@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-student')
 
 @section('title', 'Enrollment Details - Student Dashboard - Amore Academy')
 
@@ -8,9 +8,7 @@
 <div class="dashboard-container">
     <div class="container-fluid px-4">
         <div class="row">
-            @include('partials.student-sidebar')
-
-            <main class="col-lg-9 col-md-8">
+            <main class="col-12">
                 <div class="welcome-card mb-4 d-flex justify-content-between align-items-center">
                     <div>
                         <h4 class="mb-2"><i class="fas fa-file-alt me-2"></i>Enrollment Details</h4>
@@ -83,3 +81,4 @@
     </div>
 </div>
 @endsection
+

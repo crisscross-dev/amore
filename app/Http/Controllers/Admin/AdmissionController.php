@@ -33,11 +33,11 @@ class AdmissionController extends Controller
 
         // Apply search filter
         if (!empty($search)) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('lrn', 'like', "%{$search}%")
-                  ->orWhere('applicant_id', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('lrn', 'like', "%{$search}%")
+                    ->orWhere('applicant_id', 'like', "%{$search}%");
             });
         }
 
@@ -45,7 +45,7 @@ class AdmissionController extends Controller
 
         return view('admin.admissions.approved', compact('admissions', 'type', 'search'));
     }
-    
+
     /**
      * Display a listing of all admissions
      */
@@ -60,26 +60,26 @@ class AdmissionController extends Controller
 
         // Base query
         $query = Admission::with(['user', 'approvedBy'])->whereIn('status', $statuses);
-        
+
         // Apply type filter
         if ($type === 'jhs') {
             $query->where('school_level', 'jhs');
         } elseif ($type === 'shs') {
             $query->where('school_level', 'shs');
         }
-        
+
         // Apply search filter
         if (!empty($search)) {
-            $query->where(function($q) use ($search) {
+            $query->where(function ($q) use ($search) {
                 $q->where('first_name', 'like', "%{$search}%")
-                  ->orWhere('last_name', 'like', "%{$search}%")
-                  ->orWhere('lrn', 'like', "%{$search}%")
-                  ->orWhere('applicant_id', 'like', "%{$search}%");
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('lrn', 'like', "%{$search}%")
+                    ->orWhere('applicant_id', 'like', "%{$search}%");
             });
         }
-        
+
         $admissions = $query->latest()->paginate(15);
-        
+
         // Get statistics
         $stats = [
             'total' => Admission::count(),
@@ -89,7 +89,7 @@ class AdmissionController extends Controller
             'jhs_total' => Admission::jhs()->count(),
             'shs_total' => Admission::shs()->count(),
         ];
-        
+
         return view('admin.admissions.index', compact('admissions', 'stats', 'type', 'status', 'search'));
     }
 
@@ -99,12 +99,12 @@ class AdmissionController extends Controller
     public function show(Request $request, $type, $id)
     {
         $admission = Admission::with(['user', 'approvedBy'])->findOrFail($id);
-        
+
         // Verify the admission type matches
         if ($admission->school_level !== $type) {
             abort(404);
         }
-        
+
         return view('admin.admissions.show', compact('admission'));
     }
 
@@ -116,55 +116,29 @@ class AdmissionController extends Controller
         $request->validate([
             'approval_notes' => 'nullable|string|max:1000',
         ]);
-        
+
         DB::beginTransaction();
         try {
             $admission = Admission::findOrFail($id);
-            
+
             // Verify the admission type matches
             if ($admission->school_level !== $type) {
                 abort(404);
             }
-            
-            // Check if user account already exists
+
             $existingUser = User::where('email', $admission->email)->first();
-            
             if ($existingUser) {
                 DB::rollBack();
                 return back()->with('error', 'A user account with this email already exists.');
             }
-            
-            // Generate random alphanumeric password (8 characters: letters and numbers)
+
             $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
             $generatedPassword = '';
             for ($i = 0; $i < 8; $i++) {
                 $generatedPassword .= $characters[random_int(0, strlen($characters) - 1)];
             }
-            
-            // Use the grade level from admission form
-            $gradeLevel = $admission->grade_level;
-            
-            // For SHS, append strand to grade level if needed
-            if (strtoupper($admission->school_level) === 'SHS' && $admission->strand && !str_contains($gradeLevel, $admission->strand)) {
-                $gradeLevel = $gradeLevel . ' - ' . $admission->strand;
-            }
-            
-            // Generate custom student ID
-            $lastStudent = User::where('account_type', 'student')
-                ->where('custom_id', 'like', 'STD-%')
-                ->orderBy('id', 'desc')
-                ->first();
-            
-            if ($lastStudent && $lastStudent->custom_id) {
-                $lastNumber = (int) substr($lastStudent->custom_id, 4);
-                $newNumber = $lastNumber + 1;
-            } else {
-                $newNumber = 1;
-            }
-            $customId = 'STD-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
-            
-            // Create user account
-            $user = User::create([
+
+            $studentUser = User::create([
                 'account_type' => 'student',
                 'first_name' => $admission->first_name,
                 'middle_name' => $admission->middle_name,
@@ -172,32 +146,29 @@ class AdmissionController extends Controller
                 'email' => $admission->email,
                 'contact_number' => $admission->phone,
                 'password' => Hash::make($generatedPassword),
-                'custom_id' => $customId,
-                'grade_level' => $gradeLevel,
-                'current_grade_level' => $admission->grade_level, // For enrollment system
+                'grade_level' => $admission->grade_level,
+                'current_grade_level' => $admission->grade_level,
                 'lrn' => $admission->lrn,
-                'status' => 'active', // Set account as active
+                'status' => 'active',
                 'profile_picture' => 'default.jpg',
                 'first_login' => true,
             ]);
-            
-            // Update admission with user_id and approval details
+
             $admission->update([
-                'user_id' => $user->id,
                 'status' => 'approved',
                 'approved_by' => Auth::id(),
                 'approved_at' => now(),
                 'approval_notes' => $request->approval_notes,
                 'rejection_reason' => null,
-                'temp_password' => $generatedPassword, // Store plain password temporarily
+                'user_id' => $studentUser->id,
+                'temp_password' => $generatedPassword,
             ]);
-            
+
             DB::commit();
-            
+
             return redirect()
                 ->route('admin.admissions.show', ['type' => $type, 'id' => $id])
-                ->with('success', 'Admission approved successfully! Student account created with password: ' . $generatedPassword);
-                
+                ->with('success', 'Admission approved successfully! Student account was created and is ready for section assignment in Enrollment.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to approve admission: ' . $e->getMessage());
@@ -212,16 +183,16 @@ class AdmissionController extends Controller
         $request->validate([
             'rejection_reason' => 'required|string|max:1000',
         ]);
-        
+
         DB::beginTransaction();
         try {
             $admission = Admission::findOrFail($id);
-            
+
             // Verify the admission type matches
             if ($admission->school_level !== $type) {
                 abort(404);
             }
-            
+
             $admission->update([
                 'status' => 'rejected',
                 'approved_by' => Auth::id(),
@@ -229,13 +200,12 @@ class AdmissionController extends Controller
                 'rejection_reason' => $request->rejection_reason,
                 'approval_notes' => null,
             ]);
-            
+
             DB::commit();
-            
+
             return redirect()
                 ->route('admin.admissions.show', ['type' => $type, 'id' => $id])
                 ->with('success', 'Admission rejected successfully.');
-                
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to reject admission: ' . $e->getMessage());
@@ -250,24 +220,23 @@ class AdmissionController extends Controller
         DB::beginTransaction();
         try {
             $admission = Admission::findOrFail($id);
-            
+
             // Verify the admission type matches
             if ($admission->school_level !== $type) {
                 abort(404);
             }
-            
+
             // Store the name for the success message
             $fullName = $admission->full_name;
-            
+
             // Delete the admission
             $admission->delete();
-            
+
             DB::commit();
-            
+
             return redirect()
                 ->route('admin.admissions.index')
                 ->with('success', "Application for {$fullName} has been permanently removed.");
-                
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Failed to remove admission: ' . $e->getMessage());
@@ -286,20 +255,57 @@ class AdmissionController extends Controller
             'admissions.*.id' => 'required|integer',
             'rejection_reason' => 'required_if:action,reject|nullable|string|max:1000',
         ]);
-        
+
         DB::beginTransaction();
         try {
             $successCount = 0;
-            
+
             foreach ($request->admissions as $item) {
                 $admission = Admission::find($item['id']);
-                
+
                 if ($admission && $admission->school_level === $item['type']) {
                     if ($request->action === 'approve') {
+                        $generatedPassword = null;
+                        $createdUserId = $admission->user_id;
+
+                        if (! $admission->user_id) {
+                            $existingUser = $admission->email ? User::where('email', $admission->email)->first() : null;
+
+                            if ($existingUser) {
+                                $createdUserId = $existingUser->id;
+                            } else {
+                                $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                                $generatedPassword = '';
+                                for ($i = 0; $i < 8; $i++) {
+                                    $generatedPassword .= $characters[random_int(0, strlen($characters) - 1)];
+                                }
+
+                                $studentUser = User::create([
+                                    'account_type' => 'student',
+                                    'first_name' => $admission->first_name,
+                                    'middle_name' => $admission->middle_name,
+                                    'last_name' => $admission->last_name,
+                                    'email' => $admission->email,
+                                    'contact_number' => $admission->phone,
+                                    'password' => Hash::make($generatedPassword),
+                                    'grade_level' => $admission->grade_level,
+                                    'current_grade_level' => $admission->grade_level,
+                                    'lrn' => $admission->lrn,
+                                    'status' => 'active',
+                                    'profile_picture' => 'default.jpg',
+                                    'first_login' => true,
+                                ]);
+
+                                $createdUserId = $studentUser->id;
+                            }
+                        }
+
                         $admission->update([
                             'status' => 'approved',
                             'approved_by' => Auth::id(),
                             'approved_at' => now(),
+                            'user_id' => $createdUserId,
+                            'temp_password' => $generatedPassword,
                             'rejection_reason' => null,
                         ]);
                     } else {
@@ -313,12 +319,11 @@ class AdmissionController extends Controller
                     $successCount++;
                 }
             }
-            
+
             DB::commit();
-            
+
             $actionText = $request->action === 'approve' ? 'approved' : 'rejected';
             return back()->with('success', "{$successCount} admission(s) {$actionText} successfully!");
-            
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Bulk action failed: ' . $e->getMessage());

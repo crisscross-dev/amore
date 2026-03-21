@@ -12,9 +12,8 @@
 <div class="dashboard-container">
   <div class="container-fluid px-4">
     <div class="row">
-      @include('partials.faculty-sidebar')
 
-      <main class="col-lg-9 col-md-8">
+      <main class="col-12">
         <div class="welcome-card">
           <div class="row g-4 align-items-center">
             <div class="col-lg-7">
@@ -266,3 +265,4 @@
   </div>
 </div>
 @endsection
+

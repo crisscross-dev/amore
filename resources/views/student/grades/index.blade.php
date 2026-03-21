@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-student')
 
 @section('title', 'My Grades - Student Dashboard - Amore Academy')
 
@@ -8,9 +8,7 @@
 <div class="dashboard-container">
   <div class="container-fluid px-4">
     <div class="row">
-      @include('partials.student-sidebar')
-
-      <main class="col-lg-9 col-md-8">
+      <main class="col-12">
         <div class="welcome-card mb-4">
           <h4 class="mb-0"><i class="fas fa-graduation-cap me-2"></i>My Approved Grades</h4>
         </div>

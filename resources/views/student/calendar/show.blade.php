@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-student')
 
 @section('title', 'Event Details - Student Dashboard - Amore Academy')
 
@@ -14,10 +14,8 @@
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
-            @include('partials.student-sidebar')
-
             <!-- Main Content -->
-            <main class="col-lg-9 col-md-8">
+            <main class="col-12">
                 <!-- Mobile Profile (Hidden on Desktop) -->
                 <div class="d-md-none mobile-profile mb-4">
                     <div class="text-center">
@@ -217,3 +215,4 @@
 </style>
 
 @endsection
+

@@ -38,7 +38,7 @@ Route::get('/', function () {
         ->orderBy('created_at', 'desc')
         ->take(6)
         ->get();
-    
+
     return view('welcome', compact('publicAnnouncements'));
 })->name('welcome');
 
@@ -64,20 +64,20 @@ Route::middleware(['auth'])->group(function () {
     // Role-based dashboard routing
     Route::get('/dashboard', function () {
         $user = auth()->user();
-        
+
         // Route to appropriate dashboard based on account type
-        return match($user->account_type) {
+        return match ($user->account_type) {
             'admin' => app(AdminDashboardController::class)->index(),
             'faculty' => app(FacultyDashboardController::class)->index(),
             default => app(StudentDashboardController::class)->index()
         };
     })->name('dashboard');
-    
+
     // Individual dashboard routes (optional direct access)
     Route::get('/dashboard/student', [StudentDashboardController::class, 'index'])->name('dashboard.student');
     Route::get('/dashboard/faculty', [FacultyDashboardController::class, 'index'])->name('dashboard.faculty');
     Route::get('/dashboard/admin', [AdminDashboardController::class, 'index'])->name('dashboard.admin');
-    
+
     // Calendar Routes (accessible by all authenticated users)
     Route::prefix('calendar')->name('calendar.')->group(function () {
         // CRUD operations (admin only) - Must be BEFORE dynamic routes
@@ -88,11 +88,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{event}/edit', [CalendarController::class, 'edit'])->name('edit');
         Route::put('/{event}', [CalendarController::class, 'update'])->name('update');
         Route::delete('/{event}', [CalendarController::class, 'destroy'])->name('destroy');
-        
+
         // View calendar (all roles) - Must be LAST because of optional params
         Route::get('/{year?}/{month?}', [CalendarController::class, 'index'])->name('index');
     });
-    
+
     // Announcement Routes (Admin only)
     Route::prefix('announcements')->name('announcements.')->group(function () {
         Route::get('/', [AnnouncementController::class, 'index'])->name('index');
@@ -104,7 +104,7 @@ Route::middleware(['auth'])->group(function () {
         Route::delete('/{announcement}', [AnnouncementController::class, 'destroy'])->name('destroy');
         Route::patch('/{announcement}/pin', [AnnouncementController::class, 'pin'])->name('pin');
     });
-    
+
     // Admin Admission Approval Routes
     Route::prefix('admin/admissions')->name('admin.admissions.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\AdmissionController::class, 'index'])->name('index');
@@ -121,10 +121,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/manage', [\App\Http\Controllers\Admin\AdminController::class, 'manageAccounts'])->name('manage');
         Route::patch('/{user}/approve', [\App\Http\Controllers\Admin\AdminController::class, 'approve'])->name('approve');
         Route::patch('/{user}/reject', [\App\Http\Controllers\Admin\AdminController::class, 'reject'])->name('reject');
-    Route::get('/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'show'])->name('show');
+        Route::get('/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'show'])->name('show');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\AdminController::class, 'edit'])->name('edit');
         Route::put('/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'update'])->name('update');
-    Route::delete('/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'destroy'])->name('destroy');
+        Route::delete('/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'destroy'])->name('destroy');
     });
 
     // Faculty Position Management
@@ -149,11 +149,21 @@ Route::middleware(['auth'])->group(function () {
     });
 
     Route::post('/admin/sections/{section}/adviser', [SectionAssignmentController::class, 'updateAdviser'])
+        ->middleware('admin')
         ->name('admin.sections.assign-adviser');
     Route::post('/admin/sections/{section}/subjects/{subject}/teacher', [SectionAssignmentController::class, 'updateSubjectTeacher'])
+        ->middleware('admin')
         ->name('admin.sections.assign-subject-teacher');
     Route::post('/admin/sections/{section}/subjects/teachers', [SectionAssignmentController::class, 'updateSubjectTeachers'])
+        ->middleware('admin')
         ->name('admin.sections.assign-subject-teachers');
+
+    Route::prefix('admin/teaching-loads')->name('admin.teaching-loads.')->middleware('admin')->group(function () {
+        Route::get('/', [SectionController::class, 'teachingLoads'])->name('index');
+        Route::post('/', [SectionAssignmentController::class, 'storeTeachingLoad'])->name('store');
+        Route::put('/{teachingAssignment}', [SectionAssignmentController::class, 'updateTeachingLoad'])->name('update');
+        Route::delete('/{teachingAssignment}', [SectionAssignmentController::class, 'destroyTeachingLoad'])->name('destroy');
+    });
 
     // Student Section assignment
     Route::post('/admin/students/{user}/assign-section', [StudentSectionController::class, 'assign'])
@@ -266,6 +276,8 @@ Route::middleware(['auth'])->group(function () {
     // Admin Enrollment Approval
     Route::prefix('admin/enrollments')->name('admin.enrollments.')->middleware('admin')->group(function () {
         Route::get('/', [EnrollmentApprovalController::class, 'index'])->name('index');
+        Route::get('/admissions/{admission}/review', [EnrollmentApprovalController::class, 'reviewApprovedAdmission'])->name('review-admission');
+        Route::post('/admissions/{admission}/enroll', [EnrollmentApprovalController::class, 'enrollApprovedAdmission'])->name('enroll-admission');
         Route::get('/{enrollment}', [EnrollmentApprovalController::class, 'show'])->name('show');
         Route::post('/{enrollment}/approve', [EnrollmentApprovalController::class, 'approve'])->name('approve');
         Route::post('/{enrollment}/reject', [EnrollmentApprovalController::class, 'reject'])->name('reject');

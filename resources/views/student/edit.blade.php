@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-student')
 
 @section('title', 'Student Dashboard - Edit Profile - Amore Academy')
 

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Section;
 use App\Models\SectionSubjectTeacher;
 use App\Models\Subject;
+use Illuminate\Validation\Rule;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -209,6 +210,81 @@ class SectionAssignmentController extends Controller
         }
 
         return back()->with('success', 'Subject teacher assignments updated successfully.');
+    }
+
+    public function storeTeachingLoad(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'teacher_id' => ['required', 'exists:users,id'],
+            'section_id' => ['required', 'exists:sections,id'],
+            'subject_id' => [
+                'required',
+                'exists:subjects,id',
+                Rule::unique('section_subject_teachers')->where(function ($query) use ($request) {
+                    return $query->where('section_id', $request->integer('section_id'))
+                        ->where('subject_id', $request->integer('subject_id'));
+                }),
+            ],
+        ], [
+            'subject_id.unique' => 'This section and subject already has an assigned faculty.',
+        ]);
+
+        $isFaculty = \App\Models\User::where('id', $validated['teacher_id'])
+            ->where('account_type', 'faculty')
+            ->exists();
+
+        if (! $isFaculty) {
+            return back()->withErrors(['teacher_id' => 'Selected faculty must be a faculty account.']);
+        }
+
+        SectionSubjectTeacher::create([
+            'teacher_id' => (int) $validated['teacher_id'],
+            'section_id' => (int) $validated['section_id'],
+            'subject_id' => (int) $validated['subject_id'],
+        ]);
+
+        return back()->with('success', 'Teaching load assigned successfully.');
+    }
+
+    public function updateTeachingLoad(Request $request, SectionSubjectTeacher $teachingAssignment): RedirectResponse
+    {
+        $validated = $request->validate([
+            'teacher_id' => ['required', 'exists:users,id'],
+            'section_id' => ['required', 'exists:sections,id'],
+            'subject_id' => [
+                'required',
+                'exists:subjects,id',
+                Rule::unique('section_subject_teachers')->where(function ($query) use ($request) {
+                    return $query->where('section_id', $request->integer('section_id'))
+                        ->where('subject_id', $request->integer('subject_id'));
+                })->ignore($teachingAssignment->id),
+            ],
+        ], [
+            'subject_id.unique' => 'This section and subject already has an assigned faculty.',
+        ]);
+
+        $isFaculty = \App\Models\User::where('id', $validated['teacher_id'])
+            ->where('account_type', 'faculty')
+            ->exists();
+
+        if (! $isFaculty) {
+            return back()->withErrors(['teacher_id' => 'Selected faculty must be a faculty account.']);
+        }
+
+        $teachingAssignment->update([
+            'teacher_id' => (int) $validated['teacher_id'],
+            'section_id' => (int) $validated['section_id'],
+            'subject_id' => (int) $validated['subject_id'],
+        ]);
+
+        return back()->with('success', 'Teaching load updated successfully.');
+    }
+
+    public function destroyTeachingLoad(SectionSubjectTeacher $teachingAssignment): RedirectResponse
+    {
+        $teachingAssignment->delete();
+
+        return back()->with('success', 'Teaching load removed successfully.');
     }
 
     private function normalizeGradeLevel(?string $gradeLevel): ?string

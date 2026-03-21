@@ -19,6 +19,7 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'account_type',
+        'current_grade_level',
         'first_name',
         'middle_name',
         'last_name',
@@ -165,5 +166,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(GradeEntry::class, 'student_id');
     }
-
 }

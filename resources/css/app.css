@@ -53,11 +53,15 @@
 /* Homepage and Navbar integration (after imports for correct precedence) */
 html,
 body {
+    margin: 0;
+    height: 100%;
     scroll-behavior: smooth;
     scroll-padding-top: 110px; /* offset for sticky navbar */
-    /* Homepage background image (served from public/images) */
-    background: url("/images/background.png") no-repeat center center fixed;
-    background-size: cover;
+    background-color: #edf3ea;
+}
+
+body.has-app-shell {
+    background-color: #edf3ea;
 }
 
 .navbar,
@@ -83,18 +87,18 @@ body {
     background-color: rgba(24, 65, 31, 0.95);
 }
 
-/* Global app shell: fixed header + fixed sidebar + scrollable main content */
+/* Global app shell: CSS grid with separate sidebar/header/main areas */
 .has-app-shell {
-    height: 100vh;
+    height: 100dvh;
     overflow: hidden;
 }
 
-.has-app-shell .app-global-header {
+body.has-app-shell {
+    margin: 0;
+    overflow: hidden;
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1050;
+    inset: 0;
+    width: 100%;
 }
 
 .has-app-shell {
@@ -103,37 +107,84 @@ body {
 }
 
 .has-app-shell .app-shell-layout {
-    height: 100vh;
-    padding-top: var(--app-header-height);
+    display: grid;
+    grid-template-columns: var(--app-sidebar-width) minmax(0, 1fr);
+    grid-template-rows: var(--app-header-height) minmax(0, 1fr);
+    grid-template-areas:
+        "sidebar header"
+        "sidebar main";
+    height: 100dvh;
+    min-height: 100dvh;
+}
+
+.has-app-shell .app-shell-header {
+    grid-area: header;
+    min-width: 0;
+}
+
+.has-app-shell .app-shell-header .app-global-header {
+    height: 100%;
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+    background-color: #1f5d3a;
+    border-bottom: 1px solid #17492d;
 }
 
 .has-app-shell .app-shell-sidebar {
-    position: fixed;
-    top: var(--app-header-height);
-    left: 0;
-    width: var(--app-sidebar-width);
-    height: calc(100vh - var(--app-header-height));
-    padding: 1rem;
+    grid-area: sidebar;
+    width: 100%;
+    height: 100dvh;
+    padding: 0;
     overflow-y: auto;
     overflow-x: hidden;
-    z-index: 1040;
+    min-height: 0;
 }
 
 .has-app-shell .app-shell-sidebar .profile-sidebar {
     height: 100%;
     margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+    position: relative;
+    top: 0;
+    max-height: none;
 }
 
 .has-app-shell .app-shell-main {
-    margin-left: var(--app-sidebar-width);
-    height: calc(100vh - var(--app-header-height));
+    grid-area: main;
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
+    min-height: 0;
+    background: transparent;
 }
 
 .has-app-shell .app-shell-content {
     min-height: 100%;
-    padding: 1rem 1.25rem 1.5rem;
+    padding: 0;
+}
+
+.app-auth-header-inner,
+.app-auth-header-inner-simple {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    align-items: center;
+    column-gap: 1rem;
+    width: 100%;
+}
+
+.app-header-spacer {
+    min-width: 0;
+}
+
+.app-brand-centered {
+    justify-self: center;
+    margin: 0;
+}
+
+.app-header-actions {
+    justify-self: end;
 }
 
 @media (max-width: 767.98px) {
@@ -143,16 +194,15 @@ body {
     }
 
     .has-app-shell .app-shell-layout {
-        padding-top: 0;
+        display: block;
         height: auto;
     }
 
-    .has-app-shell .app-global-header {
+    .has-app-shell .app-shell-header .app-global-header {
         position: sticky;
     }
 
     .has-app-shell .app-shell-main {
-        margin-left: 0;
         height: auto;
         overflow: visible;
     }

@@ -20,7 +20,6 @@ $department = $currentUser->department ?? 'No department assigned';
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
-            @include('partials.faculty-sidebar')
 
             <!-- Main Dashboard Content -->
             <main class="col-12">

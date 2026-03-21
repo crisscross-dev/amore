@@ -14,8 +14,7 @@
 <div class="dashboard-container">
   <div class="container-fluid px-4">
     <div class="row">
-      @include('partials.faculty-sidebar')
-      <main class="col-lg-9 col-md-8">
+      <main class="col-12">
         <div class="welcome-card mb-4">
           <div class="d-flex justify-content-between align-items-center">
             <div>

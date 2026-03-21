@@ -54,6 +54,13 @@
             <div class="nav-label">Accounts</div>
         </a>
 
+        <a href="{{ route('admin.faculty-assignments.index') }}" class="nav-link {{ Request::routeIs('admin.faculty-assignments.*') ? 'active' : '' }}">
+            <div class="nav-icon">
+                <i class="fas fa-user-tag"></i>
+            </div>
+            <div class="nav-label">Faculty Assignments</div>
+        </a>
+
         <a href="{{ route('admin.sections.index') }}" class="nav-link {{ Request::routeIs('admin.sections.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-layer-group"></i>
@@ -105,6 +112,14 @@
 </div>
 
 <style>
+    .has-app-shell {
+        --app-sidebar-width: 260px;
+    }
+
+    .profile-sidebar {
+        padding: 1rem !important;
+    }
+
     .admin-nav-menu {
         display: flex;
         flex-direction: column;
@@ -123,6 +138,8 @@
         text-decoration: none;
         cursor: pointer;
         position: relative;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     .admin-nav-menu .nav-link::before {

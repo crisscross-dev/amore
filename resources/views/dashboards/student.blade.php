@@ -1,4 +1,4 @@
-@extends('layouts.app')
+@extends('layouts.app-student')
 
 @section('title', 'Student Dashboard - Amore Academy')
 
@@ -13,9 +13,6 @@
 <div class="dashboard-container">
     <div class="container-fluid px-4">
         <div class="row">
-            <!-- Left Profile Sidebar -->
-            @include('partials.student-sidebar')
-
             <!-- Main Dashboard Content -->
             <main class="col-12">
                 <!-- Mobile Profile (Hidden on Desktop) -->

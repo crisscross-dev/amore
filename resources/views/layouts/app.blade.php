@@ -11,24 +11,81 @@
   <link href="https://fonts.googleapis.com/css2?family=Display+Playfair:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
   @vite(['resources/css/app.css'])
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
-
+  <style>
+    html,
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+  </style>
   @stack('styles')
 </head>
 @php
-$useAppShell = auth()->check() && !Request::routeIs('welcome');
+$currentUser = auth()->user();
+$accountType = $currentUser ? strtolower((string) $currentUser->account_type) : null;
+$useAppShell = auth()->check()
+&& in_array($accountType, ['admin', 'faculty'], true)
+&& !Request::routeIs('welcome');
+$isLoggedIn = auth()->check();
 @endphp
 
 <body id="top" class="{{ $useAppShell ? 'has-app-shell' : '' }}">
 
+  @if($useAppShell)
+  <div class="app-shell-layout">
+    <header class="app-shell-header">
+      <nav class="navbar navbar-light navbar-custom app-global-header app-auth-header">
+        <div class="container-fluid app-auth-header-inner">
+          <div class="app-header-spacer" aria-hidden="true"></div>
+
+          <a class="navbar-brand text-white fw-bold fs-3 app-brand-centered" href="{{ route('welcome') }}#top">Amore Academy</a>
+
+          <div class="text-end app-header-actions">
+            <span class="nav-item btn rounded-4 content_homepage">
+              <a href="{{ route('dashboard') }}" class="text-decoration-none">
+                <i class="bi bi-person-circle me-2"></i>
+                {{ Auth::user()->first_name }}
+              </a>
+            </span>
+          </div>
+        </div>
+      </nav>
+    </header>
+
+    <aside class="app-shell-sidebar d-none d-md-block">
+      @if($accountType === 'admin')
+      @include('partials.admin-sidebar')
+      @elseif($accountType === 'faculty')
+      @include('partials.faculty-sidebar')
+      @endif
+    </aside>
+
+    <main class="app-shell-main" role="main">
+      <div class="app-shell-content">
+        @yield('content')
+      </div>
+    </main>
+  </div>
+  @else
   {{-- Navbar --}}
-  <nav class="navbar navbar-expand-lg navbar-light navbar-custom app-global-header">
-    <div class="container">
-      <a class="navbar-brand text-white fw-bold fs-3" href="{{ route('welcome') }}#top">Amore Academy</a>
+  <nav class="navbar navbar-expand-lg navbar-light navbar-custom app-global-header {{ $isLoggedIn ? 'app-auth-header' : '' }}">
+    <div class="container {{ $isLoggedIn ? 'app-auth-header-inner app-auth-header-inner-simple' : '' }}">
+      @if($isLoggedIn)
+      <div class="app-header-spacer" aria-hidden="true"></div>
+      @endif
+
+      <a class="navbar-brand text-white fw-bold fs-3 {{ $isLoggedIn ? 'app-brand-centered' : '' }}" href="{{ route('welcome') }}#top">Amore Academy</a>
+
+      @guest
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
         <span class="navbar-toggler-icon"></span>
       </button>
+      @endguest
+
+      @guest
       <div class="collapse navbar-collapse text-white" id="navbarNav">
-        <ul class="navbar-nav mx-auto  list-bg">
+        <ul class="navbar-nav mx-auto list-bg">
           <li class="nav-item text-center"><a class="nav-link text-white" href="{{ route('welcome') }}#about">About Us</a></li>
           <li class="nav-item text-center"><a class="nav-link text-white" href="{{ route('welcome') }}#news">News</a></li>
           <li class="nav-item text-center"><a class="nav-link text-white" href="{{ route('welcome') }}#faculty">Faculty</a></li>
@@ -37,105 +94,30 @@ $useAppShell = auth()->check() && !Request::routeIs('welcome');
         </ul>
 
         <div class="text-center">
-          @auth
-          <span class="nav-item btn rounded-4 content_homepage">
-            <a href="{{ route('dashboard') }}" class="text-decoration-none">
-              <i class="bi bi-person-circle me-2"></i>
-              {{ Auth::user()->first_name }}
-            </a>
-          </span>
-          @else
-          <span class="nav-item btn rounded-4 content_homepage position-relative overflow-hidden">
-            <a href="{{ route('login') }}" class="text-decoration-none d-flex align-items-center justify-content-center">
-              <i class="bi bi-box-arrow-in-right me-2"></i>
-              <span>Login</span>
-            </a>
+          <a href="{{ route('login') }}" class="nav-item btn rounded-4 content_homepage position-relative overflow-hidden text-decoration-none d-flex align-items-center justify-content-center">
+            <i class="bi bi-box-arrow-in-right me-2"></i>
+            <span>Login</span>
             <span class="btn-shimmer"></span>
-          </span>
-          @endauth
+          </a>
         </div>
-
-
-        <!-- <div class="text-center">
-          @if (Request::is('login'))
-            <a class="nav-item btn btn-primary rounded-4 content_homepage" href="/login">Login as Admin</a>
-          @else 
-            <a class="nav-item btn btn-primary rounded-4 content_homepage" href="/login">Login</a>
-          @endif
-        </div> -->
       </div>
+      @else
+      <div class="text-end app-header-actions">
+        <span class="nav-item btn rounded-4 content_homepage">
+          <a href="{{ route('dashboard') }}" class="text-decoration-none">
+            <i class="bi bi-person-circle me-2"></i>
+            {{ Auth::user()->first_name }}
+          </a>
+        </span>
+      </div>
+      @endguest
     </div>
   </nav>
 
-  @if($useAppShell)
-  <div class="app-shell-layout">
-    <aside class="app-shell-sidebar d-none d-md-block">
-      @include('partials.admin-sidebar')
-    </aside>
-
-    <main class="app-shell-main" role="main">
-      <div class="app-shell-content">
-        @yield('content')
-
-        {{-- Footer Bar --}}
-        <div class="top-bar top-border mt-2">
-          <div class="container py-3">
-            <div class="row align-items-center">
-              <div class="col-12 d-flex align-items-center justify-content-center">
-                <a href="#" class="small mr-3">
-                  <span class="me-1"><i class="bi bi-question-circle"></i></span>
-                  <span class="small1">Have a questions?</span>
-                </a>
-                <a href="#" class="small mr-3">
-                  <span class="me-1"><i class="bi bi-telephone"></i></span>
-                  <span class="small1">10 20 123 456</span>
-                </a>
-                <a href="#" class="small mr-3">
-                  <span class="me-1"><i class="bi bi-envelope"></i></span>
-                  <span class="small1">amoreacademy@gmail.com</span>
-                </a>
-                <a href="#" class="small mr-3">
-                  <span class="me-1"><i class="bi bi-pin-map"></i></span>
-                  <span class="small1">Trece Martires City Cavite</span>
-                </a>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-  @else
   {{-- Page Content --}}
   <main>
     @yield('content')
   </main>
-
-  {{-- Footer Bar --}}
-  <div class="top-bar top-border mt-2">
-    <div class="container py-3">
-      <div class="row align-items-center">
-        <div class="col-12 d-flex align-items-center justify-content-center">
-          <a href="#" class="small mr-3">
-            <span class="me-1"><i class="bi bi-question-circle"></i></span>
-            <span class="small1">Have a questions?</span>
-          </a>
-          <a href="#" class="small mr-3">
-            <span class="me-1"><i class="bi bi-telephone"></i></span>
-            <span class="small1">10 20 123 456</span>
-          </a>
-          <a href="#" class="small mr-3">
-            <span class="me-1"><i class="bi bi-envelope"></i></span>
-            <span class="small1">amoreacademy@gmail.com</span>
-          </a>
-          <a href="#" class="small mr-3">
-            <span class="me-1"><i class="bi bi-pin-map"></i></span>
-            <span class="small1">Trece Martires City Cavite</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
   @endif
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

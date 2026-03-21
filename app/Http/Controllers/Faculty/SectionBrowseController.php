@@ -20,6 +20,12 @@ class SectionBrowseController extends Controller
             ->orderBy('grade_level')
             ->orderBy('name');
 
+        if ($user->account_type === 'faculty') {
+            $query->whereHas('subjectTeachers', function ($assignmentQuery) use ($user) {
+                $assignmentQuery->where('teacher_id', $user->id);
+            });
+        }
+
         // Filter by grade level
         if ($request->filled('grade_level')) {
             $query->where('grade_level', $request->grade_level);
@@ -37,7 +43,16 @@ class SectionBrowseController extends Controller
 
         $sections = $query->paginate(15)->withQueryString();
 
-        $gradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
+        $gradeLevels = Section::query()
+            ->when($user->account_type === 'faculty', function ($levelQuery) use ($user) {
+                $levelQuery->whereHas('subjectTeachers', function ($assignmentQuery) use ($user) {
+                    $assignmentQuery->where('teacher_id', $user->id);
+                });
+            })
+            ->select('grade_level')
+            ->distinct()
+            ->orderBy('grade_level')
+            ->pluck('grade_level');
 
         return view('faculty.sections.index', compact('sections', 'gradeLevels'));
     }
@@ -50,8 +65,24 @@ class SectionBrowseController extends Controller
             abort(403);
         }
 
+        if ($user->account_type === 'faculty') {
+            $isAssigned = $section->subjectTeachers()
+                ->where('teacher_id', $user->id)
+                ->exists();
+
+            abort_unless($isAssigned, 403);
+        }
+
         $section->load(['adviser', 'students']);
 
-        return view('faculty.sections.show', compact('section'));
+        $subjectAssignments = $section->subjectTeachers()
+            ->with(['subject', 'teacher'])
+            ->whereHas('subject', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->orderBy('subject_id')
+            ->get();
+
+        return view('faculty.sections.show', compact('section', 'subjectAssignments'));
     }
 }

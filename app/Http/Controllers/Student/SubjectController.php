@@ -16,33 +16,27 @@ class SubjectController extends Controller
 
         // Get the student's section
         $sectionId = $user->section_id;
-        
+
         if (!$sectionId) {
             return view('student.subjects.index', [
-                'subjects' => collect([]),
+                'subjectAssignments' => collect([]),
                 'section' => null,
                 'message' => 'You are not assigned to any section yet. Please contact your administrator.'
             ]);
         }
 
-        // Get all subject assignments for this section with teacher information
-        $subjectAssignments = SectionSubjectTeacher::with(['subject', 'teacher', 'section'])
+        $subjectAssignments = SectionSubjectTeacher::with(['subject', 'teacher'])
             ->where('section_id', $sectionId)
+            ->whereHas('subject', function ($query) {
+                $query->where('is_active', true);
+            })
+            ->orderBy('day_of_week')
+            ->orderBy('start_time')
             ->orderBy('subject_id')
             ->get();
 
-        // Group by subject to handle multiple teachers for the same subject
-        $subjects = $subjectAssignments->groupBy('subject_id')->map(function ($assignments) {
-            $firstAssignment = $assignments->first();
-            return [
-                'subject' => $firstAssignment->subject,
-                'teachers' => $assignments->map(fn($a) => $a->teacher)->filter(),
-                'section' => $firstAssignment->section,
-            ];
-        })->values();
-
         return view('student.subjects.index', [
-            'subjects' => $subjects,
+            'subjectAssignments' => $subjectAssignments,
             'section' => $user->section,
             'message' => null
         ]);
