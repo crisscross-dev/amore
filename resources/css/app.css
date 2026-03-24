@@ -102,7 +102,7 @@ body.has-app-shell {
 }
 
 .has-app-shell {
-    --app-header-height: 88px;
+    --app-header-height: 56px;
     --app-sidebar-width: 300px;
 }
 
@@ -127,8 +127,8 @@ body.has-app-shell {
     position: sticky;
     top: 0;
     z-index: 1030;
-    background-color: #1f5d3a;
-    border-bottom: 1px solid #17492d;
+    background-color: #1f7a4d;
+    border-bottom: 2px solid #17492d;
 }
 
 .has-app-shell .app-shell-sidebar {
@@ -165,6 +165,10 @@ body.has-app-shell {
     padding: 0;
 }
 
+.has-app-shell .dashboard-container {
+    padding-top: 0.5rem;
+}
+
 .app-auth-header-inner,
 .app-auth-header-inner-simple {
     display: grid;
@@ -185,6 +189,35 @@ body.has-app-shell {
 
 .app-header-actions {
     justify-self: end;
+}
+
+.has-app-shell .app-shell-header .app-global-header {
+    --bs-navbar-padding-y: 0;
+    --bs-navbar-brand-padding-y: 0;
+}
+
+.has-app-shell .app-shell-header .app-auth-header-inner {
+    height: 100%;
+    padding-top: 0;
+    padding-bottom: 0;
+}
+
+.has-app-shell .app-shell-header .navbar-brand {
+    font-size: 1.25rem !important;
+    line-height: 1.2;
+    margin-bottom: 0;
+}
+
+.has-app-shell .app-shell-header .content_homepage {
+    padding: 0.35rem 0.9rem;
+    font-size: 0.875rem;
+    line-height: 1.1;
+}
+
+.has-app-shell .app-shell-header .content_homepage a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
 }
 
 @media (max-width: 767.98px) {

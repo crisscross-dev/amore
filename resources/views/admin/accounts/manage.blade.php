@@ -11,54 +11,54 @@
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css', 'resources/js/admin-accounts.js', 'resources/js/student-sections.js'])
 
 <style>
-/* Remove default modal backdrop */
-.modal-backdrop {
-    display: none !important;
-}
+    /* Remove default modal backdrop */
+    .modal-backdrop {
+        display: none !important;
+    }
 
-/* Set z-index on modal wrapper */
-.modal {
-    z-index: 1050 !important;
-}
+    /* Set z-index on modal wrapper */
+    .modal {
+        z-index: 1050 !important;
+    }
 
-/* Make modal text readable */
-.modal-content {
-    color: #212529;
-}
+    /* Make modal text readable */
+    .modal-content {
+        color: #212529;
+    }
 
-.modal-body {
-    color: #212529;
-}
+    .modal-body {
+        color: #212529;
+    }
 
-.modal-header .modal-title {
-    color: #212529;
-}
+    .modal-header .modal-title {
+        color: #212529;
+    }
 
-.modal-body h5 {
-    color: #212529;
-}
+    .modal-body h5 {
+        color: #212529;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Remove any leftover backdrops
-    const removeBackdrops = function() {
-        const backdrops = document.querySelectorAll('.modal-backdrop');
-        backdrops.forEach(backdrop => backdrop.remove());
-        document.body.classList.remove('modal-open');
-        document.body.style.removeProperty('overflow');
-        document.body.style.removeProperty('padding-right');
-    };
+    document.addEventListener('DOMContentLoaded', function() {
+        // Remove any leftover backdrops
+        const removeBackdrops = function() {
+            const backdrops = document.querySelectorAll('.modal-backdrop');
+            backdrops.forEach(backdrop => backdrop.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        };
 
-    // Add event listeners to all modals
-    const modals = document.querySelectorAll('.modal');
-    modals.forEach(modal => {
-        modal.addEventListener('hidden.bs.modal', removeBackdrops);
+        // Add event listeners to all modals
+        const modals = document.querySelectorAll('.modal');
+        modals.forEach(modal => {
+            modal.addEventListener('hidden.bs.modal', removeBackdrops);
+        });
+
+        // Remove backdrops on page load
+        removeBackdrops();
     });
-
-    // Remove backdrops on page load
-    removeBackdrops();
-});
 </script>
 
 <div class="dashboard-container">
@@ -72,10 +72,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="d-md-none mobile-profile mb-4">
                     <div class="text-center">
                         <img src="{{ asset('uploads/profile_picture/' . Auth::user()->profile_picture) }}"
-                             alt="Profile Picture"
-                             class="rounded-circle mb-3 border border-3 border-white"
-                             width="80"
-                             height="80">
+                            alt="Profile Picture"
+                            class="rounded-circle mb-3 border border-3 border-white"
+                            width="80"
+                            height="80">
 
                         <h5 class="text-white mb-1">{{ Auth::user()->first_name ?? 'Admin' }} {{ Auth::user()->last_name ?? 'Name' }}</h5>
                         <p class="text-white-50 small mb-3">
@@ -120,8 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                         <button
                             class="btn logout-btn w-100"
-                            onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();"
-                        >
+                            onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </button>
 
@@ -131,36 +130,34 @@ document.addEventListener('DOMContentLoaded', function() {
                     </div>
                 </div>
 
-                <!-- Page header -->
-                <div class="welcome-card mb-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-2">
-                                <i class="fas fa-users-cog me-2"></i>
-                                Manage Accounts
-                            </h4>
-                            <p class="mb-0 opacity-90">
-                                View and manage student and faculty accounts
-                            </p>
-                        </div>
-                    </div>
+
+                <div class="header-title d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="mb-2 fw-semibold text-success">
+                        Manage Accounts
+                    </h5>
+                    <!-- <div class="d-none d-lg-block">
+                        <a href="{{ route('calendar.create') }}" class="btn btn-success btn-m">
+                            <i class="fas fa-plus me-2"></i>Add Activity
+                        </a>
+                    </div> -->
                 </div>
+
 
                 <!-- Flash Messages -->
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle"></i>
-                        <strong>Success!</strong> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i>
+                    <strong>Success!</strong> {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <strong>Error!</strong> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i>
+                    <strong>Error!</strong> {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
                 @endif
 
                 <!-- Accounts Management -->
@@ -214,4 +211,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </div>
 
 @endsection
-

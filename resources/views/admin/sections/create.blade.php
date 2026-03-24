@@ -13,6 +13,16 @@
         color: rgba(33, 37, 41, 0.75);
     }
 
+    .admissions-card .subject-option .form-check-label,
+    .admissions-card .subject-option .form-check-label span,
+    .admissions-card .subject-option .form-check-label small {
+        color: rgba(33, 37, 41, 0.9) !important;
+    }
+
+    .admissions-card .subject-option .form-check-label {
+        font-weight: 500;
+    }
+
     .admissions-card .form-control::placeholder {
         color: rgba(108, 117, 125, 0.65);
     }

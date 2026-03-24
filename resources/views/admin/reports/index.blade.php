@@ -20,17 +20,17 @@
         <!-- Mobile Profile (Hidden on Desktop) -->
         <div class="d-md-none mobile-profile mb-4">
           <div class="text-center">
-            <img src="{{ asset('uploads/profile_picture/' . Auth::user()->profile_picture) }}" 
-                 alt="Profile Picture" 
-                 class="rounded-circle mb-3 border border-3 border-white"
-                 width="80"
-                 height="80">
-            
+            <img src="{{ asset('uploads/profile_picture/' . Auth::user()->profile_picture) }}"
+              alt="Profile Picture"
+              class="rounded-circle mb-3 border border-3 border-white"
+              width="80"
+              height="80">
+
             <h5 class="text-white mb-1">{{ Auth::user()->first_name ?? 'Admin' }} {{ Auth::user()->last_name ?? 'Name' }}</h5>
             <p class="text-white-50 small mb-3">
               Administrator | {{ Auth::user()->custom_id ?? 'ADMIN-0001' }}
             </p>
-            
+
             <!-- Mobile Navigation -->
             <div class="row g-2">
               <div class="col-4">
@@ -70,36 +70,33 @@
                 </a>
               </div>
             </div>
-            
+
             <hr class="bg-white opacity-25 my-3">
-            
-            <button 
+
+            <button
               class="btn logout-btn w-100"
-              onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();"
-            >
+              onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
               <i class="fas fa-sign-out-alt me-2"></i>Logout
             </button>
-            
+
             <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" class="d-none">
               @csrf
             </form>
           </div>
         </div>
 
-        <!-- Page Header -->
-        <div class="welcome-card mb-4">
-          <div class="d-flex align-items-center justify-content-between">
-            <div>
-              <h4 class="mb-2">
-                <i class="fas fa-chart-line me-2"></i>
-                Generate Reports
-              </h4>
-              <p class="mb-0 opacity-90">
-                View and export various reports for your institution
-              </p>
-            </div>
-          </div>
+        <div class="header-title d-flex align-items-center justify-content-between mb-2">
+          <h5 class="mb-2 fw-semibold text-success">
+            <i class="fas fa-chart-line me-2"></i>
+            Generate Reports
+          </h5>
+          <!-- <div class="d-none d-lg-block">
+            <a href="{{ route('admin.faculty-positions.create') }}" class="btn btn-success btn-sm">
+              <i class="fas fa-plus me-2"></i>New Position
+            </a>
+          </div> -->
         </div>
+
 
         <!-- Statistics Overview -->
         <div class="row mb-4">
@@ -153,7 +150,7 @@
         <!-- Report Options -->
         <div class="faculty-management-card p-4">
           <h5 class="mb-4"><i class="fas fa-file-alt me-2 text-success"></i>Available Reports</h5>
-          
+
           <div class="row g-4">
             <!-- Faculty List Report -->
             <div class="col-md-6">
@@ -249,4 +246,3 @@
   </div>
 </div>
 @endsection
-

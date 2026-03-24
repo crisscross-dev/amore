@@ -85,23 +85,16 @@
                     </div>
                 </div>
 
-                <!-- Page Header -->
-                <div class="welcome-card mb-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-2">
-                                <i class="fas fa-layer-group me-2"></i>
-                                Manage Sections
-                            </h4>
-                            <p class="mb-0 opacity-90">
-                                Create and edit sections per grade level
-                            </p>
-                        </div>
-                        <div class="d-none d-lg-block">
-                            <a href="{{ route('admin.sections.create') }}" class="btn btn-primary btn-lg">
-                                <i class="fas fa-plus me-2"></i>New Section
-                            </a>
-                        </div>
+
+                <div class="header-title d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="mb-2 fw-semibold text-success">
+                        <i class="fas fa-layer-group me-2"></i>
+                        Manage Sections
+                    </h5>
+                    <div class="d-none d-lg-block">
+                        <a href="{{ route('admin.sections.create') }}" class="btn btn-primary btn-m">
+                            <i class="fas fa-plus me-2"></i>New Section
+                        </a>
                     </div>
                 </div>
 

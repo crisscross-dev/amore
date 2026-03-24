@@ -24,7 +24,7 @@
             <div class="nav-label">Announcements</div>
         </a>
 
-        <div class="nav-section-title">Management</div>
+        <div class="nav-section-title">Academic</div>
 
         <a href="{{ route('admin.admissions.index') }}" class="nav-link {{ Request::routeIs('admin.admissions.index') ? 'active' : '' }}">
             <div class="nav-icon">
@@ -47,20 +47,6 @@
             <div class="nav-label">Grade Approvals</div>
         </a>
 
-        <a href="{{ route('admin.accounts.manage') }}" class="nav-link {{ Request::routeIs('admin.accounts.manage') ? 'active' : '' }}">
-            <div class="nav-icon">
-                <i class="fas fa-users-cog"></i>
-            </div>
-            <div class="nav-label">Accounts</div>
-        </a>
-
-        <a href="{{ route('admin.faculty-assignments.index') }}" class="nav-link {{ Request::routeIs('admin.faculty-assignments.*') ? 'active' : '' }}">
-            <div class="nav-icon">
-                <i class="fas fa-user-tag"></i>
-            </div>
-            <div class="nav-label">Faculty Assignments</div>
-        </a>
-
         <a href="{{ route('admin.sections.index') }}" class="nav-link {{ Request::routeIs('admin.sections.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-layer-group"></i>
@@ -81,6 +67,31 @@
             </div>
             <div class="nav-label">Enrollments</div>
         </a>
+
+        <div class="nav-section-title">Staff And Accounts</div>
+
+        <a href="{{ route('admin.accounts.manage') }}" class="nav-link {{ Request::routeIs('admin.accounts.manage') ? 'active' : '' }}">
+            <div class="nav-icon">
+                <i class="fas fa-users-cog"></i>
+            </div>
+            <div class="nav-label">Accounts</div>
+        </a>
+
+        <a href="{{ route('admin.faculty-assignments.index') }}" class="nav-link {{ Request::routeIs('admin.faculty-assignments.*') ? 'active' : '' }}">
+            <div class="nav-icon">
+                <i class="fas fa-user-tag"></i>
+            </div>
+            <div class="nav-label">Faculty Assignments</div>
+        </a>
+
+        <a href="{{ route('admin.faculty-positions.index') }}" class="nav-link {{ Request::routeIs('admin.faculty-positions.*') ? 'active' : '' }}">
+            <div class="nav-icon">
+                <i class="fas fa-layer-group"></i>
+            </div>
+            <div class="nav-label">Manage Positions</div>
+        </a>
+
+        <div class="nav-section-title">Analytics</div>
 
         <a href="{{ route('admin.reports.index') }}" class="nav-link {{ Request::routeIs('admin.reports.*') ? 'active' : '' }}">
             <div class="nav-icon">

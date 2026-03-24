@@ -12,6 +12,43 @@
     @vite(['resources/css/app.css'])
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
 
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: transparent;
+            position: relative;
+            isolation: isolate;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -2;
+            background: url("{{ asset('images/background.png') }}") center center / cover no-repeat;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: rgba(24, 65, 31, 0.12);
+            pointer-events: none;
+        }
+
+        main {
+            background: transparent;
+        }
+
+        section,
+        .top-bar,
+        .contacts-footer {
+            background: transparent;
+        }
+    </style>
+
     @stack('styles')
 </head>
 

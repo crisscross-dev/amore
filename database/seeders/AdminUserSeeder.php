@@ -13,8 +13,8 @@ class AdminUserSeeder extends Seeder
      */
     public function run(): void
     {
-        $adminEmail = config('app.admin_email', 'admin@amoreacademy.com');
-        $adminPassword = config('app.admin_password', 'Admin@12345');
+        $adminEmail = config('app.admin_email', 'admin@gmail.com');
+        $adminPassword = config('app.admin_password', 'password');
 
         User::updateOrCreate(
             ['email' => $adminEmail],

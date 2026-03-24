@@ -1,3 +1,72 @@
+.modal .modal-title {
+    color: #212529 !important;
+}
+
+.modal .modal-body,
+.modal .modal-body p,
+.modal .modal-body label,
+.modal .modal-body strong,
+.modal .modal-body .form-label,
+.modal .modal-body .text-muted {
+    color: #212529 !important;
+}
+
+.modal .assignment-modal-current {
+    color: #212529 !important;
+}
+
+.faculty-position-modal-dialog {
+    max-width: 960px;
+}
+
+.faculty-position-modal-dialog .modal-body {
+    padding-top: 1rem;
+}
+
+.faculty-position-modal-dialog .form-label {
+    color: #212529 !important;
+}
+
+.faculty-position-modal-dialog .form-control,
+.faculty-position-modal-dialog .form-select {
+    min-height: 40px;
+}
+
+.faculty-positions-page .positions-sticky-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.1rem 0 0.5rem;
+    margin-bottom: 0.35rem;
+    background: transparent;
+}
+
+.faculty-positions-page .positions-sticky-header h5 {
+    color: #198754 !important;
+}
+
+.faculty-positions-page .positions-sticky-header .btn {
+    min-height: 34px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.faculty-positions-page .positions-sticky-header .btn-success {
+    background: transparent;
+    border-color: #198754;
+    color: #198754;
+}
+
+.faculty-positions-page .positions-sticky-header .btn-success:hover {
+    background: rgba(25, 135, 84, 0.08);
+    border-color: #198754;
+    color: #145c3a;
+}
+
+.faculty-positions-page .faculty-management-card {
+    margin-top: 0;
+}
 :root {
     --faculty-card-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
 }
@@ -28,7 +97,8 @@
     border-radius: 20px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
     overflow: hidden;
-    margin-bottom: 2rem;
+    margin-top: 0.25rem;
+    margin-bottom: 1.5rem;
 }
 
 .faculty-management-card .card-header,
@@ -58,6 +128,23 @@
 .faculty-management-table table {
     border-radius: 12px;
     overflow: hidden;
+    margin-bottom: 0;
+}
+
+.faculty-management-table th,
+.faculty-management-table td {
+    vertical-align: middle;
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.faculty-management-table .faculty-col-name {
+    width: 35%;
+}
+
+.faculty-management-table .faculty-col-department {
+    width: 19%;
+    white-space: nowrap;
 }
 
 .faculty-management-table thead {
@@ -76,6 +163,30 @@
 
 .faculty-management-table tbody tr:hover {
     background: rgba(25, 135, 84, 0.05);
+}
+
+.faculty-row-clickable {
+    cursor: pointer;
+}
+
+.faculty-row-clickable:focus-visible {
+    outline: 2px solid rgba(25, 135, 84, 0.45);
+    outline-offset: -2px;
+}
+
+.faculty-row-clickable td {
+    transition: background-color 0.2s ease;
+}
+
+.faculty-row-clickable:hover td {
+    background: rgba(25, 135, 84, 0.04);
+}
+
+.assignment-modal-current {
+    padding: 0.75rem 0.9rem;
+    border-radius: 10px;
+    background: rgba(32, 201, 151, 0.08);
+    border: 1px solid rgba(32, 201, 151, 0.2);
 }
 
 .faculty-management-card .form-label {
@@ -161,25 +272,51 @@
 
 .faculty-management-actions {
     display: flex;
-    justify-content: flex-end;
+    justify-content: space-between;
+    align-items: center;
     gap: 0.5rem;
     flex-wrap: wrap;
+    margin-bottom: 0;
+    position: sticky;
+    top: 0.35rem;
+    z-index: 30;
+    padding: 0.2rem 0;
+    background: linear-gradient(
+        180deg,
+        rgba(237, 243, 234, 0.98),
+        rgba(237, 243, 234, 0.92)
+    );
+    backdrop-filter: blur(6px);
 }
 
 .faculty-inline-filters {
     display: flex;
     gap: 0.5rem;
     align-items: center;
-    margin-right: auto;
+    margin-left: auto;
+    margin-right: 0;
 }
 
 .faculty-inline-filters .form-control,
 .faculty-inline-filters .form-select {
-    min-width: 180px;
+    min-width: 170px;
+    min-height: 34px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
 }
 
 .faculty-inline-filters .form-control {
-    min-width: 240px;
+    min-width: 220px;
+}
+
+.faculty-management-actions > .btn {
+    min-height: 34px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+}
+
+.dashboard-container > .container-fluid {
+    padding-top: 0.5rem;
 }
 
 @media (max-width: 767.98px) {

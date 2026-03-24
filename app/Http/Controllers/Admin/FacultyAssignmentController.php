@@ -32,8 +32,12 @@ class FacultyAssignmentController extends Controller
 
         $facultyMembers = $query->orderBy('last_name')->paginate(15)->withQueryString();
         $positions = FacultyPosition::orderBy('hierarchy_level')->orderBy('name')->get();
+        $departmentOptions = Subject::orderBy('name')
+            ->pluck('name')
+            ->unique()
+            ->values();
 
-        return view('admin.faculty_assignments.index', compact('facultyMembers', 'positions'));
+        return view('admin.faculty_assignments.index', compact('facultyMembers', 'positions', 'departmentOptions'));
     }
 
     public function edit(User $user): View

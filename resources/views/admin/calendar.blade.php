@@ -20,17 +20,17 @@
                 <!-- Mobile Profile (Hidden on Desktop) -->
                 <div class="d-md-none mobile-profile mb-4">
                     <div class="text-center">
-                        <img src="{{ asset('uploads/profile_picture/' . Auth::user()->profile_picture) }}" 
-                             alt="Profile Picture" 
-                             class="rounded-circle mb-3 border border-3 border-white"
-                             width="80"
-                             height="80">
-                        
+                        <img src="{{ asset('uploads/profile_picture/' . Auth::user()->profile_picture) }}"
+                            alt="Profile Picture"
+                            class="rounded-circle mb-3 border border-3 border-white"
+                            width="80"
+                            height="80">
+
                         <h5 class="text-white mb-1">{{ Auth::user()->first_name ?? 'Admin' }} {{ Auth::user()->last_name ?? 'Name' }}</h5>
                         <p class="text-white-50 small mb-3">
                             Administrator | {{ Auth::user()->custom_id ?? 'ADMIN-0001' }}
                         </p>
-                        
+
                         <!-- Mobile Navigation -->
                         <div class="row g-2">
                             <div class="col-4">
@@ -64,16 +64,15 @@
                                 </a>
                             </div>
                         </div>
-                        
+
                         <hr class="bg-white opacity-25 my-3">
-                        
-                        <button 
+
+                        <button
                             class="btn logout-btn w-100"
-                            onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();"
-                        >
+                            onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </button>
-                        
+
                         <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" class="d-none">
                             @csrf
                         </form>
@@ -82,39 +81,30 @@
 
                 <!-- Success/Error Messages -->
                 @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle me-2"></i>
+                    {{ session('success') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 @endif
 
                 @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
                 @endif
 
-                <!-- Page Header -->
-                <div class="welcome-card mb-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-2">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                Academic Calendar
-                            </h4>
-                            <p class="mb-0 opacity-90">
-                                View important dates, events, and schedules for Amore Academy
-                            </p>
-                        </div>
-                        <div class="d-none d-lg-block">
-                            <a href="{{ route('calendar.create') }}" class="btn-link btn-green">
-                            <!-- <a href="{{ route('calendar.create') }}" class="btn btn-success btn-lg"> -->
-                                <i class="fas fa-plus me-2"></i>Add Activity
-                            </a>
-                        </div>
+                <div class="header-title d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="mb-2 fw-semibold text-success">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Academic Calendar
+                    </h5>
+                    <div class="d-none d-lg-block">
+                        <a href="{{ route('calendar.create') }}" class="btn btn-success btn-m">
+                            <i class="fas fa-plus me-2"></i>Add Activity
+                        </a>
                     </div>
                 </div>
 
@@ -171,58 +161,58 @@
                                 </thead>
                                 <tbody>
                                     @php
-                                        $calendarDate = \Carbon\Carbon::create($currentYear, $currentMonth, 1);
-                                        $firstDayOfMonth = $calendarDate->copy()->startOfMonth();
-                                        $lastDayOfMonth = $calendarDate->copy()->endOfMonth();
-                                        $startDayOfWeek = $firstDayOfMonth->dayOfWeek;
-                                        $daysInMonth = $lastDayOfMonth->day;
-                                        $today = now()->day;
-                                        $isCurrentMonth = ($currentMonth == now()->month && $currentYear == now()->year);
-                                        
-                                        // Get event days from loaded events
-                                        $eventDays = $events->pluck('start_date')->map(function($date) {
-                                            return \Carbon\Carbon::parse($date)->day;
-                                        })->unique()->toArray();
-                                        
-                                        // Group events by day
-                                        $eventsByDay = $events->groupBy(function($event) {
-                                            return \Carbon\Carbon::parse($event->start_date)->day;
-                                        });
+                                    $calendarDate = \Carbon\Carbon::create($currentYear, $currentMonth, 1);
+                                    $firstDayOfMonth = $calendarDate->copy()->startOfMonth();
+                                    $lastDayOfMonth = $calendarDate->copy()->endOfMonth();
+                                    $startDayOfWeek = $firstDayOfMonth->dayOfWeek;
+                                    $daysInMonth = $lastDayOfMonth->day;
+                                    $today = now()->day;
+                                    $isCurrentMonth = ($currentMonth == now()->month && $currentYear == now()->year);
+
+                                    // Get event days from loaded events
+                                    $eventDays = $events->pluck('start_date')->map(function($date) {
+                                    return \Carbon\Carbon::parse($date)->day;
+                                    })->unique()->toArray();
+
+                                    // Group events by day
+                                    $eventsByDay = $events->groupBy(function($event) {
+                                    return \Carbon\Carbon::parse($event->start_date)->day;
+                                    });
                                     @endphp
-                                    
+
                                     @for ($week = 0; $week < 6; $week++)
                                         <tr>
-                                            @for ($day = 0; $day < 7; $day++)
-                                                @php
-                                                    $dayNumber = ($week * 7 + $day) - $startDayOfWeek + 1;
-                                                    $hasEvents = in_array($dayNumber, $eventDays);
-                                                    $isToday = $isCurrentMonth && $dayNumber == $today;
-                                                @endphp
-                                                
-                                                @if ($dayNumber > 0 && $dayNumber <= $daysInMonth)
-                                                    <td class="calendar-day {{ $isToday ? 'today' : '' }} {{ $hasEvents ? 'has-event' : '' }}" data-day="{{ $dayNumber }}">
-                                                        <div class="day-number">{{ $dayNumber }}</div>
-                                                        @if ($hasEvents && isset($eventsByDay[$dayNumber]))
-                                                            <div class="event-indicator">
-                                                                @foreach($eventsByDay[$dayNumber]->take(1) as $event)
-                                                                    <i class="fas fa-circle" style="font-size: 6px; color: {{ $event->color }}"></i>
-                                                                @endforeach
-                                                                @if($eventsByDay[$dayNumber]->count() > 1)
-                                                                    <small class="badge bg-success rounded-pill" style="font-size: 0.6rem;">+{{ $eventsByDay[$dayNumber]->count() - 1 }}</small>
-                                                                @endif
-                                                            </div>
-                                                        @endif
-                                                    </td>
-                                                @else
-                                                    <td class="calendar-day empty"></td>
+                                        @for ($day = 0; $day < 7; $day++)
+                                            @php
+                                            $dayNumber=($week * 7 + $day) - $startDayOfWeek + 1;
+                                            $hasEvents=in_array($dayNumber, $eventDays);
+                                            $isToday=$isCurrentMonth && $dayNumber==$today;
+                                            @endphp
+
+                                            @if ($dayNumber> 0 && $dayNumber <= $daysInMonth)
+                                                <td class="calendar-day {{ $isToday ? 'today' : '' }} {{ $hasEvents ? 'has-event' : '' }}" data-day="{{ $dayNumber }}">
+                                                <div class="day-number">{{ $dayNumber }}</div>
+                                                @if ($hasEvents && isset($eventsByDay[$dayNumber]))
+                                                <div class="event-indicator">
+                                                    @foreach($eventsByDay[$dayNumber]->take(1) as $event)
+                                                    <i class="fas fa-circle" style="font-size: 6px; color: {{ $event->color }}"></i>
+                                                    @endforeach
+                                                    @if($eventsByDay[$dayNumber]->count() > 1)
+                                                    <small class="badge bg-success rounded-pill" style="font-size: 0.6rem;">+{{ $eventsByDay[$dayNumber]->count() - 1 }}</small>
+                                                    @endif
+                                                </div>
                                                 @endif
-                                            @endfor
-                                        </tr>
-                                        
-                                        @if ($week * 7 + 7 - $startDayOfWeek > $daysInMonth)
-                                            @break
-                                        @endif
-                                    @endfor
+                                                </td>
+                                                @else
+                                                <td class="calendar-day empty"></td>
+                                                @endif
+                                                @endfor
+                                                </tr>
+
+                                                @if ($week * 7 + 7 - $startDayOfWeek > $daysInMonth)
+                                                @break
+                                                @endif
+                                                @endfor
                                 </tbody>
                             </table>
                         </div>
@@ -252,101 +242,101 @@
                     </div>
                     <div class="card-body">
                         @if($upcomingEvents->count() > 0 || $announcements->count() > 0)
-                            <!-- Event & Announcement List -->
-                            <div class="list-group list-group-flush">
-                                <!-- Announcements Section -->
-                                @if($announcements->count() > 0)
-                                    <div class="list-group-item border-0 px-0 bg-light">
-                                        <small class="text-success fw-bold">
-                                            <i class="fas fa-bullhorn me-1"></i>RECENT ANNOUNCEMENTS
-                                        </small>
+                        <!-- Event & Announcement List -->
+                        <div class="list-group list-group-flush">
+                            <!-- Announcements Section -->
+                            @if($announcements->count() > 0)
+                            <div class="list-group-item border-0 px-0 bg-light">
+                                <small class="text-success fw-bold">
+                                    <i class="fas fa-bullhorn me-1"></i>RECENT ANNOUNCEMENTS
+                                </small>
+                            </div>
+                            @foreach($announcements as $announcement)
+                            <a href="{{ route('announcements.show', $announcement) }}"
+                                class="list-group-item list-group-item-action border-0 border-bottom px-0 announcement-item"
+                                style="border-left: 4px solid {{ $announcement->priority_color }} !important;">
+                                <div class="d-flex align-items-start">
+                                    <div class="rounded p-3 me-3" style="background-color: {{ $announcement->priority_color }}15;">
+                                        <i class="fas {{ $announcement->priority_icon }}" style="font-size: 1.5rem; color: {{ $announcement->priority_color }}"></i>
                                     </div>
-                                    @foreach($announcements as $announcement)
-                                        <a href="{{ route('announcements.show', $announcement) }}" 
-                                           class="list-group-item list-group-item-action border-0 border-bottom px-0 announcement-item"
-                                           style="border-left: 4px solid {{ $announcement->priority_color }} !important;">
-                                            <div class="d-flex align-items-start">
-                                                <div class="rounded p-3 me-3" style="background-color: {{ $announcement->priority_color }}15;">
-                                                    <i class="fas {{ $announcement->priority_icon }}" style="font-size: 1.5rem; color: {{ $announcement->priority_color }}"></i>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <h6 class="mb-0 fw-bold text-success">{{ $announcement->title }}</h6>
-                                                        <div class="d-flex gap-1">
-                                                            @if($announcement->is_pinned)
-                                                                <span class="badge bg-warning"><i class="fas fa-thumbtack"></i></span>
-                                                            @endif
-                                                            <span class="badge" style="background-color: {{ $announcement->priority_color }}">
-                                                                {{ ucfirst($announcement->priority) }}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-                                                    <p class="mb-2 text-muted small">
-                                                        <i class="fas fa-user me-1"></i>{{ $announcement->audience_label }}
-                                                        <i class="far fa-clock ms-3 me-1"></i>{{ $announcement->created_at->diffForHumans() }}
-                                                    </p>
-                                                    <p class="mb-0 text-muted small">
-                                                        {{ Str::limit(strip_tags($announcement->content), 100) }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </a>
-                                    @endforeach
-                                @endif
-
-                                <!-- Events Section -->
-                                @if($upcomingEvents->count() > 0)
-                                    <div class="list-group-item border-0 px-0 bg-light {{ $announcements->count() > 0 ? 'mt-3' : '' }}">
-                                        <small class="text-success fw-bold">
-                                            <i class="fas fa-calendar-check me-1"></i>UPCOMING EVENTS
-                                        </small>
-                                    </div>
-                                    @foreach($upcomingEvents as $event)
-                                        <div class="list-group-item border-0 border-bottom px-0 upcoming-event-item" 
-                                             data-event-day="{{ $event->start_date->day }}"
-                                             data-event-month="{{ $event->start_date->month }}"
-                                             data-event-year="{{ $event->start_date->year }}"
-                                             role="button"
-                                             tabindex="0"
-                                             aria-label="Click to view {{ $event->start_date->format('F Y') }} calendar">
-                                            <div class="d-flex align-items-start">
-                                                <div class="rounded p-3 me-3" style="background-color: {{ $event->color }}15;">
-                                                    <i class="fas {{ $event->type_icon }}" style="font-size: 1.5rem; color: {{ $event->color }}"></i>
-                                                </div>
-                                                <div class="flex-grow-1">
-                                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <h6 class="mb-0 fw-bold text-success">{{ $event->title }}</h6>
-                                                        <span class="badge" style="background-color: {{ $event->color }}">
-                                                            {{ $event->start_date->diffForHumans() }}
-                                                        </span>
-                                                    </div>
-                                                    <p class="mb-2 text-muted small">
-                                                        <i class="far fa-calendar me-1"></i>{{ $event->start_date->format('F d, Y') }}
-                                                        @if(!$event->is_all_day)
-                                                            <i class="far fa-clock ms-3 me-1"></i>{{ $event->start_date->format('g:i A') }}
-                                                            @if($event->end_date)
-                                                                - {{ $event->end_date->format('g:i A') }}
-                                                            @endif
-                                                        @else
-                                                            <i class="far fa-clock ms-3 me-1"></i>All Day
-                                                        @endif
-                                                    </p>
-                                                    @if($event->description)
-                                                        <p class="mb-0 text-muted small">
-                                                            {{ Str::limit($event->description, 100) }}
-                                                        </p>
-                                                    @endif
-                                                </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0 fw-bold text-success">{{ $announcement->title }}</h6>
+                                            <div class="d-flex gap-1">
+                                                @if($announcement->is_pinned)
+                                                <span class="badge bg-warning"><i class="fas fa-thumbtack"></i></span>
+                                                @endif
+                                                <span class="badge" style="background-color: {{ $announcement->priority_color }}">
+                                                    {{ ucfirst($announcement->priority) }}
+                                                </span>
                                             </div>
                                         </div>
-                                    @endforeach
-                                @endif
+                                        <p class="mb-2 text-muted small">
+                                            <i class="fas fa-user me-1"></i>{{ $announcement->audience_label }}
+                                            <i class="far fa-clock ms-3 me-1"></i>{{ $announcement->created_at->diffForHumans() }}
+                                        </p>
+                                        <p class="mb-0 text-muted small">
+                                            {{ Str::limit(strip_tags($announcement->content), 100) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </a>
+                            @endforeach
+                            @endif
+
+                            <!-- Events Section -->
+                            @if($upcomingEvents->count() > 0)
+                            <div class="list-group-item border-0 px-0 bg-light {{ $announcements->count() > 0 ? 'mt-3' : '' }}">
+                                <small class="text-success fw-bold">
+                                    <i class="fas fa-calendar-check me-1"></i>UPCOMING EVENTS
+                                </small>
                             </div>
+                            @foreach($upcomingEvents as $event)
+                            <div class="list-group-item border-0 border-bottom px-0 upcoming-event-item"
+                                data-event-day="{{ $event->start_date->day }}"
+                                data-event-month="{{ $event->start_date->month }}"
+                                data-event-year="{{ $event->start_date->year }}"
+                                role="button"
+                                tabindex="0"
+                                aria-label="Click to view {{ $event->start_date->format('F Y') }} calendar">
+                                <div class="d-flex align-items-start">
+                                    <div class="rounded p-3 me-3" style="background-color: {{ $event->color }}15;">
+                                        <i class="fas {{ $event->type_icon }}" style="font-size: 1.5rem; color: {{ $event->color }}"></i>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0 fw-bold text-success">{{ $event->title }}</h6>
+                                            <span class="badge" style="background-color: {{ $event->color }}">
+                                                {{ $event->start_date->diffForHumans() }}
+                                            </span>
+                                        </div>
+                                        <p class="mb-2 text-muted small">
+                                            <i class="far fa-calendar me-1"></i>{{ $event->start_date->format('F d, Y') }}
+                                            @if(!$event->is_all_day)
+                                            <i class="far fa-clock ms-3 me-1"></i>{{ $event->start_date->format('g:i A') }}
+                                            @if($event->end_date)
+                                            - {{ $event->end_date->format('g:i A') }}
+                                            @endif
+                                            @else
+                                            <i class="far fa-clock ms-3 me-1"></i>All Day
+                                            @endif
+                                        </p>
+                                        @if($event->description)
+                                        <p class="mb-0 text-muted small">
+                                            {{ Str::limit($event->description, 100) }}
+                                        </p>
+                                        @endif
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
+                            @endif
+                        </div>
                         @else
-                            <div class="text-center py-5">
-                                <i class="fas fa-calendar-times text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
-                                <p class="text-muted mt-3">No upcoming events or announcements</p>
-                            </div>
+                        <div class="text-center py-5">
+                            <i class="fas fa-calendar-times text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="text-muted mt-3">No upcoming events or announcements</p>
+                        </div>
                         @endif
 
                         <!-- View All Buttons -->
@@ -366,4 +356,3 @@
 </div>
 
 @endsection
-

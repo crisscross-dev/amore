@@ -85,19 +85,16 @@
                     </div>
                 </div>
 
-                <!-- Page Header -->
-                <div class="welcome-card mb-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-2">
-                                <i class="fas fa-user-plus me-2"></i>
-                                Enrollment Approvals
-                            </h4>
-                            <p class="mb-0 opacity-90">
-                                Review and manage student enrollment requests
-                            </p>
-                        </div>
-                    </div>
+                <div class="header-title d-flex align-items-center justify-content-between mb-2">
+                    <h5 class="mb-2 fw-semibold text-success">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Enrollment Approvals
+                    </h5>
+                    <!-- <div class="d-none d-lg-block">
+                        <a href="{{ route('calendar.create') }}" class="btn btn-success btn-m">
+                            <i class="fas fa-plus me-2"></i>Add Activity
+                        </a>
+                    </div> -->
                 </div>
 
                 <!-- Flash Messages -->
