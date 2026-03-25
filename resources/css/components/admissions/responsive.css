@@ -21,10 +21,12 @@
 }
 
 @media (max-width: 768px) {
-    :where(.admissions-container,
-           .admission-detail-container,
-           .admissions-dashboard,
-           .admissions-detail) {
+    :where(
+        .admissions-container,
+        .admission-detail-container,
+        .admissions-dashboard,
+        .admissions-detail
+    ) {
         padding: 1rem;
     }
 
@@ -45,6 +47,14 @@
         width: 100%;
     }
 
+    :where(
+        .admissions-dashboard__table thead th,
+        .admissions-dashboard__table tbody td
+    ) {
+        padding: 0.7rem 0.65rem;
+        font-size: 0.86rem;
+    }
+
     :where(.bulk-actions-content, .admissions-dashboard__bulk-actions-content) {
         flex-direction: column;
     }
@@ -54,7 +64,10 @@
         flex-direction: column;
     }
 
-    :where(.bulk-actions-buttons .btn, .admissions-dashboard__bulk-actions-buttons .btn) {
+    :where(
+        .bulk-actions-buttons .btn,
+        .admissions-dashboard__bulk-actions-buttons .btn
+    ) {
         width: 100%;
     }
 }

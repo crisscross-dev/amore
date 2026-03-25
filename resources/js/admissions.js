@@ -3,6 +3,8 @@
  * Handles bulk selection, filters, and approval/rejection actions
  */
 
+import { Alert, Modal } from "bootstrap";
+
 class AdmissionsManager {
     constructor() {
         this.selectedAdmissions = new Set();
@@ -13,6 +15,39 @@ class AdmissionsManager {
         this.setupBulkSelection();
         this.setupBulkActions();
         this.setupFilters();
+        this.setupRowPreviewModals();
+    }
+
+    /**
+     * Open admission modal when a table row is double-clicked
+     */
+    setupRowPreviewModals() {
+        const rows = document.querySelectorAll(
+            ".admissions-dashboard__table-row[data-modal-target]",
+        );
+
+        rows.forEach((row) => {
+            row.addEventListener("dblclick", (event) => {
+                const target = event.target;
+
+                if (
+                    target.closest(
+                        'input, button, a, label, [data-bs-toggle="modal"]',
+                    )
+                ) {
+                    return;
+                }
+
+                const modalId = row.dataset.modalTarget;
+                const modalElement = document.getElementById(modalId);
+
+                if (!modalElement) {
+                    return;
+                }
+
+                Modal.getOrCreateInstance(modalElement).show();
+            });
+        });
     }
 
     /**
@@ -20,11 +55,12 @@ class AdmissionsManager {
      */
     setupBulkSelection() {
         // Select all checkbox
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+        const selectAllCheckbox = document.getElementById("selectAllCheckbox");
         if (selectAllCheckbox) {
-            selectAllCheckbox.addEventListener('change', (e) => {
-                const checkboxes = document.querySelectorAll('.admission-select');
-                checkboxes.forEach(checkbox => {
+            selectAllCheckbox.addEventListener("change", (e) => {
+                const checkboxes =
+                    document.querySelectorAll(".admission-select");
+                checkboxes.forEach((checkbox) => {
                     checkbox.checked = e.target.checked;
                     this.toggleSelection(checkbox);
                 });
@@ -32,9 +68,9 @@ class AdmissionsManager {
         }
 
         // Individual checkboxes
-        const checkboxes = document.querySelectorAll('.admission-select');
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', () => {
+        const checkboxes = document.querySelectorAll(".admission-select");
+        checkboxes.forEach((checkbox) => {
+            checkbox.addEventListener("change", () => {
                 this.toggleSelection(checkbox);
                 this.updateSelectAllCheckbox();
             });
@@ -62,13 +98,16 @@ class AdmissionsManager {
      * Update the select all checkbox state
      */
     updateSelectAllCheckbox() {
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
-        const checkboxes = document.querySelectorAll('.admission-select');
-        
+        const selectAllCheckbox = document.getElementById("selectAllCheckbox");
+        const checkboxes = document.querySelectorAll(".admission-select");
+
         if (selectAllCheckbox && checkboxes.length > 0) {
-            const checkedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+            const checkedCount = Array.from(checkboxes).filter(
+                (cb) => cb.checked,
+            ).length;
             selectAllCheckbox.checked = checkedCount === checkboxes.length;
-            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+            selectAllCheckbox.indeterminate =
+                checkedCount > 0 && checkedCount < checkboxes.length;
         }
     }
 
@@ -76,13 +115,13 @@ class AdmissionsManager {
      * Update bulk actions bar visibility and count
      */
     updateBulkActionsBar() {
-        const bulkActionsBar = document.getElementById('bulkActionsBar');
-        const selectedCount = document.getElementById('selectedCount');
-        
+        const bulkActionsBar = document.getElementById("bulkActionsBar");
+        const selectedCount = document.getElementById("selectedCount");
+
         if (bulkActionsBar && selectedCount) {
             const count = this.selectedAdmissions.size;
             selectedCount.textContent = count;
-            bulkActionsBar.style.display = count > 0 ? 'block' : 'none';
+            bulkActionsBar.style.display = count > 0 ? "block" : "none";
         }
     }
 
@@ -91,25 +130,25 @@ class AdmissionsManager {
      */
     setupBulkActions() {
         // Approve button
-        const bulkApproveBtn = document.getElementById('bulkApproveBtn');
+        const bulkApproveBtn = document.getElementById("bulkApproveBtn");
         if (bulkApproveBtn) {
-            bulkApproveBtn.addEventListener('click', () => {
+            bulkApproveBtn.addEventListener("click", () => {
                 this.showBulkApproveModal();
             });
         }
 
         // Reject button
-        const bulkRejectBtn = document.getElementById('bulkRejectBtn');
+        const bulkRejectBtn = document.getElementById("bulkRejectBtn");
         if (bulkRejectBtn) {
-            bulkRejectBtn.addEventListener('click', () => {
+            bulkRejectBtn.addEventListener("click", () => {
                 this.showBulkRejectModal();
             });
         }
 
         // Clear selection button
-        const clearSelectionBtn = document.getElementById('clearSelectionBtn');
+        const clearSelectionBtn = document.getElementById("clearSelectionBtn");
         if (clearSelectionBtn) {
-            clearSelectionBtn.addEventListener('click', () => {
+            clearSelectionBtn.addEventListener("click", () => {
                 this.clearSelection();
             });
         }
@@ -119,25 +158,25 @@ class AdmissionsManager {
      * Show bulk approve modal
      */
     showBulkApproveModal() {
-        const modal = new bootstrap.Modal(document.getElementById('bulkApproveModal'));
-        const count = document.getElementById('bulkApproveCount');
-        const input = document.getElementById('bulkApproveAdmissionsInput');
-        
+        const modal = new Modal(document.getElementById("bulkApproveModal"));
+        const count = document.getElementById("bulkApproveCount");
+        const input = document.getElementById("bulkApproveAdmissionsInput");
+
         if (count) {
             count.textContent = this.selectedAdmissions.size;
         }
-        
+
         if (input) {
-            input.innerHTML = '';
-            this.selectedAdmissions.forEach(key => {
-                const [type, id] = key.split('-');
+            input.innerHTML = "";
+            this.selectedAdmissions.forEach((key) => {
+                const [type, id] = key.split("-");
                 input.innerHTML += `
                     <input type="hidden" name="admissions[][type]" value="${type}">
                     <input type="hidden" name="admissions[][id]" value="${id}">
                 `;
             });
         }
-        
+
         modal.show();
     }
 
@@ -145,25 +184,25 @@ class AdmissionsManager {
      * Show bulk reject modal
      */
     showBulkRejectModal() {
-        const modal = new bootstrap.Modal(document.getElementById('bulkRejectModal'));
-        const count = document.getElementById('bulkRejectCount');
-        const input = document.getElementById('bulkAdmissionsInput');
-        
+        const modal = new Modal(document.getElementById("bulkRejectModal"));
+        const count = document.getElementById("bulkRejectCount");
+        const input = document.getElementById("bulkAdmissionsInput");
+
         if (count) {
             count.textContent = this.selectedAdmissions.size;
         }
-        
+
         if (input) {
-            input.innerHTML = '';
-            this.selectedAdmissions.forEach(key => {
-                const [type, id] = key.split('-');
+            input.innerHTML = "";
+            this.selectedAdmissions.forEach((key) => {
+                const [type, id] = key.split("-");
                 input.innerHTML += `
                     <input type="hidden" name="admissions[][type]" value="${type}">
                     <input type="hidden" name="admissions[][id]" value="${id}">
                 `;
             });
         }
-        
+
         modal.show();
     }
 
@@ -172,18 +211,18 @@ class AdmissionsManager {
      */
     clearSelection() {
         this.selectedAdmissions.clear();
-        
-        const checkboxes = document.querySelectorAll('.admission-select');
-        checkboxes.forEach(checkbox => {
+
+        const checkboxes = document.querySelectorAll(".admission-select");
+        checkboxes.forEach((checkbox) => {
             checkbox.checked = false;
         });
-        
-        const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+
+        const selectAllCheckbox = document.getElementById("selectAllCheckbox");
         if (selectAllCheckbox) {
             selectAllCheckbox.checked = false;
             selectAllCheckbox.indeterminate = false;
         }
-        
+
         this.updateBulkActionsBar();
     }
 
@@ -191,21 +230,19 @@ class AdmissionsManager {
      * Setup filter form
      */
     setupFilters() {
-        const filterForm = document.getElementById('filterForm');
+        const filterForm = document.getElementById("filterForm");
         if (filterForm) {
-            // Auto-submit on filter change (optional)
-            const typeFilter = document.getElementById('typeFilter');
-            const statusFilter = document.getElementById('statusFilter');
-            
+            const typeFilter = document.getElementById("typeFilter");
+            const statusFilter = document.getElementById("statusFilter");
+
             if (typeFilter) {
-                typeFilter.addEventListener('change', () => {
-                    // Optionally auto-submit
-                    // filterForm.submit();
+                typeFilter.addEventListener("change", () => {
+                    filterForm.submit();
                 });
             }
-            
+
             if (statusFilter) {
-                statusFilter.addEventListener('change', () => {
+                statusFilter.addEventListener("change", () => {
                     // Optionally auto-submit
                     // filterForm.submit();
                 });
@@ -215,17 +252,17 @@ class AdmissionsManager {
 }
 
 // Initialize when DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", () => {
     const admissionsManager = new AdmissionsManager();
-    
+
     // Make it globally accessible if needed
     window.admissionsManager = admissionsManager;
-    
+
     // Auto-hide alerts after 5 seconds
-    const alerts = document.querySelectorAll('.alert');
-    alerts.forEach(alert => {
+    const alerts = document.querySelectorAll(".alert");
+    alerts.forEach((alert) => {
         setTimeout(() => {
-            const bsAlert = new bootstrap.Alert(alert);
+            const bsAlert = new Alert(alert);
             if (bsAlert) {
                 bsAlert.close();
             }

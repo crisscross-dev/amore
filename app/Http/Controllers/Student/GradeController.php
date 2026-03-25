@@ -15,8 +15,15 @@ class GradeController extends Controller
         abort_unless($user && $user->account_type === 'student', 403);
 
         $entries = GradeEntry::query()
+            ->with(['subject', 'approver'])
             ->where('student_id', $user->id)
-            ->where('status', 'approved')
+            ->where(function ($query) {
+                $query->where('status', 'approved')
+                    ->orWhere(function ($approvedQuery) {
+                        $approvedQuery->whereNotNull('approved_by')
+                            ->whereNotNull('approved_at');
+                    });
+            })
             ->orderByDesc('approved_at')
             ->paginate(12);
 

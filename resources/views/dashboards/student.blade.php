@@ -32,7 +32,7 @@
                         <!-- Mobile Navigation -->
                         <div class="row g-2">
                             <div class="col-4">
-                                <a href="" class="btn mobile-nav-btn w-100">
+                                <a href="{{ route('student.grades.index') }}" class="btn mobile-nav-btn w-100">
                                     <i class="fas fa-chart-bar d-block mb-1"></i>
                                     <small>Grades</small>
                                 </a>
@@ -207,8 +207,8 @@
                                 <div class="d-flex w-100 justify-content-between align-items-start">
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-center mb-2">
-                                            <div class="rounded-circle p-2 me-3" style="background-color: {{ $event->color }}20; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                                                <i class="fas fa-calendar-day" style="color: {{ $event->color }}; font-size: 1.2rem;"></i>
+                                            <div class="rounded-circle p-2 me-3 event-color-chip" data-event-color="{{ $event->color }}" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-calendar-day event-color-icon" style="font-size: 1.2rem;"></i>
                                             </div>
                                             <div>
                                                 <h6 class="mb-1 fw-bold">{{ $event->title }}</h6>
@@ -229,7 +229,7 @@
                                             {{ \Str::limit(strip_tags($event->description), 100) }}
                                         </p>
                                         @endif
-                                        <span class="badge" style="background-color: {{ $event->color }}20; color: {{ $event->color }};">
+                                        <span class="badge event-type-badge" data-event-color="{{ $event->color }}">
                                             <i class="fas fa-tag me-1"></i>{{ ucfirst($event->event_type ?? 'Event') }}
                                         </span>
                                         @if($event->is_all_day)
@@ -353,8 +353,12 @@
 </div>
 @endif
 
+<div id="studentDashboardFlags" data-first-login="{{ $first_login ? '1' : '0' }}" class="d-none" aria-hidden="true"></div>
+
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        var flagsEl = document.getElementById('studentDashboardFlags');
+        var isFirstLogin = flagsEl && flagsEl.dataset.firstLogin === '1';
         var toastEl = document.getElementById('popupToast');
         if (toastEl) {
             var toast = new bootstrap.Toast(toastEl, {
@@ -363,14 +367,35 @@
             toast.show();
         }
 
-        // Show first login modal if applicable
-        @if($first_login)
-        var firstLoginModal = new bootstrap.Modal(document.getElementById('firstLoginModal'), {
-            backdrop: 'static',
-            keyboard: false
+        var eventColorElements = document.querySelectorAll('[data-event-color]');
+        eventColorElements.forEach(function(el) {
+            var color = el.getAttribute('data-event-color');
+            if (!color) {
+                return;
+            }
+
+            if (el.classList.contains('event-color-chip')) {
+                el.style.backgroundColor = color + '20';
+                var icon = el.querySelector('.event-color-icon');
+                if (icon) {
+                    icon.style.color = color;
+                }
+            }
+
+            if (el.classList.contains('event-type-badge')) {
+                el.style.backgroundColor = color + '20';
+                el.style.color = color;
+            }
         });
-        firstLoginModal.show();
-        @endif
+
+        // Show first login modal if applicable
+        if (isFirstLogin) {
+            var firstLoginModal = new bootstrap.Modal(document.getElementById('firstLoginModal'), {
+                backdrop: 'static',
+                keyboard: false
+            });
+            firstLoginModal.show();
+        }
     });
 </script>
 

@@ -2,6 +2,101 @@
    Admissions List & Items
 ================================= */
 
+:where(.admissions-dashboard__table-wrapper) {
+    border: 1px solid #e4ece8;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+}
+
+:where(.admissions-dashboard__card--list .admissions-dashboard__card-header) {
+    padding: 0.58rem 0.82rem;
+    min-height: 44px;
+}
+
+:where(
+    .admissions-dashboard__card--list .admissions-dashboard__card-header h5
+) {
+    font-size: 0.98rem;
+    line-height: 1.2;
+}
+
+:where(
+    .admissions-dashboard__card--list .admissions-dashboard__card-header .btn
+) {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.82rem;
+}
+
+:where(.admissions-dashboard__card--list .admissions-dashboard__card-body) {
+    padding: 1rem;
+}
+
+:where(.admissions-dashboard__table) {
+    --bs-table-bg: #ffffff;
+    --bs-table-striped-bg: #f8fbf9;
+    --bs-table-hover-bg: #f2f8f4;
+    margin-bottom: 0;
+}
+
+:where(.admissions-dashboard__table thead th) {
+    background: #f3f8f5;
+    color: #355546;
+    font-size: 0.82rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-weight: 700;
+    border-bottom: 1px solid #dce9e2;
+    padding: 0.68rem 0.72rem;
+    white-space: nowrap;
+}
+
+:where(.admissions-dashboard__table tbody td) {
+    border-bottom: 1px solid #edf2ef;
+    padding: 0.7rem 0.72rem;
+    vertical-align: middle;
+}
+
+:where(.admissions-dashboard__table-row) {
+    cursor: pointer;
+}
+
+:where(.admissions-dashboard__table tbody tr:last-child td) {
+    border-bottom: 0;
+}
+
+:where(.admissions-dashboard__table-col-check) {
+    width: 48px;
+}
+
+:where(.admissions-dashboard__applicant-name) {
+    font-weight: 700;
+    color: #17653f;
+}
+
+:where(.admissions-dashboard__applicant-subline) {
+    font-size: 0.8rem;
+    margin-top: 0.05rem;
+}
+
+:where(.admissions-dashboard__table .btn) {
+    border-radius: 10px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+:where(.admissions-dashboard__show-modal-body) {
+    padding-top: 0.85rem;
+    padding-bottom: 0.5rem;
+}
+
+:where(.admissions-dashboard__show-modal-body h6) {
+    font-size: 0.95rem;
+    color: #2f5b47;
+    border-bottom: 1px solid #e9efeb;
+    padding-bottom: 0.35rem;
+}
+
 :where(.admissions-list, .admissions-dashboard__list) {
     display: flex;
     flex-direction: column;
@@ -13,26 +108,28 @@
     align-items: center;
     gap: 1rem;
     padding: 1.5rem;
-    background: var(--color-surface);
-    border-radius: 15px;
-    border: 2px solid #f8f9fa;
+    background: #ffffff;
+    border-radius: 14px;
+    border: 1px solid #e4ece8;
     transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 3px 10px rgba(15, 30, 22, 0.05);
 }
 
 :where(.admission-item:hover, .admissions-dashboard__list-item:hover) {
-    background: #f8f9fa;
-    border-color: var(--color-primary);
-    transform: translateX(8px);
-    box-shadow: 0 8px 25px rgba(25, 135, 84, 0.15);
+    background: #fcfffd;
+    border-color: #bfd8cb;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 18px rgba(15, 30, 22, 0.09);
 }
 
 :where(.admission-checkbox, .admissions-dashboard__list-checkbox) {
     flex-shrink: 0;
 }
 
-:where(.admission-checkbox .form-check-input,
-       .admissions-dashboard__list-checkbox-input) {
+:where(
+    .admission-checkbox .form-check-input,
+    .admissions-dashboard__list-checkbox-input
+) {
     width: 1.2rem;
     height: 1.2rem;
     cursor: pointer;
@@ -57,12 +154,13 @@
     min-width: 0;
 }
 
-/* :where(.admission-name, .admissions-dashboard__list-title) {
-    font-size: 1.15rem;
+:where(.admission-name, .admissions-dashboard__list-title) {
+    font-size: 1.08rem;
     font-weight: 700;
-    color: var(--color-primary);
+    color: #17653f;
     margin: 0 0 0.5rem 0;
-} */
+    letter-spacing: 0.01em;
+}
 
 :where(.admission-meta, .admissions-dashboard__list-meta) {
     display: flex;
@@ -110,6 +208,8 @@
 
 :where(.admission-actions .btn, .admissions-dashboard__list-actions .btn) {
     white-space: nowrap;
+    border-radius: 10px;
+    font-weight: 600;
 }
 
 :where(.pagination-wrapper, .admissions-dashboard__pagination) {

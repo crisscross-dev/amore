@@ -5,9 +5,9 @@
 ================================= */
 
 /* External Libraries */
-/* @import 'bootstrap/dist/css/bootstrap.min.css';
-@import '@fortawesome/fontawesome-free/css/all.min.css';
-@import 'bootstrap-icons/font/bootstrap-icons.css';
+@import "bootstrap/dist/css/bootstrap.min.css";
+@import "@fortawesome/fontawesome-free/css/all.min.css";
+@import "bootstrap-icons/font/bootstrap-icons.css";
 
 /* Base Styles */
 @import "./base/variables.css";
@@ -43,7 +43,6 @@
 @import "./utilities/colors.css";
 @import "./utilities/spacing.css";
 @import "./utilities/layout.css";
-*/
 
 /* Legacy styles - will be removed after migration */
 .form_login {

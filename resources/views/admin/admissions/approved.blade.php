@@ -10,12 +10,6 @@
 <!-- Admin Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css', 'resources/css/pagination.css', 'resources/js/admissions.js'])
 
-<style>
-    .admission-name {
-        color: #198754;
-    }
-</style>
-
 <div class="dashboard-container">
     <div class="container-fluid px-4">
         <div class="row">
@@ -80,23 +74,15 @@
                 </div>
 
                 <div class="admissions-container admissions-dashboard">
-                    <!-- Page header -->
-                    <div class="welcome-card mb-4">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <div>
-                                <h4 class="mb-2">
-                                    <i class="fas fa-check-circle me-2"></i>
-                                    Approved Admissions
-                                </h4>
-                                <p class="mb-0 opacity-90">
-                                    View all approved admission applications
-                                </p>
-                            </div>
-                            <div class="d-none d-lg-block">
-                                <a href="{{ route('admissions.selection') }}" class="btn btn-success btn-lg">
-                                    <i class="fas fa-plus me-2"></i>New Admission
-                                </a>
-                            </div>
+                    <div class="header-title d-flex align-items-center justify-content-between mb-2">
+                        <h5 class="mb-2 fw-semibold text-success">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Approved Admissions
+                        </h5>
+                        <div class="d-none d-lg-block">
+                            <a href="{{ route('admissions.selection') }}" class="btn btn-success btn-m">
+                                <i class="fas fa-plus me-2"></i>New Admission
+                            </a>
                         </div>
                     </div>
 
@@ -117,47 +103,8 @@
                     </div>
                     @endif
 
-                    <!-- Filters and Search -->
-                    <div class="admissions-card admissions-dashboard__card">
-                        <div class="card-header admissions-dashboard__card-header">
-                            <h5><i class="fas fa-filter me-2"></i>Filter Approved Applications</h5>
-                        </div>
-                        <div class="card-body admissions-dashboard__card-body">
-                            <form method="GET" action="{{ route('admin.admissions.approved') }}" id="filterForm">
-                                <div class="filter-grid admissions-dashboard__filters">
-                                    <!-- Type Filter -->
-                                    <div class="filter-item admissions-dashboard__filters-item">
-                                        <label for="typeFilter"><i class="fas fa-graduation-cap me-1"></i>Admission Type</label>
-                                        <select name="type" id="typeFilter" class="form-select">
-                                            <option value="all" {{ request('type', 'all') === 'all' ? 'selected' : '' }}>All Types</option>
-                                            <option value="jhs" {{ request('type') === 'jhs' ? 'selected' : '' }}>Junior High School (JHS)</option>
-                                            <option value="shs" {{ request('type') === 'shs' ? 'selected' : '' }}>Senior High School (SHS)</option>
-                                        </select>
-                                    </div>
-
-                                    <!-- Search -->
-                                    <div class="filter-item admissions-dashboard__filters-item">
-                                        <label for="searchInput"><i class="fas fa-search me-1"></i>Search</label>
-                                        <input type="text" name="search" id="searchInput" class="form-control"
-                                            placeholder="Name, LRN, or ID..." value="{{ request('search') }}">
-                                    </div>
-
-                                    <!-- Actions -->
-                                    <div class="filter-item filter-actions admissions-dashboard__filters-item admissions-dashboard__filters-actions">
-                                        <button type="submit" class="btn btn-success">
-                                            <i class="fas fa-search"></i> Search
-                                        </button>
-                                        <a href="{{ route('admin.admissions.approved') }}" class="btn btn-outline-secondary">
-                                            <i class="fas fa-redo"></i> Reset
-                                        </a>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-
                     <!-- Admissions List -->
-                    <div class="admissions-card admissions-dashboard__card">
+                    <div class="admissions-card admissions-dashboard__card admissions-dashboard__card--list">
                         <div class="card-header admissions-dashboard__card-header">
                             <h5><i class="fas fa-list me-2"></i>Applications List</h5>
                             <div class="view-rejected-btn">
@@ -167,67 +114,148 @@
                             </div>
                         </div>
                         <div class="card-body admissions-dashboard__card-body">
-                            @if($admissions->count() > 0)
-                            <div class="admissions-list admissions-dashboard__list">
-                                @foreach($admissions as $admission)
-                                <div class="admission-item admissions-dashboard__list-item">
-                                    <div class="admission-info admissions-dashboard__list-content">
-                                        <div class="admission-header-row admissions-dashboard__list-header">
-                                            <div class="admission-name-section admissions-dashboard__list-header-group">
-                                                <h6 class="admission-name">{{ $admission->full_name }}</h6>
-                                                <div class="admission-meta admissions-dashboard__list-meta">
-                                                    <span class="meta-item admissions-dashboard__list-meta-item">
-                                                        <i class="fas fa-id-card"></i> {{ $admission->applicant_id ?? 'N/A' }}
-                                                    </span>
-                                                    <span class="meta-item admissions-dashboard__list-meta-item">
-                                                        <i class="fas fa-hashtag"></i> LRN: {{ $admission->lrn }}
-                                                    </span>
-                                                    <span class="meta-item admissions-dashboard__list-meta-item">
-                                                        <i class="fas fa-graduation-cap"></i> {{ strtoupper($admission->school_level) }}
-                                                    </span>
-                                                    @if(strtoupper($admission->school_level) === 'SHS' && $admission->strand)
-                                                    <span class="meta-item admissions-dashboard__list-meta-item">
-                                                        <i class="fas fa-book"></i> {{ $admission->strand }}
-                                                        @if($admission->strand === 'TVL' && $admission->tvl_specialization)
-                                                        - {{ $admission->tvl_specialization }}
-                                                        @endif
-                                                    </span>
-                                                    @endif
-                                                </div>
-                                            </div>
-
-                                            <div class="admission-status-section admissions-dashboard__list-status">
-                                                @include('admin.admissions._status_badge', ['status' => $admission->status])
-                                            </div>
-                                        </div>
-
-                                        <div class="admission-details-row admissions-dashboard__list-details">
-                                            <div class="detail-item admissions-dashboard__list-detail-item">
-                                                <i class="fas fa-calendar"></i>
-                                                Applied: {{ $admission->created_at->format('M d, Y') }}
-                                            </div>
-                                            <div class="detail-item admissions-dashboard__list-detail-item">
-                                                <i class="fas fa-school"></i>
-                                                From: {{ $admission->school_name }}
-                                            </div>
-                                            @if($admission->status === 'approved' && $admission->approved_at)
-                                            <div class="detail-item admissions-dashboard__list-detail-item text-success">
-                                                <i class="fas fa-check"></i>
-                                                Approved: {{ $admission->approved_at->format('M d, Y') }}
-                                            </div>
-                                            @endif
-                                        </div>
+                            <form method="GET" action="{{ route('admin.admissions.approved') }}" id="filterForm" class="admissions-dashboard__toolbar">
+                                <div class="admissions-dashboard__toolbar-fields">
+                                    <div class="filter-item admissions-dashboard__filters-item admissions-dashboard__toolbar-type">
+                                        <select name="type" id="typeFilter" class="form-select">
+                                            <option value="all" {{ request('type', 'all') === 'all' ? 'selected' : '' }}>All Types</option>
+                                            <option value="jhs" {{ request('type') === 'jhs' ? 'selected' : '' }}>Junior High School (JHS)</option>
+                                            <option value="shs" {{ request('type') === 'shs' ? 'selected' : '' }}>Senior High School (SHS)</option>
+                                        </select>
                                     </div>
 
-                                    <div class="admission-actions admissions-dashboard__list-actions">
-                                        <a href="{{ route('admin.admissions.show', ['type' => $admission->school_level, 'id' => $admission->id]) }}"
-                                            class="btn btn-success btn-sm">
-                                            <i class="fas fa-eye"></i> View Details
-                                        </a>
+                                    <div class="filter-item admissions-dashboard__filters-item admissions-dashboard__toolbar-search">
+                                        <input type="text" name="search" id="searchInput" class="form-control" placeholder="Search by name, LRN, or applicant ID" value="{{ request('search') }}">
                                     </div>
                                 </div>
-                                @endforeach
+                            </form>
+
+                            @if($admissions->count() > 0)
+                            <div class="table-responsive admissions-dashboard__table-wrapper">
+                                <table class="table table-hover align-middle admissions-dashboard__table mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Applicant</th>
+                                            <th>LRN</th>
+                                            <th>Admission Type</th>
+                                            <th>Applied Date</th>
+                                            <th>Approved Date</th>
+                                            <th>School</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($admissions as $admission)
+                                        <tr class="admissions-dashboard__table-row" data-modal-target="approvedAdmissionShowModal-{{ $admission->id }}">
+                                            <td>
+                                                <div class="admissions-dashboard__applicant-name">{{ $admission->full_name }}</div>
+                                                @if(strtoupper($admission->school_level) === 'SHS' && $admission->strand)
+                                                <div class="admissions-dashboard__applicant-subline text-muted">
+                                                    {{ $admission->strand }}@if($admission->strand === 'TVL' && $admission->tvl_specialization) - {{ $admission->tvl_specialization }}@endif
+                                                </div>
+                                                @endif
+                                            </td>
+                                            <td>{{ $admission->lrn }}</td>
+                                            <td>{{ strtoupper($admission->school_level) }}</td>
+                                            <td>{{ $admission->created_at->format('M d, Y') }}</td>
+                                            <td>{{ $admission->approved_at ? $admission->approved_at->format('M d, Y') : 'N/A' }}</td>
+                                            <td>{{ $admission->school_name }}</td>
+                                            <td>@include('admin.admissions._status_badge', ['status' => $admission->status])</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
+
+                            @foreach($admissions as $admission)
+                            <div class="modal fade" id="approvedAdmissionShowModal-{{ $admission->id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">
+                                                <i class="fas fa-user-graduate me-2"></i>{{ $admission->full_name }}
+                                            </h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body admissions-dashboard__show-modal-body">
+                                            <div class="row g-3">
+                                                <div class="col-12">
+                                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                                        <div>
+                                                            <div class="h5 mb-1">{{ $admission->full_name }}</div>
+                                                            <div class="text-muted small">Applicant ID: {{ $admission->applicant_id ?? 'N/A' }}</div>
+                                                        </div>
+                                                        <div>@include('admin.admissions._status_badge', ['status' => $admission->status])</div>
+                                                    </div>
+                                                </div>
+
+                                                <div class="col-12">
+                                                    <h6 class="mb-2"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">LRN</small>
+                                                    <div class="fw-semibold">{{ $admission->lrn }}</div>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Admission Type</small>
+                                                    <div class="fw-semibold">{{ strtoupper($admission->school_level) }}</div>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Birthdate</small>
+                                                    <div class="fw-semibold">{{ $admission->dob ? $admission->dob->format('F d, Y') : 'N/A' }}</div>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Gender</small>
+                                                    <div class="fw-semibold">{{ $admission->gender ? ucfirst($admission->gender) : 'N/A' }}</div>
+                                                </div>
+                                                <div class="col-12"><small class="text-muted d-block">Address</small>
+                                                    <div class="fw-semibold">{{ $admission->address ?? 'N/A' }}</div>
+                                                </div>
+
+                                                <div class="col-12 mt-2">
+                                                    <h6 class="mb-2"><i class="fas fa-book me-2"></i>Academic Information</h6>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Previous School</small>
+                                                    <div class="fw-semibold">{{ $admission->school_name }}</div>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">School Type</small>
+                                                    <div class="fw-semibold">{{ $admission->school_type ? ucfirst($admission->school_type) : 'N/A' }}</div>
+                                                </div>
+                                                @if(strtoupper($admission->school_level) === 'SHS' && $admission->strand)
+                                                <div class="col-md-6"><small class="text-muted d-block">Strand</small>
+                                                    <div class="fw-semibold">{{ $admission->strand }}</div>
+                                                </div>
+                                                @endif
+                                                @if($admission->strand === 'TVL' && $admission->tvl_specialization)
+                                                <div class="col-md-6"><small class="text-muted d-block">TVL Specialization</small>
+                                                    <div class="fw-semibold">{{ $admission->tvl_specialization }}</div>
+                                                </div>
+                                                @endif
+
+                                                <div class="col-12 mt-2">
+                                                    <h6 class="mb-2"><i class="fas fa-history me-2"></i>Application Timeline</h6>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Submitted</small>
+                                                    <div class="fw-semibold">{{ $admission->created_at->format('M d, Y h:i A') }}</div>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Approved</small>
+                                                    <div class="fw-semibold">{{ $admission->approved_at ? $admission->approved_at->format('M d, Y h:i A') : 'N/A' }}</div>
+                                                </div>
+
+                                                <div class="col-12 mt-2">
+                                                    <h6 class="mb-2"><i class="fas fa-key me-2"></i>Login Credentials</h6>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Email</small>
+                                                    <div class="fw-semibold">{{ $admission->email ?? 'N/A' }}</div>
+                                                </div>
+                                                <div class="col-md-6"><small class="text-muted d-block">Password</small>
+                                                    <div class="fw-semibold">{{ $admission->temp_password ?? 'Not available' }}</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @endforeach
 
                             <!-- Pagination -->
                             <div class="d-flex justify-content-between align-items-center mt-4 p-3 bg-light rounded border">

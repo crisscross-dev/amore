@@ -26,22 +26,22 @@
               </thead>
               <tbody>
                 @forelse($entries as $entry)
-                  <tr>
-                    <td>{{ $entry->subject->name ?? 'Subject' }}</td>
-                    <td>{{ $entry->term }}</td>
-                    <td>{{ number_format($entry->grade_value, 2) }}</td>
-                    <td>{{ $entry->approved_at }}</td>
-                  </tr>
+                <tr>
+                  <td>{{ $entry->subject->name ?? 'Subject' }}</td>
+                  <td>{{ $entry->term }}</td>
+                  <td>{{ number_format($entry->grade_value, 2) }}</td>
+                  <td>{{ optional($entry->approved_at)->format('M d, Y h:i A') ?? 'Pending admin approval' }}</td>
+                </tr>
                 @empty
-                  <tr>
-                    <td colspan="4">
-                      <div class="faculty-management-empty">
-                        <i class="fas fa-info-circle"></i>
-                        <h5 class="fw-semibold mb-2">No approved grades yet</h5>
-                        <p class="mb-0">Approved grades will appear here once available.</p>
-                      </div>
-                    </td>
-                  </tr>
+                <tr>
+                  <td colspan="4">
+                    <div class="faculty-management-empty">
+                      <i class="fas fa-info-circle"></i>
+                      <h5 class="fw-semibold mb-2">No approved grades yet</h5>
+                      <p class="mb-0">Approved grades will appear here once available.</p>
+                    </div>
+                  </td>
+                </tr>
                 @endforelse
               </tbody>
             </table>
