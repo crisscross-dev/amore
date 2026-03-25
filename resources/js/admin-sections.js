@@ -4,6 +4,34 @@
 document.addEventListener("DOMContentLoaded", () => {
     console.log("Admin Sections JS loaded");
 
+    function askConfirmation(config) {
+        if (window.Swal) {
+            return window.Swal.fire({
+                icon: config.icon || "question",
+                title: config.title || "Confirm action",
+                text: config.text || "Do you want to continue?",
+                showCancelButton: true,
+                confirmButtonText: config.confirmButtonText || "Yes, continue",
+                cancelButtonText: "Cancel",
+                confirmButtonColor: config.confirmButtonColor || "#198754",
+                cancelButtonColor: "#6c757d",
+                reverseButtons: true,
+                focusCancel: true,
+            }).then((result) => result.isConfirmed);
+        }
+
+        if (
+            window.AppSwal &&
+            typeof window.AppSwal.confirmUpdateAdmin === "function"
+        ) {
+            return window.AppSwal.confirmUpdateAdmin().then(
+                (result) => result.isConfirmed,
+            );
+        }
+
+        return Promise.resolve(true);
+    }
+
     const assignAdviserForm = document.getElementById("assignAdviserForm");
     const assignAdviserSectionName = document.getElementById(
         "assignAdviserSectionName",
@@ -65,20 +93,6 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(scheduleConflictMessage.dataset.message);
     }
 
-    // Confirm delete actions if not already handled inline
-    document
-        .querySelectorAll('form[action*="/admin/sections/"][method="post"]')
-        .forEach((form) => {
-            const method = form.querySelector('input[name="_method"]');
-            if (method && method.value.toUpperCase() === "DELETE") {
-                form.addEventListener("submit", (e) => {
-                    // If the button didn't already confirm, ensure a prompt
-                    const confirmed = window.confirm("Delete this section?");
-                    if (!confirmed) e.preventDefault();
-                });
-            }
-        });
-
     // Auto format grade level input to remove spaces
     document.querySelectorAll('input[name="grade_level"]').forEach((input) => {
         input.addEventListener("blur", () => {
@@ -131,6 +145,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const bulkForm = document.getElementById("bulkAssignForm");
         if (bulkForm) {
             bulkForm.addEventListener("submit", function (e) {
+                if (bulkForm.dataset.localConfirmPass === "true") {
+                    delete bulkForm.dataset.localConfirmPass;
+                    return;
+                }
+
                 const checkedCount = document.querySelectorAll(
                     ".student-checkbox:checked",
                 ).length;
@@ -140,12 +159,25 @@ document.addEventListener("DOMContentLoaded", () => {
                     return false;
                 }
 
-                const confirmed = confirm(
-                    `Add ${checkedCount} student${checkedCount > 1 ? "s" : ""} to this section?`,
-                );
-                if (!confirmed) {
-                    e.preventDefault();
-                }
+                e.preventDefault();
+                askConfirmation({
+                    icon: "question",
+                    title: "Add students to section",
+                    text: `Add ${checkedCount} student${checkedCount > 1 ? "s" : ""} to this section?`,
+                    confirmButtonText: "Yes, add",
+                    confirmButtonColor: "#198754",
+                }).then((confirmed) => {
+                    if (!confirmed) {
+                        return;
+                    }
+
+                    bulkForm.dataset.localConfirmPass = "true";
+                    if (typeof bulkForm.requestSubmit === "function") {
+                        bulkForm.requestSubmit();
+                    } else {
+                        bulkForm.submit();
+                    }
+                });
             });
         }
     }
@@ -379,48 +411,54 @@ document.addEventListener("DOMContentLoaded", () => {
             confirmAddBtn.addEventListener("click", function () {
                 if (selectedStudents.length === 0) return;
 
-                const confirmed = confirm(
-                    `Add ${selectedStudents.length} student${selectedStudents.length > 1 ? "s" : ""} to this section?`,
-                );
-                if (!confirmed) return;
+                askConfirmation({
+                    icon: "question",
+                    title: "Add students to section",
+                    text: `Add ${selectedStudents.length} student${selectedStudents.length > 1 ? "s" : ""} to this section?`,
+                    confirmButtonText: "Yes, add",
+                    confirmButtonColor: "#198754",
+                }).then((confirmed) => {
+                    if (!confirmed) return;
 
-                // Get section ID from URL or data attribute
-                const sectionId =
-                    document.querySelector("[data-section-id]")?.dataset
-                        .sectionId || window.location.pathname.split("/").pop();
+                    // Get section ID from URL or data attribute
+                    const sectionId =
+                        document.querySelector("[data-section-id]")?.dataset
+                            .sectionId ||
+                        window.location.pathname.split("/").pop();
 
-                // Create form and submit
-                const form = document.createElement("form");
-                form.method = "POST";
-                form.action = "/admin/students/bulk-assign-section";
+                    // Create form and submit
+                    const form = document.createElement("form");
+                    form.method = "POST";
+                    form.action = "/admin/students/bulk-assign-section";
 
-                // CSRF token
-                const csrfInput = document.createElement("input");
-                csrfInput.type = "hidden";
-                csrfInput.name = "_token";
-                csrfInput.value =
-                    document.querySelector('meta[name="csrf-token"]')
-                        ?.content || "";
-                form.appendChild(csrfInput);
+                    // CSRF token
+                    const csrfInput = document.createElement("input");
+                    csrfInput.type = "hidden";
+                    csrfInput.name = "_token";
+                    csrfInput.value =
+                        document.querySelector('meta[name="csrf-token"]')
+                            ?.content || "";
+                    form.appendChild(csrfInput);
 
-                // Section ID
-                const sectionInput = document.createElement("input");
-                sectionInput.type = "hidden";
-                sectionInput.name = "section_id";
-                sectionInput.value = sectionId;
-                form.appendChild(sectionInput);
+                    // Section ID
+                    const sectionInput = document.createElement("input");
+                    sectionInput.type = "hidden";
+                    sectionInput.name = "section_id";
+                    sectionInput.value = sectionId;
+                    form.appendChild(sectionInput);
 
-                // Student IDs
-                selectedStudents.forEach((student) => {
-                    const studentInput = document.createElement("input");
-                    studentInput.type = "hidden";
-                    studentInput.name = "student_ids[]";
-                    studentInput.value = student.id;
-                    form.appendChild(studentInput);
+                    // Student IDs
+                    selectedStudents.forEach((student) => {
+                        const studentInput = document.createElement("input");
+                        studentInput.type = "hidden";
+                        studentInput.name = "student_ids[]";
+                        studentInput.value = student.id;
+                        form.appendChild(studentInput);
+                    });
+
+                    document.body.appendChild(form);
+                    form.submit();
                 });
-
-                document.body.appendChild(form);
-                form.submit();
             });
         }
 

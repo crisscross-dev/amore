@@ -14,11 +14,11 @@ class FacultySeeder extends Seeder
         $faculty = [
             [
                 'custom_id' => 'FAC-2026-0001',
-                'first_name' => 'Andrea',
+                'first_name' => 'faculty',
                 'last_name' => 'Salcedo',
                 'middle_name' => 'Lopez',
-                'email' => 'andrea.salcedo@amore.edu',
-                'password' => Hash::make('password123'),
+                'email' => 'faculty@gmail.com',
+                'password' => Hash::make('password'),
                 'account_type' => 'faculty',
                 'department' => 'Mathematics',
                 'contact_number' => '09170010001',
@@ -26,11 +26,11 @@ class FacultySeeder extends Seeder
             ],
             [
                 'custom_id' => 'FAC-2026-0002',
-                'first_name' => 'Marco',
+                'first_name' => 'faculty2',
                 'last_name' => 'Villareal',
                 'middle_name' => 'Dizon',
-                'email' => 'marco.villareal@amore.edu',
-                'password' => Hash::make('password123'),
+                'email' => 'faculty2@gmail.com',
+                'password' => Hash::make('password'),
                 'account_type' => 'faculty',
                 'department' => 'English Communication',
                 'contact_number' => '09170010002',
@@ -267,3 +267,6 @@ class FacultySeeder extends Seeder
         $this->command->info('✓ Created ' . count($faculty) . ' faculty records');
     }
 }
+
+
+//php artisan db:seed --class=Database\Seeders\FacultySeeder

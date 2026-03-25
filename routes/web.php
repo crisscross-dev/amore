@@ -63,7 +63,7 @@ Route::post('/reset-password', [PasswordResetController::class, 'update'])->name
 Route::middleware(['auth'])->group(function () {
     // Role-based dashboard routing
     Route::get('/dashboard', function () {
-        $user = auth()->user();
+        $user = request()->user();
 
         // Route to appropriate dashboard based on account type
         return match ($user->account_type) {
@@ -215,12 +215,17 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin/grade-approvals')->name('admin.grade-approvals.')->middleware('subject-manager')->group(function () {
         Route::get('/', [GradeApprovalController::class, 'index'])->name('index');
         Route::get('/{grade}', [GradeApprovalController::class, 'show'])->name('show');
+        Route::patch('/{grade}', [GradeApprovalController::class, 'update'])->name('update');
         Route::patch('/{grade}/approve', [GradeApprovalController::class, 'approve'])->name('approve');
         Route::patch('/{grade}/reject', [GradeApprovalController::class, 'reject'])->name('reject');
     });
     // Faculty Manage Grades
     Route::prefix('faculty/grades')->name('faculty.grades.')->group(function () {
         Route::get('/', [FacultyGradeController::class, 'index'])->name('index');
+        Route::get('/assignment/{assignment}', [FacultyGradeController::class, 'assignment'])->name('assignment');
+        Route::patch('/assignment/{assignment}', [FacultyGradeController::class, 'updateAssignmentSheet'])->name('assignment.update');
+        Route::patch('/assignment/{assignment}/upload', [FacultyGradeController::class, 'uploadAssignmentSheet'])->name('assignment.upload');
+        Route::patch('/assignment/{assignment}/student/{student}', [FacultyGradeController::class, 'upsertStudentGrade'])->name('assignment.student.update');
         Route::get('/create', [FacultyGradeController::class, 'create'])->name('create');
         Route::post('/', [FacultyGradeController::class, 'store'])->name('store');
         Route::get('/{grade}/edit', [FacultyGradeController::class, 'edit'])->name('edit');

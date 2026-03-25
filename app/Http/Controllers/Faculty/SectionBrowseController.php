@@ -16,7 +16,19 @@ class SectionBrowseController extends Controller
             abort(403);
         }
 
-        $query = Section::with(['adviser', 'students'])
+        $query = Section::with([
+            'adviser',
+            'students',
+            'subjectTeachers' => function ($subjectTeacherQuery) use ($user) {
+                $subjectTeacherQuery
+                    ->with(['subject', 'teacher'])
+                    ->whereHas('subject', function ($subjectQuery) {
+                        $subjectQuery->where('is_active', true);
+                    })
+                    ->orderBy('day_of_week')
+                    ->orderBy('start_time');
+            },
+        ])
             ->orderBy('grade_level')
             ->orderBy('name');
 
@@ -54,7 +66,7 @@ class SectionBrowseController extends Controller
             ->orderBy('grade_level')
             ->pluck('grade_level');
 
-        return view('faculty.sections.index', compact('sections', 'gradeLevels'));
+        return view('faculty.sections.index', compact('sections', 'gradeLevels', 'user'));
     }
 
     public function show(Request $request, \App\Models\Section $section)

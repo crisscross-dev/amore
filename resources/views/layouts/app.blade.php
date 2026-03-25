@@ -7,10 +7,11 @@
   <title>@yield('title', 'Amore Academy')</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/png" href="{{ asset('SchoolLogo.png') }}">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+  <link href="{{ asset('css/sweetalert2.min.css') }}" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Display+Playfair:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-  @vite(['resources/css/app.css'])
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+  @vite(['resources/css/app.css', 'resources/css/swal-custom.css'])
+  <link href="{{ asset('css/bootstrap-icons.min.css') }}" rel="stylesheet">
   <style>
     html,
     body {
@@ -30,7 +31,7 @@ $useAppShell = auth()->check()
 $isLoggedIn = auth()->check();
 @endphp
 
-<body id="top" class="{{ $useAppShell ? 'has-app-shell' : '' }}">
+<body id="top" class="{{ $useAppShell ? 'has-app-shell' : '' }}" data-account-type="{{ $accountType ?? '' }}">
 
   @if($useAppShell)
   <div class="app-shell-layout">
@@ -39,11 +40,11 @@ $isLoggedIn = auth()->check();
         <div class="container-fluid app-auth-header-inner">
           <div class="app-header-spacer" aria-hidden="true"></div>
 
-          <a class="navbar-brand text-white fw-bold fs-3 app-brand-centered" href="{{ route('welcome') }}#top">Amore Academy</a>
+          <span class="navbar-brand text-white fw-bold fs-3 app-brand-centered">Amore Academy</span>
 
           <div class="text-end app-header-actions">
             <span class="nav-item btn rounded-4 content_homepage">
-              <a href="{{ route('dashboard') }}" class="text-decoration-none">
+              <a href="{{ route('profile.edit') }}" class="text-decoration-none text-white">
                 <i class="bi bi-person-circle me-2"></i>
                 {{ Auth::user()->first_name }}
               </a>
@@ -75,7 +76,7 @@ $isLoggedIn = auth()->check();
       <div class="app-header-spacer" aria-hidden="true"></div>
       @endif
 
-      <a class="navbar-brand text-white fw-bold fs-3 {{ $isLoggedIn ? 'app-brand-centered' : '' }}" href="{{ route('welcome') }}#top">Amore Academy</a>
+      <span class="navbar-brand text-white fw-bold fs-3 {{ $isLoggedIn ? 'app-brand-centered' : '' }}">Amore Academy</span>
 
       @guest
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -104,7 +105,7 @@ $isLoggedIn = auth()->check();
       @else
       <div class="text-end app-header-actions">
         <span class="nav-item btn rounded-4 content_homepage">
-          <a href="{{ route('dashboard') }}" class="text-decoration-none">
+          <a href="{{ route('profile.edit') }}" class="text-decoration-none text-white">
             <i class="bi bi-person-circle me-2"></i>
             {{ Auth::user()->first_name }}
           </a>
@@ -120,8 +121,10 @@ $isLoggedIn = auth()->check();
   </main>
   @endif
 
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
   @vite(['resources/js/app.js'])
+  <script src="{{ asset('js/sweetalert2.min.js') }}"></script>
+  <script src="{{ asset('js/swal.js') }}"></script>
 
   @stack('scripts')
 </body>

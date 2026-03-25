@@ -114,7 +114,7 @@
                                                 <i class="fas fa-edit"></i>
                                             </button>
 
-                                            <form action="{{ route('admin.teaching-loads.destroy', $load) }}" method="POST" class="d-inline" onsubmit="return confirm('Delete this teaching load?');">
+                                            <form action="{{ route('admin.teaching-loads.destroy', $load) }}" method="POST" class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button type="submit" class="btn btn-sm btn-danger" title="Delete Teaching Load">

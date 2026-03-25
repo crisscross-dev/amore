@@ -81,7 +81,7 @@
                                         @endif
                                     </td>
                                     <td class="text-center" onclick="event.stopPropagation();">
-                                        <form action="{{ route('admin.faculty-positions.destroy', $position) }}" method="POST" onsubmit="return confirm('Delete this position?');" onclick="event.stopPropagation();" class="d-inline-block">
+                                        <form action="{{ route('admin.faculty-positions.destroy', $position) }}" method="POST" onclick="event.stopPropagation();" class="d-inline-block">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="btn btn-outline-danger btn-sm">

@@ -30,6 +30,7 @@ export default defineConfig({
                 'resources/css/faculty/grade-management.css',
                 'resources/css/student/grade-view.css',
                 'resources/css/pagination.css',
+                'resources/css/swal-custom.css',
                 // New Admission System Assets
                 'resources/css/admissions.css',
                 'resources/js/admissions/jhs.js',

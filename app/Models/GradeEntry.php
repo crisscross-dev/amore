@@ -15,6 +15,7 @@ class GradeEntry extends Model
         'subject_id',
         'term',
         'grade_value',
+        'faculty_remark',
         'status',
         'created_by',
         'submitted_at',

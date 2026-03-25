@@ -75,12 +75,6 @@
             <div class="nav-label">Manage Subjects</div>
         </a>
         @elseif($isFaculty)
-        <a href="{{ route('faculty.subjects.index') }}" class="nav-link {{ Request::routeIs('faculty.subjects.*') ? 'active' : '' }}">
-            <div class="nav-icon">
-                <i class="fas fa-book"></i>
-            </div>
-            <div class="nav-label">Manage Subjects</div>
-        </a>
 
         <a href="{{ route('faculty.sections.index') }}" class="nav-link {{ Request::routeIs('faculty.sections.*') ? 'active' : '' }}">
             <div class="nav-icon">

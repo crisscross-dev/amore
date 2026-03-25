@@ -4,6 +4,13 @@
 
 @section('content')
 
+@php
+$activeTab = request('tab', 'students');
+if (!in_array($activeTab, ['students', 'faculty', 'for-approval'], true)) {
+$activeTab = 'students';
+}
+@endphp
+
 <!-- Font Awesome CDN -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
@@ -37,6 +44,10 @@
     .modal-body h5 {
         color: #212529;
     }
+
+    .js-account-row {
+        cursor: pointer;
+    }
 </style>
 
 <script>
@@ -54,6 +65,26 @@
         const modals = document.querySelectorAll('.modal');
         modals.forEach(modal => {
             modal.addEventListener('hidden.bs.modal', removeBackdrops);
+        });
+
+        document.querySelectorAll('.js-account-row[data-view-modal]').forEach(function(row) {
+            row.addEventListener('dblclick', function(event) {
+                if (event.target.closest('button, a, input, select, textarea, label, form')) {
+                    return;
+                }
+
+                const selector = row.getAttribute('data-view-modal');
+                if (!selector) {
+                    return;
+                }
+
+                const modalElement = document.querySelector(selector);
+                if (!modalElement || !window.bootstrap || !window.bootstrap.Modal) {
+                    return;
+                }
+
+                window.bootstrap.Modal.getOrCreateInstance(modalElement).show();
+            });
         });
 
         // Remove backdrops on page load
@@ -165,19 +196,19 @@
                     <div class="card-header">
                         <ul class="nav nav-tabs" id="accountTabs" role="tablist">
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link active" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="true">
+                                <button class="nav-link {{ $activeTab === 'students' ? 'active' : '' }}" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="{{ $activeTab === 'students' ? 'true' : 'false' }}">
                                     <i class="fas fa-user-graduate me-2"></i>Students
                                     <span class="badge bg-success ms-2">{{ $students->total() }}</span>
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="faculty-tab" data-bs-toggle="tab" data-bs-target="#faculty" type="button" role="tab" aria-controls="faculty" aria-selected="false">
+                                <button class="nav-link {{ $activeTab === 'faculty' ? 'active' : '' }}" id="faculty-tab" data-bs-toggle="tab" data-bs-target="#faculty" type="button" role="tab" aria-controls="faculty" aria-selected="{{ $activeTab === 'faculty' ? 'true' : 'false' }}">
                                     <i class="fas fa-chalkboard-teacher me-2"></i>Faculty
                                     <span class="badge bg-success ms-2">{{ $faculty->total() }}</span>
                                 </button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" id="for-approval-tab" data-bs-toggle="tab" data-bs-target="#for-approval" type="button" role="tab" aria-controls="for-approval" aria-selected="false">
+                                <button class="nav-link {{ $activeTab === 'for-approval' ? 'active' : '' }}" id="for-approval-tab" data-bs-toggle="tab" data-bs-target="#for-approval" type="button" role="tab" aria-controls="for-approval" aria-selected="{{ $activeTab === 'for-approval' ? 'true' : 'false' }}">
                                     <i class="fas fa-clock me-2"></i>For Approval
                                     <span class="badge bg-success ms-2">{{ $pending->total() }}</span>
                                 </button>
@@ -188,17 +219,17 @@
                     <div class="card-body">
                         <div class="tab-content" id="accountTabsContent">
                             <!-- Students Tab -->
-                            <div class="tab-pane fade show active" id="students" role="tabpanel" aria-labelledby="students-tab">
+                            <div class="tab-pane fade {{ $activeTab === 'students' ? 'show active' : '' }}" id="students" role="tabpanel" aria-labelledby="students-tab">
                                 @include('admin.accounts._students_table')
                             </div>
 
                             <!-- Faculty Tab -->
-                            <div class="tab-pane fade" id="faculty" role="tabpanel" aria-labelledby="faculty-tab">
+                            <div class="tab-pane fade {{ $activeTab === 'faculty' ? 'show active' : '' }}" id="faculty" role="tabpanel" aria-labelledby="faculty-tab">
                                 @include('admin.accounts._faculty_table')
                             </div>
 
                             <!-- For Approval -->
-                            <div class="tab-pane fade" id="for-approval" role="tabpanel" aria-labelledby="for-approval-tab">
+                            <div class="tab-pane fade {{ $activeTab === 'for-approval' ? 'show active' : '' }}" id="for-approval" role="tabpanel" aria-labelledby="for-approval-tab">
                                 @include('admin.accounts._for_approval_table')
                             </div>
                         </div>

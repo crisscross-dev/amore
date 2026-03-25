@@ -184,8 +184,8 @@ $department = $currentUser->department ?? 'No department assigned';
                                 <div class="d-flex w-100 justify-content-between align-items-start">
                                     <div class="flex-grow-1">
                                         <div class="d-flex align-items-center mb-2">
-                                            <div class="rounded-circle p-2 me-3" style="background-color: {{ $event->color }}20; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                                                <i class="fas fa-calendar-day" style="color: {{ $event->color }}; font-size: 1.2rem;"></i>
+                                            <div class="rounded-circle p-2 me-3 bg-success bg-opacity-10 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                                <i class="fas fa-calendar-day text-success" style="font-size: 1.2rem;"></i>
                                             </div>
                                             <div>
                                                 <h6 class="mb-1 fw-bold">{{ $event->title }}</h6>
@@ -206,7 +206,7 @@ $department = $currentUser->department ?? 'No department assigned';
                                             {{ \Str::limit(strip_tags($event->description), 100) }}
                                         </p>
                                         @endif
-                                        <span class="badge" style="background-color: {{ $event->color }}20; color: {{ $event->color }};">
+                                        <span class="badge bg-success bg-opacity-10 text-success">
                                             <i class="fas fa-tag me-1"></i>{{ ucfirst($event->event_type ?? 'Event') }}
                                         </span>
                                         @if($event->is_all_day)

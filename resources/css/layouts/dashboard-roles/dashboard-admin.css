@@ -352,9 +352,10 @@ h6 {
     background: linear-gradient(135deg, var(--color-primary) 0%, #20c997 100%);
     color: white;
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: 1rem;
     border: none;
-    padding: 1.5rem;
+    padding: 0.85rem 1rem;
+    line-height: 1.2;
 }
 
 /* Activity Table */
@@ -445,32 +446,44 @@ h6 {
 }
 
 .pagination-wrapper .pagination {
+    align-items: center;
     gap: 0.35rem;
     justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 0;
 }
 
 .pagination-wrapper .page-link {
-    border-radius: 999px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    background-color: rgba(255, 255, 255, 0.12);
-    color: #fff;
+    min-width: 42px;
+    min-height: 38px;
     padding: 0.4rem 0.85rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    line-height: 1.2;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f7a4f;
+    border-radius: 999px;
+    border: 1px solid rgba(31, 122, 79, 0.25);
+    background: #ffffff;
 }
 
 .pagination-wrapper .page-link:hover {
-    background-color: rgba(255, 255, 255, 0.25);
-    color: #fff;
+    color: #1f7a4f;
+    border-color: rgba(31, 122, 79, 0.45);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: none;
 }
 
 .pagination-wrapper .page-item.active .page-link {
-    background-color: var(--green-600);
-    border-color: var(--green-600);
+    background-color: #1f7a4f;
+    border-color: #1f7a4f;
     color: #fff;
 }
 
 .pagination-wrapper .page-item.disabled .page-link {
-    opacity: 0.5;
+    color: #6c757d;
+    opacity: 0.8;
     cursor: not-allowed;
 }
 

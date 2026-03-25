@@ -61,7 +61,7 @@ class SubjectController extends Controller
                         ->orWhere('description', 'like', "%{$search}%");
                 });
             })
-            ->when($filters['subject_type'] ?? null, fn ($query, $type) => $query->where('subject_type', $type))
+            ->when($filters['subject_type'] ?? null, fn($query, $type) => $query->where('subject_type', $type))
             ->when($filters['grade_level'] ?? null, function ($query, $level) {
                 $this->applyGradeFilter($query, $level);
             })
@@ -71,6 +71,7 @@ class SubjectController extends Controller
 
         return $this->renderView('index', [
             'subjects' => $subjects,
+            'subject' => new Subject(),
             'subjectTypes' => self::SUBJECT_TYPES,
             'gradeLevels' => self::GRADE_LEVELS,
             'filterGradeLevels' => self::FILTER_GRADE_LEVELS,
@@ -406,7 +407,7 @@ class SubjectController extends Controller
         }
 
         $subject->gradeLevels()->delete();
-        $rows = array_map(fn ($level) => ['grade_level' => $level], $gradeLevels);
+        $rows = array_map(fn($level) => ['grade_level' => $level], $gradeLevels);
         $subject->gradeLevels()->createMany($rows);
     }
 
@@ -445,13 +446,13 @@ class SubjectController extends Controller
             $builder->whereHas('gradeLevels', function ($subQuery) use ($grades) {
                 $subQuery->whereIn('grade_level', $grades);
             })
-            ->orWhere(function ($subQuery) use ($grades) {
-                $subQuery->whereDoesntHave('gradeLevels')
-                    ->where(function ($fallback) use ($grades) {
-                        $fallback->whereIn('grade_level', $grades)
-                            ->orWhere('grade_level', 'all');
-                    });
-            });
+                ->orWhere(function ($subQuery) use ($grades) {
+                    $subQuery->whereDoesntHave('gradeLevels')
+                        ->where(function ($fallback) use ($grades) {
+                            $fallback->whereIn('grade_level', $grades)
+                                ->orWhere('grade_level', 'all');
+                        });
+                });
         });
     }
 

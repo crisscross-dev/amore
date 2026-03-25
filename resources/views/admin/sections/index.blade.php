@@ -92,26 +92,20 @@
                         Manage Sections
                     </h5>
                     <div class="d-none d-lg-block">
-                        <a href="{{ route('admin.sections.create') }}" class="btn btn-primary btn-m">
+                        <button type="button" class="btn btn-primary btn-m" data-bs-toggle="modal" data-bs-target="#createSectionModal">
                             <i class="fas fa-plus me-2"></i>New Section
-                        </a>
+                        </button>
                     </div>
                 </div>
 
                 <!-- Mobile New Section Button -->
                 <div class="d-lg-none mb-3 d-grid gap-2">
-                    <a href="{{ route('admin.sections.create') }}" class="btn btn-primary w-100">
+                    <button type="button" class="btn btn-primary w-100" data-bs-toggle="modal" data-bs-target="#createSectionModal">
                         <i class="fas fa-plus me-2"></i>New Section
-                    </a>
+                    </button>
                 </div>
 
                 <!-- Flash Messages -->
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
                 @if(session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
@@ -177,15 +171,17 @@
                                             @endif
                                         </td>
                                         <td class="text-center">
-                                            <a class="btn btn-sm btn-warning me-1"
-                                                href="{{ route('admin.sections.edit', $section) }}"
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-warning me-1"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#editSectionModal{{ $section->id }}"
                                                 title="Edit Section">
                                                 <i class="fas fa-edit"></i>
-                                            </a>
+                                            </button>
                                             <form action="{{ route('admin.sections.destroy', $section) }}"
                                                 method="POST"
-                                                class="d-inline"
-                                                onsubmit="return confirm('Are you sure you want to delete this section?')">
+                                                class="d-inline">
                                                 @csrf
                                                 @method('DELETE')
                                                 <button class="btn btn-sm btn-danger"
@@ -201,9 +197,9 @@
                                         <td colspan="7" class="text-center py-4">
                                             <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
                                             <p class="text-muted">No sections found. Create your first section to get started.</p>
-                                            <a href="{{ route('admin.sections.create') }}" class="btn btn-primary">
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createSectionModal">
                                                 <i class="fas fa-plus me-2"></i>Create New Section
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                     @endforelse
@@ -219,6 +215,80 @@
                         @endif
                     </div>
                 </div>
+
+                <div class="modal fade" id="createSectionModal" tabindex="-1" aria-labelledby="createSectionModalLabel" aria-hidden="true" data-open-on-load="{{ $errors->any() ? '1' : '0' }}">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div>
+                                    <h5 class="modal-title" id="createSectionModalLabel">
+                                        <i class="fas fa-layer-group me-2"></i>
+                                        Create New Section
+                                    </h5>
+                                    <p class="mb-0 text-muted small">Add a section with a typed name, selected grade, and matching subjects.</p>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                @include('admin.sections._form', [
+                                'section' => new \App\Models\Section(),
+                                'schoolYears' => $schoolYears,
+                                'subjects' => $subjects,
+                                'action' => route('admin.sections.store'),
+                                'method' => 'POST',
+                                'submitLabel' => 'Create Section',
+                                'modalContext' => 'create',
+                                'isModal' => true,
+                                'routeBase' => 'admin.sections.',
+                                ])
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @foreach($sections as $section)
+                @php
+                $editModalContext = 'edit-' . $section->id;
+                $openEditModal = old('modal_context') === $editModalContext;
+                $selectedSubjectIds = $section->subjectTeachers->pluck('subject_id')->map(fn($id) => (int) $id)->all();
+                @endphp
+                <div
+                    class="modal fade"
+                    id="editSectionModal{{ $section->id }}"
+                    tabindex="-1"
+                    aria-labelledby="editSectionModalLabel{{ $section->id }}"
+                    aria-hidden="true"
+                    data-open-on-load="{{ $openEditModal ? '1' : '0' }}">
+                    <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <div>
+                                    <h5 class="modal-title" id="editSectionModalLabel{{ $section->id }}">
+                                        <i class="fas fa-edit me-2"></i>
+                                        Edit Section
+                                    </h5>
+                                    <p class="mb-0 text-white-50 small">Update section details and assigned subjects.</p>
+                                </div>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                @include('admin.sections._form', [
+                                'section' => $section,
+                                'schoolYears' => $schoolYears,
+                                'subjects' => $subjects,
+                                'selectedSubjectIds' => $selectedSubjectIds,
+                                'action' => route('admin.sections.update', $section),
+                                'method' => 'PUT',
+                                'submitLabel' => 'Save Changes',
+                                'modalContext' => $editModalContext,
+                                'isModal' => true,
+                                'routeBase' => 'admin.sections.',
+                                ])
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
 
             </main>
         </div>
@@ -254,9 +324,19 @@
     </div>
 </div>
 
+@if(session('success'))
+<div id="section-flash-data" class="d-none" data-success="{{ session('success') }}"></div>
+@endif
+
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const flashNode = document.getElementById('section-flash-data');
+        const successMessage = flashNode ? flashNode.dataset.success : '';
+        if (successMessage && window.AppSwal && typeof window.AppSwal.showSuccess === 'function') {
+            window.AppSwal.showSuccess(successMessage);
+        }
+
         document.querySelectorAll('.js-section-row').forEach(function(row) {
             row.addEventListener('dblclick', function(event) {
                 if (event.target.closest('a, button, form, input, select, textarea, label')) {

@@ -12,6 +12,21 @@
 'resources/css/admin/grade-approvals.css',
 ])
 
+<style>
+    .grade-approval-card {
+        padding: 1rem 1.1rem;
+    }
+
+    .grade-approval-card h5,
+    .grade-approval-card h6 {
+        margin-bottom: 0.25rem;
+    }
+
+    .grade-approval-card .small {
+        line-height: 1.25;
+    }
+</style>
+
 <div class="dashboard-container grade-approvals-page">
     <div class="container-fluid px-4">
         <div class="row">
@@ -29,102 +44,41 @@
                     </div> -->
                 </div>
 
-
-                <div class="faculty-management-card mb-4">
-                    <div class="card-body">
-                        <h5 class="mb-3">
-                            <i class="fas fa-list-check me-2"></i>
-                            Upcoming Review Tasks
-                        </h5>
-
-                        @if(empty($upcomingTasks))
-                        <div class="faculty-management-empty">
-                            <i class="fas fa-calendar-check"></i>
-                            <h5 class="fw-semibold mb-2">No pending tasks right now</h5>
-                            <p class="mb-0">All grade submissions are up to date. New tasks will appear here as they arrive.</p>
-                        </div>
-                        @else
-                        <div class="row g-3">
-                            @foreach($upcomingTasks as $task)
-                            <div class="col-md-6">
-                                <div class="assignment-summary h-100">
-                                    <div class="d-flex justify-content-between align-items-start mb-2">
-                                        <h6 class="mb-0">{{ $task['title'] }}</h6>
-                                        @php
-                                        $badgeClass = $task['status'] === 'in-progress' ? 'bg-warning text-dark' : 'bg-success';
-                                        @endphp
-                                        <span class="badge {{ $badgeClass }} text-uppercase">{{ str_replace('-', ' ', $task['status']) }}</span>
-                                    </div>
-                                    <p class="mb-2 text-muted">{{ $task['description'] }}</p>
-                                    <div class="small text-success fw-semibold">
-                                        <i class="fas fa-clock me-1"></i>Due {{ $task['deadline'] }}
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                        @endif
-                    </div>
-                </div>
-
                 <div class="faculty-management-card">
                     <div class="card-body">
                         <h5 class="mb-3 d-flex align-items-center gap-2">
                             <i class="fas fa-clipboard-check"></i>
-                            Submitted Grades Awaiting Approval
+                            Submitted Grade Sheets Awaiting Approval
                         </h5>
 
-                        @if($submissions->isEmpty())
+                        @if($sheetGroups->isEmpty())
                         <div class="faculty-management-empty">
                             <i class="fas fa-hourglass-half"></i>
                             <h5 class="fw-semibold mb-2">No submitted grades</h5>
-                            <p class="mb-0">Grade submissions from faculty will appear here for review and approval.</p>
+                            <p class="mb-0">Grade sheets from faculty will appear here for review and approval.</p>
                         </div>
                         @else
-                        <div class="table-responsive">
-                            <table class="table table-hover align-middle">
-                                <thead>
-                                    <tr>
-                                        <th>Student</th>
-                                        <th>Subject</th>
-                                        <th>Term</th>
-                                        <th>Grade</th>
-                                        <th>Submitted By</th>
-                                        <th>Submitted At</th>
-                                        <th class="text-end">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($submissions as $grade)
-                                    <tr>
-                                        <td>{{ $grade->student->first_name }} {{ $grade->student->last_name }}</td>
-                                        <td>{{ $grade->subject->name }}</td>
-                                        <td><span class="badge bg-info">{{ $grade->term }}</span></td>
-                                        <td><strong>{{ number_format($grade->grade_value, 2) }}</strong></td>
-                                        <td>{{ $grade->creator->first_name }} {{ $grade->creator->last_name }}</td>
-                                        <td>{{ $grade->submitted_at->format('M d, Y h:i A') }}</td>
-                                        <td class="text-end">
-                                            <div class="btn-group btn-group-sm">
-                                                <a href="{{ route('admin.grade-approvals.show', $grade) }}" class="btn btn-outline-info">
-                                                    <i class="fas fa-eye"></i> View
-                                                </a>
-                                                <form action="{{ route('admin.grade-approvals.approve', $grade) }}" method="POST" class="d-inline">
-                                                    @csrf
-                                                    @method('PATCH')
-                                                    <button class="btn btn-success" onclick="return confirm('Approve this grade?')">
-                                                        <i class="fas fa-check"></i> Approve
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="mt-3">
-                            {{ $submissions->links() }}
+                        <div class="row g-3">
+                            @foreach($sheetGroups as $sheet)
+                            <div class="col-12">
+                                <a href="{{ route('admin.grade-approvals.show', $sheet['representative']) }}" class="assignment-summary grade-approval-card d-block text-decoration-none h-100">
+                                    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                                        <div>
+                                            <h5 class="mb-1 text-success">{{ $sheet['grade_level'] }} - {{ $sheet['section_name'] }}</h5>
+                                            <div class="small text-muted">{{ $sheet['subject_name'] }}</div>
+                                            <div class="small text-muted">{{ $sheet['teacher_name'] }}</div>
+                                        </div>
+                                        <div class="text-end">
+                                            <span class="badge bg-success text-uppercase">{{ $sheet['student_count'] }} students</span>
+                                            <div class="small text-muted mt-1">{{ $sheet['term'] }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2 small text-muted">
+                                        <i class="fas fa-clock me-1"></i>{{ $sheet['submitted_at'] }}
+                                    </div>
+                                </a>
+                            </div>
+                            @endforeach
                         </div>
                         @endif
                     </div>

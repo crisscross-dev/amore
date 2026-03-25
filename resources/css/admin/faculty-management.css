@@ -106,14 +106,15 @@
     background: linear-gradient(135deg, var(--color-primary) 0%, #20c997 100%);
     color: #198754;
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: 1rem;
     border: none;
-    padding: 1.5rem;
+    padding: 0.85rem 1rem;
     margin: 0;
     display: flex;
     justify-content: space-between;
     align-items: center;
     gap: 1rem;
+    line-height: 1.2;
 }
 
 .faculty-management-card .card-body {

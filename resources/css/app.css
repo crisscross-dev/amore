@@ -254,3 +254,95 @@ body.has-app-shell {
 #contacts {
     scroll-margin-top: 120px;
 }
+
+/* Global modal theme: keep modal headers aligned with app green palette */
+.modal .modal-header {
+    background: linear-gradient(135deg, #166534 0%, #15803d 100%);
+    color: #ffffff;
+    border-bottom: 0;
+    padding: 0.78rem 1.05rem;
+}
+
+.modal .modal-header .modal-title {
+    color: #ffffff;
+    font-size: 1.12rem;
+    line-height: 1.25;
+    margin: 0;
+}
+
+.modal .modal-header,
+.modal .modal-header *:not(.btn-close) {
+    color: #ffffff !important;
+}
+
+.modal .modal-header .btn-close {
+    filter: invert(1) grayscale(100%) brightness(200%);
+    opacity: 0.9;
+    padding: 0.45rem;
+    margin: -0.2rem -0.2rem -0.2rem auto;
+}
+
+.modal .modal-header .btn-close:hover {
+    opacity: 1;
+}
+
+/* Global pagination style based on subject paging UI */
+.pagination-wrapper .pagination,
+nav[aria-label="Pagination Navigation"] .pagination,
+nav[aria-label="Page navigation"] .pagination {
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-bottom: 0;
+}
+
+.pagination-wrapper .page-link,
+nav[aria-label="Pagination Navigation"] .page-link,
+nav[aria-label="Page navigation"] .page-link {
+    min-width: 42px;
+    min-height: 38px;
+    padding: 0.4rem 0.85rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #1f7a4f;
+    border: 1px solid rgba(31, 122, 79, 0.25);
+    border-radius: 999px;
+    background: #ffffff;
+}
+
+.pagination-wrapper .page-item:first-child .page-link,
+.pagination-wrapper .page-item:last-child .page-link,
+nav[aria-label="Pagination Navigation"] .page-item:first-child .page-link,
+nav[aria-label="Pagination Navigation"] .page-item:last-child .page-link,
+nav[aria-label="Page navigation"] .page-item:first-child .page-link,
+nav[aria-label="Page navigation"] .page-item:last-child .page-link {
+    min-width: 76px;
+}
+
+.pagination-wrapper .page-item.disabled .page-link,
+nav[aria-label="Pagination Navigation"] .page-item.disabled .page-link,
+nav[aria-label="Page navigation"] .page-item.disabled .page-link {
+    color: #6c757d;
+    opacity: 0.8;
+}
+
+.pagination-wrapper .page-item.active .page-link,
+nav[aria-label="Pagination Navigation"] .page-item.active .page-link,
+nav[aria-label="Page navigation"] .page-item.active .page-link {
+    color: #fff;
+    background: #1f7a4f;
+    border-color: #1f7a4f;
+}
+
+.pagination-wrapper .page-link:hover,
+nav[aria-label="Pagination Navigation"] .page-link:hover,
+nav[aria-label="Page navigation"] .page-link:hover {
+    color: #1f7a4f;
+    border-color: rgba(31, 122, 79, 0.45);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    transform: none;
+}

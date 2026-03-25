@@ -12,71 +12,63 @@ class SubjectSeeder extends Seeder
      */
     public function run(): void
     {
-        $subjects = [
-            [
-                'name' => 'Mathematics',
-                'description' => 'Foundational mathematics covering number sense, algebra, and problem-solving.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 4,
-            ],
-            [
-                'name' => 'Filipino',
-                'description' => 'Paglinang ng kasanayan sa wika, pagbasa, at pagsulat sa Filipino.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 4,
-            ],
-            [
-                'name' => 'English',
-                'description' => 'Develops reading comprehension, writing, and oral communication skills.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 4,
-            ],
-            [
-                'name' => 'Science',
-                'description' => 'Integrated science focusing on biology, chemistry, and physics concepts.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 4,
-            ],
-            [
-                'name' => 'Technology and Livelihood Education (TLE)',
-                'description' => 'Practical skills in technology, entrepreneurship, and livelihood.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 3,
-            ],
-            [
-                'name' => 'Edukasyon sa Pagpapakatao (ESP)',
-                'description' => 'Values education focusing on character formation and ethics.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 2,
-            ],
-            [
-                'name' => 'Araling Panlipunan (AP)',
-                'description' => 'Social studies covering history, geography, and civics.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 3,
-            ],
-            [
-                'name' => 'Good Manners and Right Conduct (GMRC)',
-                'description' => 'Character-building lessons on respect, discipline, and integrity.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 1,
-            ],
-            [
-                'name' => 'Physical Education and Health',
-                'description' => 'Promotes fitness, teamwork, and healthy lifestyles.',
-                'subject_type' => null,
-                'grade_level' => 'all',
-                'hours_per_week' => 2,
-            ],
+        $subjects = [];
+
+        $grade7to8Subjects = [
+            'Filipino',
+            'English',
+            'Math',
+            'Science',
+            'AP',
+            'GMRC',
+            'TLE',
+            'MAPEH - Music & Arts',
+            'MAPEH - PE & Health',
         ];
+
+        $grade9to10Subjects = [
+            'Filipino',
+            'English',
+            'Math',
+            'Science',
+            'AP',
+            'EsP',
+            'TLE',
+            'MAPEH - Music',
+            'MAPEH - Arts',
+            'MAPEH - PE',
+            'MAPEH - Health',
+        ];
+
+        // Remove standalone MAPEH for grades where components are used.
+        Subject::query()
+            ->whereIn('grade_level', ['7', '8', '9', '10'])
+            ->where('name', 'MAPEH')
+            ->delete();
+
+        foreach (['7', '8'] as $gradeLevel) {
+            foreach ($grade7to8Subjects as $subjectName) {
+                $subjects[] = [
+                    'name' => $subjectName,
+                    'description' => null,
+                    'subject_type' => null,
+                    'grade_level' => $gradeLevel,
+                    'hours_per_week' => null,
+                ];
+            }
+        }
+
+        foreach (['9', '10'] as $gradeLevel) {
+            foreach ($grade9to10Subjects as $subjectName) {
+                $subjects[] = [
+                    'name' => $subjectName,
+                    'description' => null,
+                    'subject_type' => null,
+                    'grade_level' => $gradeLevel,
+                    'hours_per_week' => null,
+                ];
+            }
+        }
 
         foreach ($subjects as $subject) {
             Subject::updateOrCreate(
@@ -89,3 +81,5 @@ class SubjectSeeder extends Seeder
         }
     }
 }
+
+//php artisan db:seed --class=Database\Seeders\SubjectSeeder

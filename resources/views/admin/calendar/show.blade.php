@@ -10,6 +10,15 @@
 <!-- Admin Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css'])
 
+<style>
+    .event-color-indicator {
+        width: 4px;
+        height: 30px;
+        border-radius: 2px;
+        background-color: #198754;
+    }
+</style>
+
 <div class="dashboard-container">
     <div class="container-fluid px-4">
         <div class="row">
@@ -20,17 +29,17 @@
                 <!-- Mobile Profile (Hidden on Desktop) -->
                 <div class="d-md-none mobile-profile mb-4">
                     <div class="text-center">
-                        <img src="{{ asset('uploads/profile_picture/' . Auth::user()->profile_picture) }}" 
-                             alt="Profile Picture" 
-                             class="rounded-circle mb-3 border border-3 border-white"
-                             width="80"
-                             height="80">
-                        
+                        <img src="{{ asset('uploads/profile_picture/' . Auth::user()->profile_picture) }}"
+                            alt="Profile Picture"
+                            class="rounded-circle mb-3 border border-3 border-white"
+                            width="80"
+                            height="80">
+
                         <h5 class="text-white mb-1">{{ Auth::user()->first_name ?? 'Admin' }} {{ Auth::user()->last_name ?? 'Name' }}</h5>
                         <p class="text-white-50 small mb-3">
                             Administrator | {{ Auth::user()->custom_id ?? 'ADMIN-0001' }}
                         </p>
-                        
+
                         <!-- Mobile Navigation -->
                         <div class="row g-2">
                             <div class="col-4">
@@ -64,16 +73,15 @@
                                 </a>
                             </div>
                         </div>
-                        
+
                         <hr class="bg-white opacity-25 my-3">
-                        
-                        <button 
+
+                        <button
                             class="btn logout-btn w-100"
-                            onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();"
-                        >
+                            onclick="event.preventDefault(); document.getElementById('logout-form-mobile').submit();">
                             <i class="fas fa-sign-out-alt me-2"></i>Logout
                         </button>
-                        
+
                         <form id="logout-form-mobile" action="{{ route('logout') }}" method="POST" class="d-none">
                             @csrf
                         </form>
@@ -96,7 +104,7 @@
                             <a href="{{ route('calendar.index') }}" class="btn btn-warning">
                                 <i class="fas fa-user-edit me-2"></i>Back to Calendar
                             </a>
-                        </div>  
+                        </div>
                     </div>
                 </div>
 
@@ -108,117 +116,125 @@
                 </div>
 
                 @if($events->isEmpty())
-                    <!-- No Events Card -->
-                    <div class="activity-card">
-                        <div class="card-body text-center py-5">
-                            <i class="fas fa-calendar-times text-success" style="font-size: 4rem; opacity: 0.3;"></i>
-                            <h5 class="text-success mt-4 mb-3">No Events Scheduled</h5>
-                            <p class="text-muted mb-4">
-                                There are no events scheduled for this day.
-                            </p>
-                            
-                            @if($canEdit ?? true)
-                                <a href="{{ route('calendar.create') }}" class="btn btn-success">
-                                    <i class="fas fa-plus me-2"></i>Create Event
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                @else
-                    <!-- Events Table -->
-                    <div class="activity-card">
-                        <div class="card-header d-flex justify-content-between align-items-center">
-                            <span>
-                                <i class="fas fa-list me-2"></i>
-                                Events List
-                            </span>
-                            <span class="badge bg-white text-success">{{ $events->count() }} event(s)</span>
-                        </div>
-                        <div class="card-body p-0">
-                            <div class="table-responsive">
-                                <table class="table table-hover mb-0">
-                                    <thead class="bg-success text-white">
-                                        <tr>
-                                            <th class="ps-3">Title</th>
-                                            <th>Time</th>
-                                            <th>Description</th>
-                                            <th>Created By</th>
-                                            @if($canEdit ?? true)
-                                                <th class="text-center">Actions</th>
-                                            @endif
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($events as $event)
-                                            <tr>
-                                                <td class="ps-3">
-                                                    <div class="d-flex align-items-center">
-                                                        <div class="me-2" style="width: 4px; height: 30px; background-color: {{ $event->color }}; border-radius: 2px;"></div>
-                                                        <strong class="text-success">{{ $event->title }}</strong>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    @if($event->is_all_day)
-                                                        <span class="badge bg-success">All Day</span>
-                                                    @else
-                                                        <span class="text-muted">
-                                                            <i class="far fa-clock me-1"></i>
-                                                            {{ \Carbon\Carbon::parse($event->start_date)->format('g:i A') }}
-                                                            @if($event->end_date)
-                                                                - {{ \Carbon\Carbon::parse($event->end_date)->format('g:i A') }}
-                                                            @endif
-                                                        </span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    @if($event->description)
-                                                        <span class="text-muted">{{ Str::limit($event->description, 50) }}</span>
-                                                    @else
-                                                        <span class="text-muted fst-italic">No description</span>
-                                                    @endif
-                                                </td>
-                                                <td>
-                                                    <small class="text-muted">
-                                                        {{ $event->creator->first_name ?? 'Admin' }} {{ $event->creator->last_name ?? '' }}
-                                                    </small>
-                                                </td>
-                                                @if($canEdit ?? true)
-                                                    <td class="text-center">
-                                                        <div class="btn-group btn-group-sm">
-                                                            <a href="{{ route('calendar.edit', $event) }}" class="btn btn-success" title="Edit">
-                                                                <i class="fas fa-edit"></i>
-                                                            </a>
-                                                            <form method="POST" action="{{ route('calendar.destroy', $event) }}" class="d-inline" onsubmit="return confirm('Are you sure you want to delete this event?');">
-                                                                @csrf
-                                                                @method('DELETE')
-                                                                <button type="submit" class="btn btn-outline-danger" title="Delete">
-                                                                    <i class="fas fa-trash"></i>
-                                                                </button>
-                                                            </form>
-                                                        </div>
-                                                    </td>
-                                                @endif
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    </div>
+                <!-- No Events Card -->
+                <div class="activity-card">
+                    <div class="card-body text-center py-5">
+                        <i class="fas fa-calendar-times text-success" style="font-size: 4rem; opacity: 0.3;"></i>
+                        <h5 class="text-success mt-4 mb-3">No Events Scheduled</h5>
+                        <p class="text-muted mb-4">
+                            There are no events scheduled for this day.
+                        </p>
 
-                    <!-- Add New Event Button (Admin Only) -->
-                    @if($canEdit ?? true)
-                        <div class="mt-3">
-                            <a href="{{ route('calendar.create') }}" class="btn btn-success">
-                                <i class="fas fa-plus me-2"></i>Create Another Event
-                            </a>
+                        @if($canEdit ?? true)
+                        <a href="{{ route('calendar.create') }}" class="btn btn-success">
+                            <i class="fas fa-plus me-2"></i>Create Event
+                        </a>
+                        @endif
+                    </div>
+                </div>
+                @else
+                <!-- Events Table -->
+                <div class="activity-card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="fas fa-list me-2"></i>
+                            Events List
+                        </span>
+                        <span class="badge bg-white text-success">{{ $events->count() }} event(s)</span>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="bg-success text-white">
+                                    <tr>
+                                        <th class="ps-3">Title</th>
+                                        <th>Time</th>
+                                        <th>Description</th>
+                                        <th>Created By</th>
+                                        @if($canEdit ?? true)
+                                        <th class="text-center">Actions</th>
+                                        @endif
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($events as $event)
+                                    <tr>
+                                        <td class="ps-3">
+                                            <div class="d-flex align-items-center">
+                                                <div class="me-2 event-color-indicator" data-event-color="{{ $event->color ?? '#198754' }}"></div>
+                                                <strong class="text-success">{{ $event->title }}</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            @if($event->is_all_day)
+                                            <span class="badge bg-success">All Day</span>
+                                            @else
+                                            <span class="text-muted">
+                                                <i class="far fa-clock me-1"></i>
+                                                {{ \Carbon\Carbon::parse($event->start_date)->format('g:i A') }}
+                                                @if($event->end_date)
+                                                - {{ \Carbon\Carbon::parse($event->end_date)->format('g:i A') }}
+                                                @endif
+                                            </span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($event->description)
+                                            <span class="text-muted">{{ Str::limit($event->description, 50) }}</span>
+                                            @else
+                                            <span class="text-muted fst-italic">No description</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">
+                                                {{ $event->creator->first_name ?? 'Admin' }} {{ $event->creator->last_name ?? '' }}
+                                            </small>
+                                        </td>
+                                        @if($canEdit ?? true)
+                                        <td class="text-center">
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ route('calendar.edit', $event) }}" class="btn btn-success" title="Edit">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form method="POST" action="{{ route('calendar.destroy', $event) }}" class="d-inline">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-outline-danger" title="Delete">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                        @endif
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                    @endif
+                    </div>
+                </div>
+
+                <!-- Add New Event Button (Admin Only) -->
+                @if($canEdit ?? true)
+                <div class="mt-3">
+                    <a href="{{ route('calendar.create') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Create Another Event
+                    </a>
+                </div>
+                @endif
                 @endif
             </main>
         </div>
     </div>
 </div>
 
-@endsection
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.event-color-indicator[data-event-color]').forEach(function(el) {
+            var color = el.getAttribute('data-event-color') || '#198754';
+            el.style.backgroundColor = color;
+        });
+    });
+</script>
 
+@endsection

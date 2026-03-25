@@ -20,12 +20,13 @@
 }
 
 .card-header {
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: 0.65rem 1rem;
     margin-bottom: 0;
     background-color: rgba(0, 0, 0, 0.03);
     border-bottom: 1px solid rgba(0, 0, 0, 0.125);
     border-top-left-radius: var(--border-radius-lg);
     border-top-right-radius: var(--border-radius-lg);
+    line-height: 1.2;
 }
 
 .card-footer {
@@ -81,9 +82,9 @@
     .card-body {
         padding: var(--spacing-md);
     }
-    
+
     .card-header,
     .card-footer {
-        padding: var(--spacing-sm) var(--spacing-md);
+        padding: 0.55rem 0.85rem;
     }
 }

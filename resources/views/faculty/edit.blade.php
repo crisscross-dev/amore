@@ -14,21 +14,6 @@
         <div class="row justify-content-center">
             <div class="col-12" style="max-width: 1600px;">
                 
-                <!-- Page Header -->
-                <div class="profile-header">
-                    <div class="d-flex align-items-center justify-content-between flex-wrap">
-                        <div>
-                            <h2 class="mb-2">
-                                <i class="fas fa-user-edit me-2"></i>Edit Profile
-                            </h2>
-                            <p class="text-muted mb-0">Update your personal information and settings</p>
-                        </div>
-                        <x-ui.button variant="warning" href="{{ route('dashboard.faculty') }}" class="mt-3 mt-md-0">
-                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                        </x-ui.button>
-                    </div>
-                </div>
-
                 <!-- Success Message -->
                 @if(session('success'))
                     <div class="mb-3">

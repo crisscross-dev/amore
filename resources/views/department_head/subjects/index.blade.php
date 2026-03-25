@@ -7,8 +7,8 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 @vite([
-    'resources/css/layouts/dashboard-roles/dashboard-admin.css',
-    'resources/css/admin/faculty-management.css',
+'resources/css/layouts/dashboard-roles/dashboard-admin.css',
+'resources/css/admin/faculty-management.css',
 ])
 
 <div class="dashboard-container">
@@ -44,54 +44,54 @@
                 </div>
 
                 @if(session('success'))
-                    <x-ui.alert type="success" :dismissible="true">{{ session('success') }}</x-ui.alert>
+                <x-ui.alert type="success" :dismissible="true">{{ session('success') }}</x-ui.alert>
                 @endif
 
                 @if($errors->any())
-                    <x-ui.alert type="danger" :dismissible="true">
-                        <ul class="mb-0">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                    </x-ui.alert>
+                <x-ui.alert type="danger" :dismissible="true">
+                    <ul class="mb-0">
+                        @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </x-ui.alert>
                 @endif
 
                 @if(!empty($importSummary))
-                    <div class="faculty-management-card mb-4">
-                        <h5 class="mb-3">
-                            <i class="fas fa-file-import me-2 text-success"></i>
-                            Last Import Summary
-                        </h5>
-                        <div class="row g-3">
-                            <div class="col-sm-3">
-                                <div class="fw-semibold">Processed</div>
-                                <div>{{ $importSummary['processed'] }}</div>
-                            </div>
-                            <div class="col-sm-3">
-                                <div class="fw-semibold text-success">Created</div>
-                                <div>{{ $importSummary['created'] }}</div>
-                            </div>
-                            <div class="col-sm-3">
-                                <div class="fw-semibold text-primary">Updated</div>
-                                <div>{{ $importSummary['updated'] }}</div>
-                            </div>
-                            <div class="col-sm-3">
-                                <div class="fw-semibold text-danger">Errors</div>
-                                <div>{{ count($importSummary['errors']) }}</div>
-                            </div>
+                <div class="faculty-management-card mb-4">
+                    <h5 class="mb-3">
+                        <i class="fas fa-file-import me-2 text-success"></i>
+                        Last Import Summary
+                    </h5>
+                    <div class="row g-3">
+                        <div class="col-sm-3">
+                            <div class="fw-semibold">Processed</div>
+                            <div>{{ $importSummary['processed'] }}</div>
                         </div>
-                        @if(!empty($importSummary['errors']))
-                            <div class="alert alert-warning mt-3 mb-0">
-                                <strong>Import warnings:</strong>
-                                <ul class="mb-0 mt-2">
-                                    @foreach($importSummary['errors'] as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
+                        <div class="col-sm-3">
+                            <div class="fw-semibold text-success">Created</div>
+                            <div>{{ $importSummary['created'] }}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="fw-semibold text-primary">Updated</div>
+                            <div>{{ $importSummary['updated'] }}</div>
+                        </div>
+                        <div class="col-sm-3">
+                            <div class="fw-semibold text-danger">Errors</div>
+                            <div>{{ count($importSummary['errors']) }}</div>
+                        </div>
                     </div>
+                    @if(!empty($importSummary['errors']))
+                    <div class="alert alert-warning mt-3 mb-0">
+                        <strong>Import warnings:</strong>
+                        <ul class="mb-0 mt-2">
+                            @foreach($importSummary['errors'] as $error)
+                            <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                    @endif
+                </div>
                 @endif
 
                 <div class="faculty-management-card mb-4">
@@ -125,9 +125,9 @@
                             <select name="subject_type" class="form-select">
                                 <option value="">All types</option>
                                 @foreach($subjectTypes as $value => $label)
-                                    <option value="{{ $value }}" {{ ($filters['subject_type'] ?? '') === $value ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
+                                <option value="{{ $value }}" {{ ($filters['subject_type'] ?? '') === $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -136,9 +136,9 @@
                             <select name="grade_level" class="form-select">
                                 <option value="">All grade levels</option>
                                 @foreach($filterGradeLevels as $value => $label)
-                                    <option value="{{ $value }}" {{ ($filters['grade_level'] ?? '') === $value ? 'selected' : '' }}>
-                                        {{ $label }}
-                                    </option>
+                                <option value="{{ $value }}" {{ ($filters['grade_level'] ?? '') === $value ? 'selected' : '' }}>
+                                    {{ $label }}
+                                </option>
                                 @endforeach
                             </select>
                         </div>
@@ -172,52 +172,52 @@
                             </thead>
                             <tbody>
                                 @forelse($subjects as $subject)
-                                    <tr>
-                                        <td>
-                                            <div class="fw-semibold text-success">{{ $subject->name }}</div>
-                                            <small class="text-muted">{{ $subject->description ?: 'No description provided' }}</small>
-                                        </td>
-                                        <td class="text-capitalize">
-                                            {{ $subject->subject_type ? ($subjectTypes[$subject->subject_type] ?? ucfirst($subject->subject_type)) : '—' }}
-                                        </td>
-                                        <td>
-                                            @php
-                                                $mappedLevels = $subject->gradeLevels->pluck('grade_level')->unique()->sort()->values();
-                                            @endphp
-                                            @if($mappedLevels->isEmpty())
-                                                {{ $gradeLevels[$subject->grade_level] ?? strtoupper($subject->grade_level) }}
-                                            @elseif($mappedLevels->count() === 6)
-                                                All Levels
-                                            @else
-                                                Grade {{ $mappedLevels->implode(', ') }}
-                                            @endif
-                                        </td>
-                                        <!-- <td>{{ $subject->hours_per_week ?? '—' }}</td> -->
-                                        <td class="text-center">
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <a href="{{ route($routeBase . 'edit', $subject) }}" class="btn btn-outline-success">
-                                                    <i class="fas fa-pen"></i>
-                                                </a>
-                                                <form action="{{ route($routeBase . 'destroy', $subject) }}" method="POST" onsubmit="return confirm('Delete this subject?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-outline-danger">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-success">{{ $subject->name }}</div>
+                                        <small class="text-muted">{{ $subject->description ?: 'No description provided' }}</small>
+                                    </td>
+                                    <td class="text-capitalize">
+                                        {{ $subject->subject_type ? ($subjectTypes[$subject->subject_type] ?? ucfirst($subject->subject_type)) : '—' }}
+                                    </td>
+                                    <td>
+                                        @php
+                                        $mappedLevels = $subject->gradeLevels->pluck('grade_level')->unique()->sort()->values();
+                                        @endphp
+                                        @if($mappedLevels->isEmpty())
+                                        {{ $gradeLevels[$subject->grade_level] ?? strtoupper($subject->grade_level) }}
+                                        @elseif($mappedLevels->count() === 6)
+                                        All Levels
+                                        @else
+                                        Grade {{ $mappedLevels->implode(', ') }}
+                                        @endif
+                                    </td>
+                                    <!-- <td>{{ $subject->hours_per_week ?? '—' }}</td> -->
+                                    <td class="text-center">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="{{ route($routeBase . 'edit', $subject) }}" class="btn btn-outline-success">
+                                                <i class="fas fa-pen"></i>
+                                            </a>
+                                            <form action="{{ route($routeBase . 'destroy', $subject) }}" method="POST">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-outline-danger">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
                                 @empty
-                                    <tr>
-                                        <td colspan="5">
-                                            <div class="faculty-management-empty">
-                                                <i class="fas fa-book"></i>
-                                                <h5 class="fw-semibold mb-2">No subjects available yet</h5>
-                                                <p class="mb-0">Create your first subject to populate the catalog.</p>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                <tr>
+                                    <td colspan="5">
+                                        <div class="faculty-management-empty">
+                                            <i class="fas fa-book"></i>
+                                            <h5 class="fw-semibold mb-2">No subjects available yet</h5>
+                                            <p class="mb-0">Create your first subject to populate the catalog.</p>
+                                        </div>
+                                    </td>
+                                </tr>
                                 @endforelse
                             </tbody>
                         </table>
@@ -232,4 +232,3 @@
     </div>
 </div>
 @endsection
-

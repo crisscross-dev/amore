@@ -1,98 +1,98 @@
 @if($pending->count() > 0)
-    <div class="table-responsive mt-3">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <th><i class="fas fa-id-badge me-1"></i>ID</th>
-                    <th><i class="fas fa-user me-1"></i>Name</th>
-                    <th><i class="fas fa-envelope me-1"></i>Email</th>
-                    <th><i class="fas fa-circle me-1"></i>Account Type</th>
-                    <th><i class="fas fa-graduation-cap me-1"></i>Grade / Dept</th>
-                    <th class="text-center"><i class="fas fa-cogs me-1"></i>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($pending as $account)
-                    <tr>
-                        <td><strong>{{ $account->custom_id ?? $account->id }}</strong></td>
-                        <td>
-                            <div class="d-flex align-items-center">
-                                <div class="me-2">
-                                    @if($account->profile_picture)
-                                        <img src="{{ asset('uploads/profile_picture/' . $account->profile_picture) }}" 
-                                             alt="Profile" 
-                                             class="rounded-circle"
-                                             width="32"
-                                             height="32"
-                                             style="object-fit: cover;">
-                                    @else
-                                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center" 
-                                             style="width: 32px; height: 32px; font-size: 14px;">
-                                            {{ strtoupper(substr($account->first_name, 0, 1)) }}
-                                        </div>
-                                    @endif
-                                </div>
-                                <div>
-                                    <strong>{{ $account->first_name }} {{ $account->last_name }}</strong>
-                                </div>
-                            </div>
-                        </td>
-                        <td>{{ $account->email }}</td>
-                        <td>{{ ucfirst($account->account_type) }}</td>
-                        <td>
-                            @if($account->account_type === 'student')
-                                @if($account->grade_level)
-                                    <span class="badge bg-info">Grade {{ $account->grade_level }}</span>
-                                @else
-                                    <span class="text-muted">Not set</span>
-                                @endif
+<div class="table-responsive mt-3">
+    <table class="table table-hover align-middle">
+        <thead>
+            <tr>
+                <th><i class="fas fa-id-badge me-1"></i>ID</th>
+                <th><i class="fas fa-user me-1"></i>Name</th>
+                <th><i class="fas fa-envelope me-1"></i>Email</th>
+                <th><i class="fas fa-circle me-1"></i>Account Type</th>
+                <th><i class="fas fa-graduation-cap me-1"></i>Grade / Dept</th>
+                <th class="text-center"><i class="fas fa-cogs me-1"></i>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($pending as $account)
+            <tr>
+                <td><strong>{{ $account->custom_id ?? $account->id }}</strong></td>
+                <td>
+                    <div class="d-flex align-items-center">
+                        <div class="me-2">
+                            @if($account->profile_picture)
+                            <img src="{{ asset('uploads/profile_picture/' . $account->profile_picture) }}"
+                                alt="Profile"
+                                class="rounded-circle"
+                                width="32"
+                                height="32"
+                                style="object-fit: cover;">
                             @else
-                                @if($account->department)
-                                    <span class="badge bg-info">{{ $account->department }}</span>
-                                @else
-                                    <span class="text-muted">Not set</span>
-                                @endif
-                            @endif
-                        </td>
-                        <td>
-                            <div class="d-flex justify-content-center gap-1">
-                                <button type="button" 
-                                        class="btn btn-sm btn-success approve-btn" 
-                                        title="Approve"
-                                        data-user-id="{{ $account->id }}"
-                                        data-user-name="{{ $account->first_name }} {{ $account->last_name }}"
-                                        data-user-email="{{ $account->email }}"
-                                        data-account-type="{{ $account->account_type }}"
-                                        data-grade-level="{{ $account->grade_level ?? '' }}"
-                                        data-lrn="{{ $account->lrn ?? '' }}"
-                                        data-department="{{ $account->department ?? '' }}"
-                                        data-registered="{{ $account->created_at->format('M d, Y') }}">
-                                    <i class="fas fa-check"></i>
-                                </button>
-                                <form action="{{ route('admin.accounts.reject', $account->id) }}" method="POST" class="d-inline">
-                                    @csrf
-                                    @method('PATCH')
-                                    <button type="submit" class="btn btn-sm btn-danger" title="Reject">
-                                        <i class="fas fa-times"></i>
-                                    </button>
-                                </form>
+                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center"
+                                style="width: 32px; height: 32px; font-size: 14px;">
+                                {{ strtoupper(substr($account->first_name, 0, 1)) }}
                             </div>
-                        </td>
-                    </tr>
-                @endforeach
-            </tbody>
-        </table>
-    </div>
+                            @endif
+                        </div>
+                        <div>
+                            <strong>{{ $account->first_name }} {{ $account->last_name }}</strong>
+                        </div>
+                    </div>
+                </td>
+                <td>{{ $account->email }}</td>
+                <td>{{ ucfirst($account->account_type) }}</td>
+                <td>
+                    @if($account->account_type === 'student')
+                    @if($account->grade_level)
+                    <span class="badge bg-info">Grade {{ $account->grade_level }}</span>
+                    @else
+                    <span class="text-muted">Not set</span>
+                    @endif
+                    @else
+                    @if($account->department)
+                    <span class="badge bg-info">{{ $account->department }}</span>
+                    @else
+                    <span class="text-muted">Not set</span>
+                    @endif
+                    @endif
+                </td>
+                <td>
+                    <div class="d-flex justify-content-center gap-1">
+                        <button type="button"
+                            class="btn btn-sm btn-success approve-btn"
+                            title="Approve"
+                            data-user-id="{{ $account->id }}"
+                            data-user-name="{{ $account->first_name }} {{ $account->last_name }}"
+                            data-user-email="{{ $account->email }}"
+                            data-account-type="{{ $account->account_type }}"
+                            data-grade-level="{{ $account->grade_level ?? '' }}"
+                            data-lrn="{{ $account->lrn ?? '' }}"
+                            data-department="{{ $account->department ?? '' }}"
+                            data-registered="{{ $account->created_at->format('M d, Y') }}">
+                            <i class="fas fa-check"></i>
+                        </button>
+                        <form action="{{ route('admin.accounts.reject', $account->id) }}" method="POST" class="d-inline">
+                            @csrf
+                            @method('PATCH')
+                            <button type="submit" class="btn btn-sm btn-danger" title="Reject">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </form>
+                    </div>
+                </td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+</div>
 
-    <div class="pagination-wrapper mt-4">
-        {{ $pending->appends(request()->query())->links('pagination::bootstrap-5') }}
-    </div>
+<div class="pagination-wrapper mt-4">
+    {{ $pending->appends(array_merge(request()->query(), ['tab' => 'for-approval']))->links('pagination::bootstrap-5') }}
+</div>
 @else
-    <div class="empty-state">
-        <i class="fas fa-inbox"></i>
-        <h5>No Pending Account Approval</h5>
-        <p>There are currently no accounts waiting for approval.</p>
-    </div>
+<div class="empty-state">
+    <i class="fas fa-inbox"></i>
+    <h5>No Pending Account Approval</h5>
+    <p>There are currently no accounts waiting for approval.</p>
+</div>
 @endif
 
 <!-- Approve Account Modal -->

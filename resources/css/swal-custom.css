@@ -1,0 +1,162 @@
+/* SweetAlert2 green-themed overrides for admin dashboard */
+.swal2-popup.swal2-green-theme {
+    background: #f3f4f6 !important;
+    color: #1f2937 !important;
+    border-radius: 12px !important;
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.15) !important;
+    padding: 1.4rem 1.5rem 1.35rem !important;
+    font-family:
+        "Segoe UI", Inter, "Helvetica Neue", Arial, sans-serif !important;
+}
+
+.swal2-title.swal2-green-title {
+    color: #1b5e20 !important;
+    font-weight: 700 !important;
+    font-size: 1.45rem !important;
+    line-height: 1.25 !important;
+    margin-bottom: 0.45rem !important;
+}
+
+.swal2-html-container.swal2-green-text {
+    color: #555 !important;
+    font-size: 0.98rem !important;
+    line-height: 1.45 !important;
+    margin-top: 0.15rem !important;
+}
+
+.swal2-icon.swal2-warning {
+    border-color: #2e7d32 !important;
+    color: #2e7d32 !important;
+}
+
+.swal2-icon.swal2-warning .swal2-icon-content {
+    color: #2e7d32 !important;
+}
+
+.swal2-actions.swal2-green-actions {
+    gap: 0.55rem !important;
+    margin-top: 1.15rem !important;
+}
+
+.swal2-confirm.swal2-green-confirm,
+.swal2-cancel.swal2-green-cancel {
+    min-width: 124px !important;
+    border-radius: 8px !important;
+    padding: 0.58rem 1.1rem !important;
+    font-size: 0.93rem !important;
+    font-weight: 600 !important;
+    border: none !important;
+    transition:
+        transform 0.14s ease,
+        filter 0.2s ease,
+        box-shadow 0.2s ease !important;
+}
+
+.swal2-confirm.swal2-green-confirm {
+    background: #2e7d32 !important;
+    color: #fff !important;
+}
+
+.swal2-cancel.swal2-green-cancel {
+    background: #6c757d !important;
+    color: #fff !important;
+}
+
+.swal2-confirm.swal2-green-confirm:hover,
+.swal2-cancel.swal2-green-cancel:hover {
+    filter: brightness(0.94) !important;
+    transform: translateY(-1px) !important;
+}
+
+.swal2-confirm.swal2-green-confirm:focus-visible,
+.swal2-cancel.swal2-green-cancel:focus-visible {
+    outline: 2px solid #1b5e20 !important;
+    outline-offset: 2px !important;
+    box-shadow: 0 0 0 2px rgba(27, 94, 32, 0.2) !important;
+}
+
+.swal2-green-popup-in {
+    animation: swalGreenIn 0.2s cubic-bezier(0.2, 0.9, 0.2, 1) both !important;
+}
+
+.swal2-green-popup-out {
+    animation: swalGreenOut 0.16s ease-in both !important;
+}
+
+.swal2-green-backdrop-in {
+    animation: swalGreenBackdropIn 0.18s ease-out both !important;
+}
+
+.swal2-green-backdrop-out {
+    animation: swalGreenBackdropOut 0.14s ease-in both !important;
+}
+
+.swal2-loader {
+    width: 2.2em !important;
+    height: 2.2em !important;
+    border-width: 0.22em !important;
+    border-style: solid !important;
+    border-color: rgba(46, 125, 50, 0.22) !important;
+    border-top-color: #2e7d32 !important;
+    border-right-color: #2e7d32 !important;
+    border-radius: 50% !important;
+    animation: swalLoaderSpin 0.85s linear infinite !important;
+}
+
+.swal2-loading .swal2-loader {
+    display: flex !important;
+}
+
+@keyframes swalGreenIn {
+    0% {
+        opacity: 0;
+        transform: translateY(8px) scale(0.97);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes swalGreenOut {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(6px) scale(0.98);
+    }
+}
+
+@keyframes swalGreenBackdropIn {
+    0% {
+        opacity: 0;
+    }
+
+    100% {
+        opacity: 1;
+    }
+}
+
+@keyframes swalGreenBackdropOut {
+    0% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
+
+@keyframes swalLoaderSpin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}

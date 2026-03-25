@@ -112,8 +112,12 @@ class SectionAssignmentController extends Controller
     public function updateSubjectTeachers(Request $request, Section $section): RedirectResponse
     {
         $validated = $request->validate([
+            'adviser_id' => ['nullable', 'exists:users,id'],
             'teacher_ids' => ['array'],
             'teacher_ids.*' => ['nullable', 'exists:users,id'],
+            'group_subject_ids' => ['array'],
+            'group_subject_ids.*' => ['array'],
+            'group_subject_ids.*.*' => ['integer', 'exists:subjects,id'],
             'rooms' => ['array'],
             'rooms.*' => ['nullable', 'string', 'max:255'],
             'days' => ['array'],
@@ -129,6 +133,20 @@ class SectionAssignmentController extends Controller
         $daysBySubject = $validated['days'] ?? [];
         $startTimesBySubject = $validated['start_times'] ?? [];
         $endTimesBySubject = $validated['end_times'] ?? [];
+        $groupSubjectIdsByRepresentative = $validated['group_subject_ids'] ?? [];
+        $adviserId = isset($validated['adviser_id']) && $validated['adviser_id'] !== ''
+            ? (int) $validated['adviser_id']
+            : null;
+
+        if ($adviserId) {
+            $isFacultyAdviser = \App\Models\User::where('id', $adviserId)
+                ->where('account_type', 'faculty')
+                ->exists();
+
+            if (! $isFacultyAdviser) {
+                return back()->withErrors(['adviser_id' => 'Selected adviser must be a faculty account.']);
+            }
+        }
 
         if (! empty($teacherIdsBySubject)) {
             $teacherIds = array_values(array_filter($teacherIdsBySubject));
@@ -161,6 +179,13 @@ class SectionAssignmentController extends Controller
             return back()->withErrors(['teacher_ids' => 'Some subjects are not valid for this section.']);
         }
 
+        foreach ($groupSubjectIdsByRepresentative as $representativeId => $groupSubjectIds) {
+            $invalidGroupSubjectIds = array_diff(array_map('intval', (array) $groupSubjectIds), $allowedSubjectIds);
+            if (! empty($invalidGroupSubjectIds)) {
+                return back()->withErrors(['teacher_ids' => 'Some grouped subjects are not valid for this section.']);
+            }
+        }
+
         foreach ($teacherIdsBySubject as $subjectId => $teacherId) {
             $room = $roomsBySubject[$subjectId] ?? null;
             $day = $daysBySubject[$subjectId] ?? null;
@@ -168,6 +193,12 @@ class SectionAssignmentController extends Controller
             $end = $endTimesBySubject[$subjectId] ?? null;
             $resolvedTeacherId = $teacherId ? (int) $teacherId : null;
             $subjectIdInt = (int) $subjectId;
+            $targetSubjectIds = array_values(array_unique(array_map('intval', $groupSubjectIdsByRepresentative[$subjectId] ?? [$subjectIdInt])));
+            $targetSubjectIds = array_values(array_intersect($targetSubjectIds, $allowedSubjectIds));
+
+            if (empty($targetSubjectIds)) {
+                continue;
+            }
 
             if (($day || $start || $end) && (! $day || ! $start || ! $end)) {
                 return back()->withErrors(['schedule' => 'Day, start time, and end time are required together.']);
@@ -189,27 +220,34 @@ class SectionAssignmentController extends Controller
                     $end,
                     $section->id,
                     $subjectIdInt,
-                    $resolvedTeacherId ? (int) $resolvedTeacherId : null
+                    $resolvedTeacherId ? (int) $resolvedTeacherId : null,
+                    $targetSubjectIds
                 );
                 if ($conflictMessage) {
                     return back()->withErrors(['schedule' => $conflictMessage]);
                 }
             }
 
-            SectionSubjectTeacher::updateOrCreate(
-                ['section_id' => $section->id, 'subject_id' => $subjectIdInt],
-                [
-                    'teacher_id' => $resolvedTeacherId,
-                    'room' => $room,
-                    'day_of_week' => $day,
-                    'start_time' => $start,
-                    'end_time' => $end,
-                    'schedule' => $this->formatSchedule($day, $start, $end),
-                ]
-            );
+            foreach ($targetSubjectIds as $targetSubjectId) {
+                SectionSubjectTeacher::updateOrCreate(
+                    ['section_id' => $section->id, 'subject_id' => $targetSubjectId],
+                    [
+                        'teacher_id' => $resolvedTeacherId,
+                        'room' => $room,
+                        'day_of_week' => $day,
+                        'start_time' => $start,
+                        'end_time' => $end,
+                        'schedule' => $this->formatSchedule($day, $start, $end),
+                    ]
+                );
+            }
         }
 
-        return back()->with('success', 'Subject teacher assignments updated successfully.');
+        $section->update([
+            'adviser_id' => $adviserId,
+        ]);
+
+        return back()->with('success', 'Subject teacher assignments and adviser updated successfully.');
     }
 
     public function storeTeachingLoad(Request $request): RedirectResponse
@@ -324,8 +362,11 @@ class SectionAssignmentController extends Controller
         string $end,
         int $sectionId,
         int $subjectId,
-        ?int $teacherId = null
+        ?int $teacherId = null,
+        array $ignoreSubjectIds = []
     ): ?string {
+        $excludedSubjectIds = array_values(array_unique(array_map('intval', array_merge($ignoreSubjectIds, [$subjectId]))));
+
         $roomConflict = SectionSubjectTeacher::query()
             ->where('room', $room)
             ->where('day_of_week', $day)
@@ -333,9 +374,9 @@ class SectionAssignmentController extends Controller
                 $query->where('start_time', '<', $end)
                     ->where('end_time', '>', $start);
             })
-            ->where(function ($query) use ($sectionId, $subjectId) {
+            ->where(function ($query) use ($sectionId, $excludedSubjectIds) {
                 $query->where('section_id', '!=', $sectionId)
-                    ->orWhere('subject_id', '!=', $subjectId);
+                    ->orWhereNotIn('subject_id', $excludedSubjectIds);
             })
             ->exists();
 
@@ -351,9 +392,9 @@ class SectionAssignmentController extends Controller
                     $query->where('start_time', '<', $end)
                         ->where('end_time', '>', $start);
                 })
-                ->where(function ($query) use ($sectionId, $subjectId) {
+                ->where(function ($query) use ($sectionId, $excludedSubjectIds) {
                     $query->where('section_id', '!=', $sectionId)
-                        ->orWhere('subject_id', '!=', $subjectId);
+                        ->orWhereNotIn('subject_id', $excludedSubjectIds);
                 })
                 ->exists();
 

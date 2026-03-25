@@ -32,10 +32,6 @@
                         <div class="col-lg-5">
                             <div class="quick-link-card">
                                 <span class="text-uppercase small fw-semibold text-white-50">Quick access</span>
-                                <a href="{{ route('admin.subjects.index') }}">
-                                    <i class="fas fa-book-open"></i>
-                                    Manage Subjects
-                                </a>
                                 <a href="{{ route('admin.faculty-assignments.index') }}">
                                     <i class="fas fa-user-check"></i>
                                     Faculty Assignments

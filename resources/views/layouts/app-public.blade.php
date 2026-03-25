@@ -7,10 +7,11 @@
     <title>@yield('title', 'Amore Academy')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="{{ asset('SchoolLogo.png') }}">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ asset('css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ asset('css/sweetalert2.min.css') }}" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Display+Playfair:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    @vite(['resources/css/app.css'])
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    @vite(['resources/css/app.css', 'resources/css/swal-custom.css'])
+    <link href="{{ asset('css/bootstrap-icons.min.css') }}" rel="stylesheet">
 
     <style>
         body {
@@ -55,7 +56,7 @@
 <body id="top">
     <nav class="navbar navbar-expand-lg navbar-light navbar-custom app-global-header">
         <div class="container">
-            <a class="navbar-brand text-white fw-bold fs-3" href="{{ route('welcome') }}#top">Amore Academy</a>
+            <span class="navbar-brand text-white fw-bold fs-3">Amore Academy</span>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavPublic">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -109,8 +110,10 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     @vite(['resources/js/app.js'])
+    <script src="{{ asset('js/sweetalert2.min.js') }}"></script>
+    <script src="{{ asset('js/swal.js') }}"></script>
 
     @stack('scripts')
 </body>

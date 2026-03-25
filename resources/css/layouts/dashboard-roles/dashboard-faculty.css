@@ -178,7 +178,7 @@
 }
 
 .stat-card::before {
-    content: '';
+    content: "";
     position: absolute;
     top: 0;
     right: 0;
@@ -249,9 +249,10 @@
     background: linear-gradient(135deg, var(--color-primary) 0%, #20c997 100%);
     color: white;
     font-weight: 600;
-    font-size: 1.2rem;
+    font-size: 1rem;
     border: none;
-    padding: 1.5rem;
+    padding: 0.85rem 1rem;
+    line-height: 1.2;
 }
 
 /* Activity Table */
@@ -309,7 +310,7 @@
     .dashboard-container {
         padding: 1rem 0;
     }
-    
+
     .stat-card h2 {
         font-size: 2rem;
     }
@@ -375,7 +376,7 @@
     .dashboard_content {
         padding: var(--spacing-lg) 0;
     }
-    
+
     .dashboard-sidebar {
         margin-bottom: var(--spacing-lg);
     }

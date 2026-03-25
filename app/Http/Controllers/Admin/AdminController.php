@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
@@ -32,35 +33,77 @@ class AdminController extends Controller
         }
 
         $gradeLevel = $request->query('student_grade_level');
-        $sectionId = $request->query('student_section_id');
-
         // Get students with pagination
         $students = User::where('account_type', 'student')
-            ->select(['id', 'first_name', 'last_name', 'email', 'grade_level', 'lrn', 'status', 'created_at', 'section_id'])
-            ->when($gradeLevel, fn ($q) => $q->where('grade_level', $gradeLevel))
-            ->when($sectionId, fn ($q) => $q->where('section_id', $sectionId))
+            ->select([
+                'id',
+                'custom_id',
+                'first_name',
+                'middle_name',
+                'last_name',
+                'email',
+                'contact_number',
+                'grade_level',
+                'department',
+                'lrn',
+                'status',
+                'created_at',
+                'section_id',
+                'profile_picture',
+            ])
+            ->when($gradeLevel, fn($q) => $q->where('grade_level', $gradeLevel))
             ->orderBy('created_at', 'desc')
-            ->paginate(15)
+            ->paginate(15, ['*'], 'students_page')
             ->withQueryString();
 
         // Get faculty with pagination
         $faculty = User::where('account_type', 'faculty')
-            ->select(['id', 'first_name', 'last_name', 'email', 'department', 'status', 'created_at'])
+            ->select([
+                'id',
+                'custom_id',
+                'first_name',
+                'middle_name',
+                'last_name',
+                'email',
+                'contact_number',
+                'grade_level',
+                'department',
+                'status',
+                'created_at',
+                'profile_picture',
+            ])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'faculty_page')
+            ->withQueryString();
 
         // Get accounts pending approval (for both students and faculty)
         $pending = User::where('status', 'for_approval')
             ->select(['id', 'first_name', 'last_name', 'email', 'account_type', 'grade_level', 'lrn', 'department', 'status', 'created_at'])
             ->orderBy('created_at', 'desc')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'pending_page')
+            ->withQueryString();
+
+        $studentGradeLevels = User::where('account_type', 'student')
+            ->whereNotNull('grade_level')
+            ->where('grade_level', '!=', '')
+            ->selectRaw('grade_level, COUNT(*) as total')
+            ->groupBy('grade_level')
+            ->get()
+            ->sortBy(function ($row) {
+                if (preg_match('/(\d+)/', (string) $row->grade_level, $match)) {
+                    return (int) $match[1];
+                }
+
+                return PHP_INT_MAX;
+            })
+            ->values();
 
         // Sections grouped by grade level
         $sectionsByGrade = \App\Models\Section::where('is_active', true)
             ->get()
             ->groupBy('grade_level');
 
-        return view('admin.accounts.manage', compact('students', 'faculty', 'pending', 'sectionsByGrade', 'gradeLevel', 'sectionId'));
+        return view('admin.accounts.manage', compact('students', 'faculty', 'pending', 'sectionsByGrade', 'gradeLevel', 'studentGradeLevels'));
     }
 
     /**
@@ -68,7 +111,7 @@ class AdminController extends Controller
      */
     public function approve(Request $request, User $user)
     {
-        if (auth()->user()->account_type !== 'admin') {
+        if (Auth::user()->account_type !== 'admin') {
             abort(403);
         }
 
@@ -89,7 +132,7 @@ class AdminController extends Controller
                 // Mail::to($user->email)->queue(new \App\Mail\AccountApproved($user));
             } catch (\Exception $e) {
                 // Log the error but don't fail the approval
-                \Log::error('Failed to send approval email: ' . $e->getMessage());
+                Log::error('Failed to send approval email: ' . $e->getMessage());
             }
         }
 
@@ -101,7 +144,7 @@ class AdminController extends Controller
      */
     public function reject(Request $request, User $user)
     {
-        if (auth()->user()->account_type !== 'admin') {
+        if (Auth::user()->account_type !== 'admin') {
             abort(403);
         }
 
@@ -109,10 +152,10 @@ class AdminController extends Controller
             return redirect()->back()->with('error', 'Account is not pending approval.');
         }
 
-    // Delete the user to reject their pending account
-    $user->delete();
+        // Delete the user to reject their pending account
+        $user->delete();
 
-    return redirect()->back()->with('success', 'Account rejected and removed.');
+        return redirect()->back()->with('success', 'Account rejected and removed.');
     }
 
     /**
@@ -120,7 +163,7 @@ class AdminController extends Controller
      */
     public function show(User $user)
     {
-        if (auth()->user()->account_type !== 'admin') {
+        if (Auth::user()->account_type !== 'admin') {
             abort(403);
         }
 
@@ -138,7 +181,7 @@ class AdminController extends Controller
      */
     public function edit(User $user)
     {
-        if (auth()->user()->account_type !== 'admin') {
+        if (Auth::user()->account_type !== 'admin') {
             abort(403);
         }
 
@@ -150,7 +193,7 @@ class AdminController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        if (auth()->user()->account_type !== 'admin') {
+        if (Auth::user()->account_type !== 'admin') {
             abort(403);
         }
 
@@ -173,7 +216,13 @@ class AdminController extends Controller
         $user->department = $request->department;
         $user->save();
 
-        return redirect()->route('admin.accounts.show', $user)->with('success', 'Account updated successfully.');
+        if ($request->filled('tab')) {
+            return redirect()->route('admin.accounts.manage', [
+                'tab' => $request->input('tab'),
+            ])->with('success', 'Account updated successfully.');
+        }
+
+        return redirect()->back()->with('success', 'Account updated successfully.');
     }
 
     /**
@@ -181,7 +230,7 @@ class AdminController extends Controller
      */
     public function destroy(Request $request, User $user)
     {
-        if (auth()->user()->account_type !== 'admin') {
+        if (Auth::user()->account_type !== 'admin') {
             abort(403);
         }
 

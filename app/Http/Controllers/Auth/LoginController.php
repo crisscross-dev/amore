@@ -8,11 +8,22 @@ use Illuminate\Support\Facades\Auth;
 
 class LoginController extends Controller
 {
+    private function dashboardRouteFor(string $accountType): string
+    {
+        return match (strtolower($accountType)) {
+            'admin' => 'dashboard.admin',
+            'faculty' => 'dashboard.faculty',
+            default => 'dashboard.student',
+        };
+    }
+
     public function showLogin()
     {
         if (Auth::check()) {
+            $routeName = $this->dashboardRouteFor((string) Auth::user()->account_type);
+
             return redirect()
-                ->route('welcome')
+                ->route($routeName)
                 ->with('popup', 'You are already logged in.');
         }
 
@@ -39,7 +50,8 @@ class LoginController extends Controller
 
             $request->session()->regenerate();
 
-            return redirect()->intended(route('dashboard'));
+            $routeName = $this->dashboardRouteFor((string) $user->account_type);
+            return redirect()->route($routeName);
         }
 
         return back()->withErrors([

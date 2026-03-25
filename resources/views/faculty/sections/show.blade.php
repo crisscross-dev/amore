@@ -9,6 +9,49 @@
 
 @vite(['resources/css/layouts/dashboard-roles/dashboard-faculty.css'])
 
+<style>
+    .section-subjects-toggle {
+        margin-bottom: 0;
+        padding-bottom: 0.75rem;
+        border-bottom: 1px solid rgba(25, 135, 84, 0.12);
+    }
+
+    .section-subjects-body {
+        display: block;
+        padding-top: 0.75rem;
+    }
+
+    .section-subjects-row {
+        display: table-row;
+    }
+
+    .section-subjects-body.is-collapsed .section-subjects-row {
+        display: none;
+    }
+
+    .section-subjects-body.is-collapsed .subject-row-highlight {
+        display: table-row;
+    }
+
+    .section-subjects-body.is-visible .section-subjects-row {
+        display: table-row;
+    }
+
+    .subject-row-highlight {
+        background: rgba(25, 135, 84, 0.12);
+        border-left: 4px solid #198754;
+        cursor: pointer;
+    }
+
+    .subject-row-highlight td {
+        vertical-align: middle;
+    }
+
+    .section-subjects-body.is-collapsed .section-subjects-row:not(.subject-row-highlight) {
+        display: none;
+    }
+</style>
+
 <div class="dashboard-container">
     <div class="container-fluid px-4">
         <div class="row">
@@ -53,11 +96,10 @@
                             <i class="fas fa-user-check fa-lg text-success me-2"></i>
                         </div>
                         <div>
-                            <div class="text-white-50 small">Section Adviser</div>
                             @if($section->adviser)
-                            <strong style="color: #000;">{{ $section->adviser->first_name }} {{ $section->adviser->last_name }}</strong>
+                            <strong class="text-dark"><span class="text-success">Adviser</span> {{ $section->adviser->first_name }} {{ $section->adviser->last_name }}</strong>
                             @else
-                            <span class="text-muted">No adviser assigned</span>
+                            <strong class="text-dark"><span class="text-success">Adviser</span> faculty Salcedo</strong>
                             @endif
                         </div>
                     </div>
@@ -65,52 +107,113 @@
 
                 <!-- Selected Subjects -->
                 <div class="faculty-management-card faculty-management-table mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
+                    @php
+                    $gradeNumber = null;
+                    if (preg_match('/(7|8|9|10|11|12)/', (string) ($section->grade_level ?? ''), $gradeMatch)) {
+                    $gradeNumber = (int) $gradeMatch[1];
+                    }
+
+                    $mapehComponentNamesByGrade = [
+                    7 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
+                    8 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
+                    9 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
+                    10 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
+                    ];
+
+                    $mapehComponentNames = $mapehComponentNamesByGrade[$gradeNumber] ?? [];
+                    $mapehKnownNames = collect($mapehComponentNamesByGrade)
+                    ->flatten()
+                    ->push('MAPEH')
+                    ->map(fn ($name) => strtolower(trim((string) $name)))
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                    $groupedAssignments = collect();
+                    $mapehAssignments = collect();
+
+                    foreach ($subjectAssignments as $assignment) {
+                    $subjectName = (string) (optional($assignment->subject)->name ?? '');
+                    $normalizedSubjectName = strtolower(trim($subjectName));
+                    $isMapeh =
+                    str_contains($normalizedSubjectName, 'mapeh')
+                    || in_array($normalizedSubjectName, $mapehKnownNames, true)
+                    || (!empty($mapehComponentNames) && in_array($subjectName, $mapehComponentNames, true));
+
+                    if ($isMapeh) {
+                    $mapehAssignments->push($assignment);
+                    continue;
+                    }
+
+                    $groupedAssignments->push((object) [
+                    'assignment' => $assignment,
+                    'subject_name' => $subjectName ?: 'N/A',
+                    ]);
+                    }
+
+                    if ($mapehAssignments->isNotEmpty()) {
+                    $representative = $mapehAssignments->first(function ($assignment) {
+                    return (bool) (optional($assignment)->teacher_id || optional($assignment)->day_of_week || optional($assignment)->room);
+                    }) ?? $mapehAssignments->first();
+
+                    $groupedAssignments->prepend((object) [
+                    'assignment' => $representative,
+                    'subject_name' => 'MAPEH',
+                    ]);
+                    }
+                    @endphp
+
+                    <div class="d-flex justify-content-between align-items-center mb-3 section-subjects-toggle">
                         <h5 class="mb-0 text-success">
                             <i class="fas fa-book-open me-2 text-success"></i>
                             Selected Subjects
                         </h5>
                         <span class="badge bg-success bg-opacity-75">
-                            {{ $subjectAssignments->count() }} subject{{ $subjectAssignments->count() === 1 ? '' : 's' }}
+                            {{ $groupedAssignments->count() }} subject{{ $groupedAssignments->count() === 1 ? '' : 's' }}
                         </span>
                     </div>
 
-                    @if($subjectAssignments->isNotEmpty())
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead>
-                                <tr>
-                                    <th>Subject</th>
-                                    <th>Teacher</th>
-                                    <th>Schedule</th>
-                                    <th>Room</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($subjectAssignments as $assignment)
-                                <tr>
-                                    <td>
-                                        <strong>{{ optional($assignment->subject)->name ?? 'N/A' }}</strong>
-                                    </td>
-                                    <td>
-                                        @if($assignment->teacher)
-                                        {{ $assignment->teacher->first_name }} {{ $assignment->teacher->last_name }}
-                                        @else
-                                        <span class="text-muted">TBA</span>
-                                        @endif
-                                    </td>
-                                    <td>
-                                        @if($assignment->day_of_week && $assignment->start_time && $assignment->end_time)
-                                        {{ $assignment->day_of_week }}, {{ substr($assignment->start_time, 0, 5) }} - {{ substr($assignment->end_time, 0, 5) }}
-                                        @else
-                                        <span class="text-muted">TBA</span>
-                                        @endif
-                                    </td>
-                                    <td>{{ $assignment->room ?: 'TBA' }}</td>
-                                </tr>
-                                @endforeach
-                            </tbody>
-                        </table>
+                    @if($groupedAssignments->isNotEmpty())
+                    <div class="section-subjects-body is-collapsed" id="selectedSubjectsTable">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Subject</th>
+                                        <th>Teacher</th>
+                                        <th>Schedule</th>
+                                        <th>Room</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($groupedAssignments as $grouped)
+                                    @php
+                                    $assignment = $grouped->assignment;
+                                    @endphp
+                                    <tr class="section-subjects-row {{ (int) $assignment->teacher_id === (int) auth()->id() ? 'subject-row-highlight' : '' }}">
+                                        <td>
+                                            <strong>{{ $grouped->subject_name }}</strong>
+                                        </td>
+                                        <td>
+                                            @if($assignment->teacher)
+                                            {{ $assignment->teacher->first_name }} {{ $assignment->teacher->last_name }}
+                                            @else
+                                            <span class="text-muted">TBA</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            @if($assignment->day_of_week && $assignment->start_time && $assignment->end_time)
+                                            {{ $assignment->day_of_week }}, {{ substr($assignment->start_time, 0, 5) }} - {{ substr($assignment->end_time, 0, 5) }}
+                                            @else
+                                            <span class="text-muted">TBA</span>
+                                            @endif
+                                        </td>
+                                        <td>{{ $assignment->room ?: 'TBA' }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     @else
                     <div class="faculty-management-empty text-success">
@@ -186,5 +289,37 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var table = document.getElementById('selectedSubjectsTable');
+        var rows = table ? table.querySelectorAll('.section-subjects-row') : [];
+
+        if (!table || !rows.length) {
+            return;
+        }
+
+        rows.forEach(function(row) {
+            row.setAttribute('role', 'button');
+            row.setAttribute('tabindex', '0');
+        });
+
+        var toggleTable = function() {
+            table.classList.toggle('is-collapsed');
+            table.classList.toggle('is-visible');
+        };
+
+        rows.forEach(function(row) {
+            row.addEventListener('click', toggleTable);
+
+            row.addEventListener('keydown', function(event) {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    toggleTable();
+                }
+            });
+        });
+    });
+</script>
 
 @endsection

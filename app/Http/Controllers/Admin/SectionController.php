@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Section;
 use App\Models\SectionSubjectTeacher;
+use App\Models\SchoolYear;
 use App\Models\Subject;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -16,7 +17,7 @@ class SectionController extends Controller
     public function index(Request $request)
     {
         $sections = Section::query()
-            ->with('adviser')
+            ->with(['adviser', 'subjectTeachers:id,section_id,subject_id'])
             ->orderBy('grade_level')
             ->orderBy('name')
             ->paginate(15, ['*'], 'sections_page')
@@ -29,7 +30,9 @@ class SectionController extends Controller
             ->orderBy('first_name')
             ->get();
 
-        return view('admin.sections.index', compact('sections', 'facultyMembers'));
+        [$schoolYears, $subjects] = $this->sectionFormOptions();
+
+        return view('admin.sections.index', compact('sections', 'facultyMembers', 'schoolYears', 'subjects'));
     }
 
     public function teachingLoads(Request $request)
@@ -141,18 +144,13 @@ class SectionController extends Controller
 
     public function create()
     {
-        $sectionNames = Section::query()
-            ->select('name')
-            ->distinct()
-            ->orderBy('name')
-            ->pluck('name');
+        [$schoolYears, $subjects] = $this->sectionFormOptions();
 
-        $subjects = Subject::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'grade_level']);
-
-        return view('admin.sections.create', compact('sectionNames', 'subjects'));
+        return view('admin.sections.create', [
+            'section' => new Section(),
+            'schoolYears' => $schoolYears,
+            'subjects' => $subjects,
+        ]);
     }
 
     public function store(Request $request)
@@ -161,7 +159,12 @@ class SectionController extends Controller
             'grade_level' => 'required|string|max:255',
             'description' => 'nullable|string',
             'capacity' => 'nullable|integer|min:1',
-            'academic_year' => 'nullable|string|max:255',
+            'academic_year' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::exists('school_years', 'year_name'),
+            ],
             'is_active' => 'nullable|boolean',
             'subject_ids' => 'required|array|min:1',
             'subject_ids.*' => [
@@ -188,7 +191,10 @@ class SectionController extends Controller
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
         DB::transaction(function () use ($validated) {
-            $subjectIds = array_unique(array_map('intval', $validated['subject_ids'] ?? []));
+            $subjectIds = $this->expandGroupedSubjectIds(
+                array_unique(array_map('intval', $validated['subject_ids'] ?? [])),
+                $validated['grade_level'] ?? null
+            );
             unset($validated['subject_ids']);
 
             $section = Section::create($validated);
@@ -207,10 +213,7 @@ class SectionController extends Controller
 
     public function edit(Section $section)
     {
-        $subjects = Subject::query()
-            ->where('is_active', true)
-            ->orderBy('name')
-            ->get(['id', 'name', 'grade_level']);
+        [$schoolYears, $subjects] = $this->sectionFormOptions();
 
         $selectedSubjectIds = SectionSubjectTeacher::query()
             ->where('section_id', $section->id)
@@ -218,7 +221,7 @@ class SectionController extends Controller
             ->map(fn($id) => (int) $id)
             ->all();
 
-        return view('admin.sections.edit', compact('section', 'subjects', 'selectedSubjectIds'));
+        return view('admin.sections.edit', compact('section', 'schoolYears', 'subjects', 'selectedSubjectIds'));
     }
 
     public function update(Request $request, Section $section)
@@ -227,7 +230,12 @@ class SectionController extends Controller
             'grade_level' => 'required|string|max:255',
             'description' => 'nullable|string',
             'capacity' => 'nullable|integer|min:1',
-            'academic_year' => 'nullable|string|max:255',
+            'academic_year' => [
+                'nullable',
+                'string',
+                'max:255',
+                Rule::exists('school_years', 'year_name'),
+            ],
             'is_active' => 'nullable|boolean',
             'subject_ids' => 'required|array|min:1',
             'subject_ids.*' => [
@@ -256,7 +264,10 @@ class SectionController extends Controller
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
         DB::transaction(function () use ($section, $validated) {
-            $subjectIds = array_unique(array_map('intval', $validated['subject_ids'] ?? []));
+            $subjectIds = $this->expandGroupedSubjectIds(
+                array_unique(array_map('intval', $validated['subject_ids'] ?? [])),
+                $validated['grade_level'] ?? null
+            );
             unset($validated['subject_ids']);
 
             $section->update($validated);
@@ -294,16 +305,93 @@ class SectionController extends Controller
         return redirect()->route('admin.sections.index')->with('success', 'Section deleted successfully');
     }
 
-    private function normalizeGradeLevel(?string $gradeLevel): ?string
+    private function sectionFormOptions(): array
+    {
+        $schoolYears = SchoolYear::query()
+            ->orderByDesc('start_date')
+            ->get(['id', 'year_name', 'is_active']);
+
+        $subjects = Subject::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name', 'grade_level', 'description']);
+
+        return [$schoolYears, $subjects];
+    }
+
+    private function expandGroupedSubjectIds(array $subjectIds, ?string $gradeLevel): array
+    {
+        $subjectIds = array_values(array_unique(array_map('intval', $subjectIds)));
+        if (empty($subjectIds)) {
+            return [];
+        }
+
+        $gradeNumber = $this->extractGradeNumber($gradeLevel);
+        if (! in_array($gradeNumber, [7, 8, 9, 10], true)) {
+            return $subjectIds;
+        }
+
+        $componentNames = $this->mapehComponentNamesForGrade($gradeNumber);
+        if (empty($componentNames)) {
+            return $subjectIds;
+        }
+
+        $selectedHasMapehComponent = Subject::query()
+            ->whereIn('id', $subjectIds)
+            ->whereIn('name', $componentNames)
+            ->exists();
+
+        if (! $selectedHasMapehComponent) {
+            return $subjectIds;
+        }
+
+        $allMapehComponentIds = Subject::query()
+            ->whereIn('name', $componentNames)
+            ->whereIn('grade_level', [(string) $gradeNumber, 'Grade ' . $gradeNumber])
+            ->pluck('id')
+            ->map(fn($id) => (int) $id)
+            ->all();
+
+        return array_values(array_unique(array_merge($subjectIds, $allMapehComponentIds)));
+    }
+
+    private function mapehComponentNamesForGrade(?int $gradeNumber): array
+    {
+        if (in_array($gradeNumber, [7, 8], true)) {
+            return [
+                'MAPEH - Music & Arts',
+                'MAPEH - PE & Health',
+                'Music & Arts',
+                'PE & Health',
+            ];
+        }
+
+        if (in_array($gradeNumber, [9, 10], true)) {
+            return [
+                'MAPEH - Music',
+                'MAPEH - Arts',
+                'MAPEH - PE',
+                'MAPEH - Health',
+                'Music',
+                'Arts',
+                'PE',
+                'Health',
+            ];
+        }
+
+        return [];
+    }
+
+    private function extractGradeNumber(?string $gradeLevel): ?int
     {
         if (! $gradeLevel) {
             return null;
         }
 
         if (preg_match('/(7|8|9|10|11|12)/', $gradeLevel, $matches)) {
-            return $matches[1];
+            return (int) $matches[1];
         }
 
-        return $gradeLevel;
+        return null;
     }
 }
