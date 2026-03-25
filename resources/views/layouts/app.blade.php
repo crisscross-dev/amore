@@ -123,7 +123,6 @@ $isLoggedIn = auth()->check();
 
   <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
   @vite(['resources/js/app.js'])
-  <script src="{{ asset('js/sweetalert2.min.js') }}"></script>
   <script src="{{ asset('js/swal.js') }}"></script>
 
   @stack('scripts')

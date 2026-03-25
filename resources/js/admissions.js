@@ -19,35 +19,43 @@ class AdmissionsManager {
     }
 
     /**
-     * Open admission modal when a table row is double-clicked
+     * Open admission modal when a table row is clicked/double-clicked
      */
     setupRowPreviewModals() {
-        const rows = document.querySelectorAll(
-            ".admissions-dashboard__table-row[data-modal-target]",
-        );
+        const openModalFromEvent = (event) => {
+            const target = event.target;
+            if (!target) {
+                return;
+            }
 
-        rows.forEach((row) => {
-            row.addEventListener("dblclick", (event) => {
-                const target = event.target;
+            if (
+                target.closest(
+                    'input, button, a, label, textarea, select, [data-bs-toggle="modal"]',
+                )
+            ) {
+                return;
+            }
 
-                if (
-                    target.closest(
-                        'input, button, a, label, [data-bs-toggle="modal"]',
-                    )
-                ) {
-                    return;
-                }
+            const row = target.closest(
+                ".admissions-dashboard__table-row[data-modal-target]",
+            );
+            if (!row) {
+                return;
+            }
 
-                const modalId = row.dataset.modalTarget;
-                const modalElement = document.getElementById(modalId);
+            const modalId = row.dataset.modalTarget;
+            const modalElement = modalId
+                ? document.getElementById(modalId)
+                : null;
+            if (!modalElement) {
+                return;
+            }
 
-                if (!modalElement) {
-                    return;
-                }
+            Modal.getOrCreateInstance(modalElement).show();
+        };
 
-                Modal.getOrCreateInstance(modalElement).show();
-            });
-        });
+        // Delegated listener is more reliable after cached/partial DOM updates on hosted setups.
+        document.addEventListener("dblclick", openModalFromEvent);
     }
 
     /**

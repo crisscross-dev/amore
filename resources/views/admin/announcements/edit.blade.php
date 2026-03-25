@@ -62,30 +62,30 @@
                                     <!-- Title -->
                                     <div class="mb-3">
                                         <label for="title" class="form-label">Title <span class="text-danger">*</span></label>
-                                        <input type="text" 
-                                               class="form-control @error('title') is-invalid @enderror" 
-                                               id="title" 
-                                               name="title" 
-                                               value="{{ old('title', $announcement->title) }}" 
-                                               required 
-                                               maxlength="255"
-                                               placeholder="Enter announcement title">
+                                        <input type="text"
+                                            class="form-control @error('title') is-invalid @enderror"
+                                            id="title"
+                                            name="title"
+                                            value="{{ old('title', $announcement->title) }}"
+                                            required
+                                            maxlength="255"
+                                            placeholder="Enter announcement title">
                                         @error('title')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                     </div>
 
                                     <!-- Content -->
                                     <div class="mb-3">
                                         <label for="content" class="form-label">Content <span class="text-danger">*</span></label>
-                                        <textarea class="form-control @error('content') is-invalid @enderror" 
-                                                  id="content" 
-                                                  name="content" 
-                                                  rows="8" 
-                                                  required
-                                                  placeholder="Enter announcement content...">{{ old('content', $announcement->content) }}</textarea>
+                                        <textarea class="form-control @error('content') is-invalid @enderror"
+                                            id="content"
+                                            name="content"
+                                            rows="8"
+                                            required
+                                            placeholder="Enter announcement content...">{{ old('content', $announcement->content) }}</textarea>
                                         @error('content')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                         <small class="form-text text-muted">You can use formatting in the content.</small>
                                     </div>
@@ -96,12 +96,12 @@
                                         <div class="row">
                                             <div class="col-md-6 col-sm-12 mb-2">
                                                 <div class="form-check card p-3 h-100">
-                                                    <input class="form-check-input" 
-                                                           type="radio" 
-                                                           name="target_audience" 
-                                                           id="target_public" 
-                                                           value="public" 
-                                                           {{ old('target_audience', $announcement->target_audience ?? 'all') == 'public' ? 'checked' : '' }}>
+                                                    <input class="form-check-input"
+                                                        type="radio"
+                                                        name="target_audience"
+                                                        id="target_public"
+                                                        value="public"
+                                                        {{ old('target_audience', $announcement->target_audience ?? 'all') == 'public' ? 'checked' : '' }}>
                                                     <label class="form-check-label w-100" for="target_public">
                                                         <strong><i class="fas fa-globe text-primary"></i> Public</strong>
                                                         <small class="d-block text-muted">Visible to everyone (including guests)</small>
@@ -110,12 +110,12 @@
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-2">
                                                 <div class="form-check card p-3 h-100">
-                                                    <input class="form-check-input" 
-                                                           type="radio" 
-                                                           name="target_audience" 
-                                                           id="target_all" 
-                                                           value="all" 
-                                                           {{ old('target_audience', $announcement->target_audience ?? 'all') == 'all' ? 'checked' : '' }}>
+                                                    <input class="form-check-input"
+                                                        type="radio"
+                                                        name="target_audience"
+                                                        id="target_all"
+                                                        value="all"
+                                                        {{ old('target_audience', $announcement->target_audience ?? 'all') == 'all' ? 'checked' : '' }}>
                                                     <label class="form-check-label w-100" for="target_all">
                                                         <strong><i class="fas fa-users text-success"></i> All Users</strong>
                                                         <small class="d-block text-muted">Visible to all logged-in users</small>
@@ -124,12 +124,12 @@
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-2">
                                                 <div class="form-check card p-3 h-100">
-                                                    <input class="form-check-input" 
-                                                           type="radio" 
-                                                           name="target_audience" 
-                                                           id="target_students" 
-                                                           value="students" 
-                                                           {{ old('target_audience', $announcement->target_audience) == 'students' ? 'checked' : '' }}>
+                                                    <input class="form-check-input"
+                                                        type="radio"
+                                                        name="target_audience"
+                                                        id="target_students"
+                                                        value="students"
+                                                        {{ old('target_audience', $announcement->target_audience) == 'students' ? 'checked' : '' }}>
                                                     <label class="form-check-label w-100" for="target_students">
                                                         <strong><i class="fas fa-graduation-cap text-info"></i> Students Only</strong>
                                                         <small class="d-block text-muted">Visible to students only</small>
@@ -138,12 +138,12 @@
                                             </div>
                                             <div class="col-md-6 col-sm-12 mb-2">
                                                 <div class="form-check card p-3 h-100">
-                                                    <input class="form-check-input" 
-                                                           type="radio" 
-                                                           name="target_audience" 
-                                                           id="target_faculty" 
-                                                           value="faculty" 
-                                                           {{ old('target_audience', $announcement->target_audience) == 'faculty' ? 'checked' : '' }}>
+                                                    <input class="form-check-input"
+                                                        type="radio"
+                                                        name="target_audience"
+                                                        id="target_faculty"
+                                                        value="faculty"
+                                                        {{ old('target_audience', $announcement->target_audience) == 'faculty' ? 'checked' : '' }}>
                                                     <label class="form-check-label w-100" for="target_faculty">
                                                         <strong><i class="fas fa-chalkboard-teacher text-warning"></i> Faculty Only</strong>
                                                         <small class="d-block text-muted">Visible to faculty only</small>
@@ -152,33 +152,33 @@
                                             </div>
                                         </div>
                                         @error('target_audience')
-                                            <div class="text-danger small mt-1">{{ $message }}</div>
+                                        <div class="text-danger small mt-1">{{ $message }}</div>
                                         @enderror
                                     </div>
 
                                     <!-- Expiration Date -->
                                     <div class="mb-3">
                                         <label for="expires_at" class="form-label">Expiration Date (Optional)</label>
-                                        <input type="datetime-local" 
-                                               class="form-control @error('expires_at') is-invalid @enderror" 
-                                               id="expires_at" 
-                                               name="expires_at" 
-                                               value="{{ old('expires_at', $announcement->expires_at ? $announcement->expires_at->format('Y-m-d\TH:i') : '') }}"
-                                               min="{{ now()->format('Y-m-d\TH:i') }}">
+                                        <input type="datetime-local"
+                                            class="form-control @error('expires_at') is-invalid @enderror"
+                                            id="expires_at"
+                                            name="expires_at"
+                                            value="{{ old('expires_at', $announcement->expires_at ? $announcement->expires_at->format('Y-m-d\TH:i') : '') }}"
+                                            min="{{ now()->format('Y-m-d\TH:i') }}">
                                         @error('expires_at')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                         <small class="form-text text-muted">Leave empty for permanent announcement</small>
                                     </div>
 
                                     <!-- Pin Announcement -->
                                     <div class="mb-3 form-check">
-                                        <input type="checkbox" 
-                                               class="form-check-input" 
-                                               id="is_pinned" 
-                                               name="is_pinned" 
-                                               value="1"
-                                               {{ old('is_pinned', $announcement->is_pinned) ? 'checked' : '' }}>
+                                        <input type="checkbox"
+                                            class="form-check-input"
+                                            id="is_pinned"
+                                            name="is_pinned"
+                                            value="1"
+                                            {{ old('is_pinned', $announcement->is_pinned) ? 'checked' : '' }}>
                                         <label class="form-check-label" for="is_pinned" style="color: #333;">
                                             <i class="fas fa-thumbtack me-1"></i> Pin this announcement (appears at top)
                                         </label>
@@ -186,42 +186,42 @@
 
                                     <!-- Existing Attachments -->
                                     @if($announcement->attachments && count($announcement->attachments) > 0)
-                                        <div class="mb-3">
-                                            <label class="form-label">Current Attachments</label>
-                                            <div class="list-group">
-                                                @foreach($announcement->attachments as $attachment)
-                                                    <div class="list-group-item">
-                                                        <div class="d-flex align-items-center">
-                                                            <i class="fas fa-file-{{ $attachment['type'] == 'pdf' ? 'pdf' : 'alt' }} text-success fa-2x me-3"></i>
-                                                            <div class="flex-grow-1">
-                                                                <strong>{{ $attachment['name'] }}</strong>
-                                                                <p class="small text-muted mb-0">
-                                                                    {{ number_format($attachment['size'] / 1024, 2) }} KB
-                                                                </p>
-                                                            </div>
-                                                            <a href="{{ asset('storage/' . $attachment['path']) }}" 
-                                                               class="btn btn-sm btn-outline-success" 
-                                                               target="_blank">
-                                                                <i class="fas fa-download"></i>
-                                                            </a>
-                                                        </div>
+                                    <div class="mb-3">
+                                        <label class="form-label">Current Attachments</label>
+                                        <div class="list-group">
+                                            @foreach($announcement->attachments as $attachment)
+                                            <div class="list-group-item">
+                                                <div class="d-flex align-items-center">
+                                                    <i class="fas fa-file-{{ $attachment['type'] == 'pdf' ? 'pdf' : 'alt' }} text-success fa-2x me-3"></i>
+                                                    <div class="flex-grow-1">
+                                                        <strong>{{ $attachment['name'] }}</strong>
+                                                        <p class="small text-muted mb-0">
+                                                            {{ number_format($attachment['size'] / 1024, 2) }} KB
+                                                        </p>
                                                     </div>
-                                                @endforeach
+                                                    <a href="{{ asset('storage/' . $attachment['path']) }}"
+                                                        class="btn btn-sm btn-outline-success"
+                                                        target="_blank">
+                                                        <i class="fas fa-download"></i>
+                                                    </a>
+                                                </div>
                                             </div>
+                                            @endforeach
                                         </div>
+                                    </div>
                                     @endif
 
                                     <!-- File Attachments -->
                                     <div class="mb-3">
                                         <label for="attachments" class="form-label">Add New Attachments (Optional)</label>
-                                        <input type="file" 
-                                               class="form-control @error('attachments.*') is-invalid @enderror" 
-                                               id="attachments" 
-                                               name="attachments[]" 
-                                               multiple
-                                               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
+                                        <input type="file"
+                                            class="form-control @error('attachments.*') is-invalid @enderror"
+                                            id="attachments"
+                                            name="attachments[]"
+                                            multiple
+                                            accept=".pdf,.doc,.docx,.jpg,.jpeg,.png">
                                         @error('attachments.*')
-                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror
                                         <small class="form-text text-muted">
                                             Accepted: PDF, DOC, DOCX, JPG, PNG (Max: 10MB per file)
@@ -253,7 +253,7 @@
                     <div class="col-lg-4">
                         <!-- Current Info -->
                         <div class="activity-card mb-4">
-                            <div class="card-header" style="background: {{ $announcement->priority_color }}; color: white;">
+                            <div class="card-header announcement-priority-header text-white" data-priority-color="{{ $announcement->priority_color }}">
                                 <i class="fas fa-info-circle me-2"></i>Current Info
                             </div>
                             <div class="card-body">
@@ -261,17 +261,17 @@
                                     <small class="text-muted d-block">Priority</small>
                                     <strong>{{ ucfirst($announcement->priority) }}</strong>
                                 </div>
-                                
+
                                 <div class="event-info-item mb-3">
                                     <small class="text-muted d-block">Audience</small>
                                     <strong>{{ $announcement->audience_label }}</strong>
                                 </div>
-                                
+
                                 <div class="event-info-item mb-3">
                                     <small class="text-muted d-block">Created</small>
                                     <strong>{{ $announcement->created_at->format('M d, Y g:i A') }}</strong>
                                 </div>
-                                
+
                                 <div class="event-info-item">
                                     <small class="text-muted d-block">Created By</small>
                                     <strong>{{ $announcement->createdBy->first_name ?? 'Admin' }} {{ $announcement->createdBy->last_name ?? '' }}</strong>
@@ -299,6 +299,20 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const priorityHeader = document.querySelector('.announcement-priority-header');
+        if (!priorityHeader) {
+            return;
+        }
+
+        const color = priorityHeader.dataset.priorityColor;
+        if (color) {
+            priorityHeader.style.background = color;
+        }
+    });
+</script>
 
 <!-- Delete Modal -->
 <div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
@@ -339,4 +353,3 @@
 </div>
 
 @endsection
-

@@ -1,6 +1,9 @@
 import "./bootstrap";
 import flatpickr from "flatpickr";
+import Swal from "sweetalert2";
 import "flatpickr/dist/themes/material_green.css";
+
+window.Swal = Swal;
 
 function initializeGlobalDatePickers(root = document) {
     const dateInputs = root.querySelectorAll(
