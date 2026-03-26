@@ -161,6 +161,8 @@
                     'subject_name' => 'MAPEH',
                     ]);
                     }
+
+                    $viewerIsAdviser = (int) $section->adviser_id === (int) auth()->id();
                     @endphp
 
                     <div class="d-flex justify-content-between align-items-center mb-3 section-subjects-toggle">
@@ -174,7 +176,10 @@
                     </div>
 
                     @if($groupedAssignments->isNotEmpty())
-                    <div class="section-subjects-body is-collapsed" id="selectedSubjectsTable">
+                    <div
+                        class="section-subjects-body {{ $viewerIsAdviser ? 'is-visible' : 'is-collapsed' }}"
+                        id="selectedSubjectsTable"
+                        data-lock-expanded="{{ $viewerIsAdviser ? '1' : '0' }}">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
                                 <thead>
@@ -294,8 +299,15 @@
     document.addEventListener('DOMContentLoaded', function() {
         var table = document.getElementById('selectedSubjectsTable');
         var rows = table ? table.querySelectorAll('.section-subjects-row') : [];
+        var lockExpanded = table && table.getAttribute('data-lock-expanded') === '1';
 
         if (!table || !rows.length) {
+            return;
+        }
+
+        if (lockExpanded) {
+            table.classList.remove('is-collapsed');
+            table.classList.add('is-visible');
             return;
         }
 

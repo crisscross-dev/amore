@@ -2,10 +2,13 @@
 $section = $section ?? new \App\Models\Section();
 $schoolYears = $schoolYears ?? collect();
 $subjects = $subjects ?? collect();
+$facultyMembers = $facultyMembers ?? collect();
+$adviserAssignments = $adviserAssignments ?? collect();
 $selectedSubjectIds = collect(old('subject_ids', $selectedSubjectIds ?? []))
 ->map(fn ($id) => (int) $id)
 ->all();
 $sectionNameValue = old('name', $section->name);
+$selectedAdviserId = old('adviser_id', $section->adviser_id);
 $selectedGradeLevel = old('grade_level', $section->grade_level);
 $selectedAcademicYear = old('academic_year', $section->academic_year);
 $modalContext = $modalContext ?? null;
@@ -78,6 +81,39 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
                 </div>
 
                 <div class="col-lg-6">
+                    <label class="form-label">Select Adviser</label>
+                    <select
+                        name="adviser_id"
+                        class="form-select section-control section-select @error('adviser_id') is-invalid @enderror">
+                        <option value="">No adviser</option>
+                        @foreach($facultyMembers as $faculty)
+                        @php
+                        $assignedSection = $adviserAssignments->get($faculty->id);
+                        $assignedSectionId = (int) optional($assignedSection)->id;
+                        $isAssignedElsewhere = $assignedSectionId > 0 && $assignedSectionId !== (int) ($section->id ?? 0);
+                        $assignedLabel = $assignedSection
+                        ? ('(' . trim((string) $assignedSection->grade_level) . ' ' . trim((string) $assignedSection->name) . ')')
+                        : '';
+                        @endphp
+                        <option
+                            value="{{ $faculty->id }}"
+                            {{ (string) $selectedAdviserId === (string) $faculty->id ? 'selected' : '' }}
+                            {{ $isAssignedElsewhere ? 'disabled style=color:#c26b08;font-weight:600;' : '' }}>
+                            {{ $faculty->first_name }} {{ $faculty->last_name }}
+                            {{ $isAssignedElsewhere ? (' ' . $assignedLabel) : '' }}
+                        </option>
+                        @endforeach
+                    </select>
+                    @error('adviser_id')
+                    <div class="invalid-feedback d-block">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+        </div>
+
+        <div class="section-form-section">
+            <div class="row g-2">
+                <div class="col-lg-4">
                     <label class="form-label d-flex align-items-center gap-2">
                         <span>Grade Level <span class="text-danger">*</span></span>
                     </label>
@@ -97,12 +133,8 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
                     <div class="invalid-feedback d-block">{{ $message }}</div>
                     @enderror
                 </div>
-            </div>
-        </div>
 
-        <div class="section-form-section">
-            <div class="row g-2">
-                <div class="col-lg-6">
+                <div class="col-lg-4">
                     <label class="form-label">Academic Year</label>
                     <select name="academic_year" class="form-select section-control section-select @error('academic_year') is-invalid @enderror">
                         <option value="">Select academic year</option>
@@ -125,7 +157,7 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
                     @enderror
                 </div>
 
-                <div class="col-lg-6">
+                <div class="col-lg-4">
                     <label class="form-label">Capacity</label>
                     <input
                         type="number"
@@ -148,7 +180,13 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
                     <label class="form-label mb-1">Subjects <span class="text-danger">*</span></label>
                     <p class="section-help-text mb-0">Select a grade first, then choose the matching subjects.</p>
                 </div>
-                <span class="badge rounded-pill text-bg-light section-subject-count" data-subject-count>0 selected</span>
+                <div class="d-flex align-items-center gap-2">
+                    <label class="section-select-all" data-select-all-wrap>
+                        <input type="checkbox" class="form-check-input" data-select-all-subjects>
+                        <span>Select All</span>
+                    </label>
+                    <span class="badge rounded-pill text-bg-light section-subject-count" data-subject-count>0 selected</span>
+                </div>
             </div>
 
             @if($subjects->isNotEmpty())
@@ -343,6 +381,29 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
         border: 1px solid rgba(15, 23, 42, 0.08);
     }
 
+    .section-select-all {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        margin: 0;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        background: #fff;
+        color: #1f2937;
+        font-size: 0.82rem;
+        font-weight: 600;
+        user-select: none;
+    }
+
+    .section-select-all .form-check-input {
+        margin: 0;
+    }
+
+    .section-select-all.is-disabled {
+        opacity: 0.55;
+    }
+
     .section-subject-empty-state {
         display: flex;
         flex-direction: column;
@@ -512,6 +573,45 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
             const emptyTitle = form.querySelector('[data-subject-empty-title]');
             const emptyText = form.querySelector('[data-subject-empty-text]');
             const submitButton = form.querySelector('[data-submit-button]');
+            const selectAllCheckbox = form.querySelector('[data-select-all-subjects]');
+            const selectAllWrap = form.querySelector('[data-select-all-wrap]');
+
+            const visibleSubjectCheckboxes = function() {
+                return subjectOptions
+                    .filter(function(option) {
+                        return !option.classList.contains('is-hidden');
+                    })
+                    .map(function(option) {
+                        return option.querySelector('[data-subject-checkbox]');
+                    })
+                    .filter(Boolean);
+            };
+
+            const updateSelectAllState = function() {
+                if (!selectAllCheckbox) {
+                    return;
+                }
+
+                const visibleCheckboxes = visibleSubjectCheckboxes();
+                const visibleCount = visibleCheckboxes.length;
+                const selectedVisibleCount = visibleCheckboxes.filter(function(checkbox) {
+                    return checkbox.checked;
+                }).length;
+
+                selectAllCheckbox.disabled = visibleCount === 0;
+                if (selectAllWrap) {
+                    selectAllWrap.classList.toggle('is-disabled', visibleCount === 0);
+                }
+
+                if (visibleCount === 0) {
+                    selectAllCheckbox.checked = false;
+                    selectAllCheckbox.indeterminate = false;
+                    return;
+                }
+
+                selectAllCheckbox.checked = selectedVisibleCount === visibleCount;
+                selectAllCheckbox.indeterminate = selectedVisibleCount > 0 && selectedVisibleCount < visibleCount;
+            };
 
             const extractGradeNumber = function(value) {
                 const match = (value || '').match(/(7|8|9|10|11|12)/);
@@ -536,6 +636,8 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
                 if (subjectCount) {
                     subjectCount.textContent = checkedCount + (checkedCount === 1 ? ' selected' : ' selected');
                 }
+
+                updateSelectAllState();
             };
 
             const filterSubjects = function() {
@@ -574,6 +676,16 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
 
             if (gradeSelect) {
                 gradeSelect.addEventListener('change', filterSubjects);
+            }
+
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    visibleSubjectCheckboxes().forEach(function(checkbox) {
+                        checkbox.checked = selectAllCheckbox.checked;
+                    });
+
+                    updateCheckedState();
+                });
             }
 
             subjectOptions.forEach(function(option) {

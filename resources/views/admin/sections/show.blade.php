@@ -8,6 +8,41 @@
 
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css', 'resources/js/admin-sections.js'])
 
+@push('styles')
+<style>
+    .js-assignment-readonly {
+        height: calc(2.25rem + 2px);
+        padding: 0.375rem 0.75rem;
+        line-height: 1.5;
+        cursor: default;
+    }
+
+    .add-students-modal-dialog .modal-content {
+        height: 82vh;
+        max-height: 82vh;
+    }
+
+    .add-students-modal-dialog .modal-body {
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .add-students-modal-dialog .student-suggestion-panel {
+        flex: 1 1 auto;
+        min-height: 220px;
+        max-height: 420px;
+        overflow-y: auto;
+    }
+
+    .add-students-modal-dialog .compact-control {
+        min-height: 36px;
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
+    }
+</style>
+@endpush
+
 <div class="dashboard-container" data-section-id="{{ $section->id }}">
     <div class="container-fluid px-4">
         <div class="row">
@@ -154,32 +189,6 @@
                                 method="POST"
                                 data-has-errors="{{ $hasAssignmentErrors ? '1' : '0' }}">
                                 @csrf
-                                <div class="row g-3 align-items-end mb-3">
-                                    <div class="col-md-6 col-lg-5">
-                                        <label class="form-label">Section Adviser</label>
-                                        <select name="adviser_id" class="form-select js-assignment-field" disabled>
-                                            <option value="">No adviser</option>
-                                            @foreach($facultyMembers as $faculty)
-                                            <option
-                                                value="{{ $faculty->id }}"
-                                                {{ (string) old('adviser_id', optional($section->adviser)->id) === (string) $faculty->id ? 'selected' : '' }}
-                                                title="{{ $faculty->first_name }} {{ $faculty->last_name }}">
-                                                {{ $faculty->first_name }} {{ $faculty->last_name }}
-                                            </option>
-                                            @endforeach
-                                        </select>
-                                        @if($errors->has('adviser_id'))
-                                        <div class="text-danger small mt-1">{{ $errors->first('adviser_id') }}</div>
-                                        @endif
-                                    </div>
-                                    <div class="col-md-6 col-lg-7 text-md-end">
-                                        @if($section->adviser)
-                                        <span class="badge bg-success">Current: {{ $section->adviser->first_name }} {{ $section->adviser->last_name }}</span>
-                                        @else
-                                        <span class="badge bg-warning text-dark">Current: Unassigned</span>
-                                        @endif
-                                    </div>
-                                </div>
                                 <div class="d-flex justify-content-end gap-2 mb-3">
                                     <button type="button" class="btn btn-outline-success" id="toggleAssignmentsEditBtn">
                                         <i class="fas fa-pen me-1"></i>Edit
@@ -187,6 +196,43 @@
                                     <button type="submit" class="btn btn-success d-none" id="saveAssignmentsBtn">
                                         <i class="fas fa-save me-1"></i>Save All
                                     </button>
+                                </div>
+                                <div class="row g-3 align-items-end mb-3">
+                                    <div class="col-md-6 col-lg-5">
+                                        @php
+                                        $selectedAdviserId = old('adviser_id', optional($section->adviser)->id);
+                                        $selectedAdviser = $facultyMembers->firstWhere('id', $selectedAdviserId);
+                                        $selectedAdviserName = $selectedAdviser
+                                        ? trim($selectedAdviser->first_name . ' ' . $selectedAdviser->last_name)
+                                        : 'No adviser';
+                                        @endphp
+                                        <label class="form-label">Section Adviser</label>
+                                        <select name="adviser_id" class="form-select js-assignment-field js-assignment-select" disabled>
+                                            <option value="">No adviser</option>
+                                            @foreach($facultyMembers as $faculty)
+                                            @php
+                                            $assignedSection = $adviserAssignments->get($faculty->id);
+                                            $assignedSectionId = (int) optional($assignedSection)->id;
+                                            $isAssignedElsewhere = $assignedSectionId > 0 && $assignedSectionId !== (int) $section->id;
+                                            $assignedLabel = $assignedSection
+                                            ? ('(' . trim((string) $assignedSection->grade_level) . ' ' . trim((string) $assignedSection->name) . ')')
+                                            : '';
+                                            @endphp
+                                            <option
+                                                value="{{ $faculty->id }}"
+                                                {{ (string) old('adviser_id', optional($section->adviser)->id) === (string) $faculty->id ? 'selected' : '' }}
+                                                title="{{ $faculty->first_name }} {{ $faculty->last_name }}"
+                                                {{ $isAssignedElsewhere ? 'disabled style=color:#c26b08;font-weight:600;' : '' }}>
+                                                {{ $faculty->first_name }} {{ $faculty->last_name }}
+                                                {{ $isAssignedElsewhere ? (' ' . $assignedLabel) : '' }}
+                                            </option>
+                                            @endforeach
+                                        </select>
+                                        <input type="text" class="form-control js-assignment-readonly" value="{{ $selectedAdviserName }}" readonly>
+                                        @if($errors->has('adviser_id'))
+                                        <div class="text-danger small mt-1">{{ $errors->first('adviser_id') }}</div>
+                                        @endif
+                                    </div>
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle">
@@ -227,7 +273,12 @@
                                                     @endif
                                                 </td>
                                                 <td>
-                                                    <select name="teacher_ids[{{ $subject->id }}]" class="form-select js-assignment-field" style="min-width: 200px;" disabled>
+                                                    @php
+                                                    $teacherDisplay = optional($assignment->teacher)
+                                                    ? trim(optional($assignment->teacher)->first_name . ' ' . optional($assignment->teacher)->last_name)
+                                                    : 'No teacher';
+                                                    @endphp
+                                                    <select name="teacher_ids[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" style="min-width: 200px;" disabled>
                                                         <option value="">No teacher</option>
                                                         @foreach($facultyMembers as $faculty)
                                                         <option value="{{ $faculty->id }}" {{ optional($assignment)->teacher_id === $faculty->id ? 'selected' : '' }} title="{{ $faculty->first_name }} {{ $faculty->last_name }}">
@@ -235,9 +286,13 @@
                                                         </option>
                                                         @endforeach
                                                     </select>
+                                                    <input type="text" class="form-control js-assignment-readonly" style="min-width: 200px;" value="{{ $teacherDisplay }}" readonly>
                                                 </td>
                                                 <td>
-                                                    <select name="days[{{ $subject->id }}]" class="form-select js-assignment-field" disabled>
+                                                    @php
+                                                    $dayDisplay = old('days.' . $subject->id, optional($assignment)->day_of_week) ?: 'No day';
+                                                    @endphp
+                                                    <select name="days[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
                                                         <option value="">Select day</option>
                                                         @foreach($dayOptions as $day)
                                                         <option value="{{ $day }}" {{ old('days.' . $subject->id, optional($assignment)->day_of_week) === $day ? 'selected' : '' }}>
@@ -245,9 +300,13 @@
                                                         </option>
                                                         @endforeach
                                                     </select>
+                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $dayDisplay }}" readonly>
                                                 </td>
                                                 <td>
-                                                    <select name="start_times[{{ $subject->id }}]" class="form-select js-assignment-field" disabled>
+                                                    @php
+                                                    $startDisplay = $startSelected ?: 'No start time';
+                                                    @endphp
+                                                    <select name="start_times[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
                                                         <option value="">Start time</option>
                                                         @foreach($timeOptions as $time)
                                                         <option value="{{ $time }}" {{ $startSelected === $time ? 'selected' : '' }}>
@@ -255,9 +314,13 @@
                                                         </option>
                                                         @endforeach
                                                     </select>
+                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $startDisplay }}" readonly>
                                                 </td>
                                                 <td>
-                                                    <select name="end_times[{{ $subject->id }}]" class="form-select js-assignment-field" disabled>
+                                                    @php
+                                                    $endDisplay = $endSelected ?: 'No end time';
+                                                    @endphp
+                                                    <select name="end_times[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
                                                         <option value="">End time</option>
                                                         @foreach($timeOptions as $time)
                                                         <option value="{{ $time }}" {{ $endSelected === $time ? 'selected' : '' }}>
@@ -265,12 +328,14 @@
                                                         </option>
                                                         @endforeach
                                                     </select>
+                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $endDisplay }}" readonly>
                                                 </td>
                                                 <td>
                                                     @php
                                                     $currentRoom = old('rooms.' . $subject->id, optional($assignment)->room);
+                                                    $roomDisplay = $currentRoom ?: 'No room';
                                                     @endphp
-                                                    <select name="rooms[{{ $subject->id }}]" class="form-select js-assignment-field" disabled>
+                                                    <select name="rooms[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
                                                         <option value="">Select room</option>
                                                         @foreach($roomOptions as $room)
                                                         <option value="{{ $room }}" {{ $currentRoom == $room ? 'selected' : '' }}>
@@ -281,6 +346,7 @@
                                                         <option value="{{ $currentRoom }}" selected>{{ $currentRoom }}</option>
                                                         @endif
                                                     </select>
+                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $roomDisplay }}" readonly>
                                                 </td>
                                                 <td class="text-center">
                                                     @if(optional($assignment)->teacher)
@@ -341,12 +407,12 @@
                                         <td>{{ $student->email }}</td>
                                         <td>{{ $student->lrn ?? '—' }}</td>
                                         <td class="text-center">
-                                            <form action="{{ route('admin.students.assign-section', $student) }}" method="POST" class="d-inline">
+                                            <form action="{{ route('admin.students.assign-section', $student) }}" method="POST" class="d-inline js-remove-student-form" data-student-name="{{ $student->first_name }} {{ $student->last_name }}">
                                                 @csrf
                                                 <input type="hidden" name="section_id" value="">
-                                                <button type="submit" class="btn btn-sm btn-outline-danger"
-                                                    title="Remove from section">
-                                                    <i class="fas fa-times"></i> Remove
+                                                <button type="submit" class="btn btn-sm btn-danger"
+                                                    title="Remove from section" aria-label="Remove from section">
+                                                    <i class="fas fa-trash"></i>
                                                 </button>
                                             </form>
                                         </td>
@@ -364,91 +430,6 @@
                     </div>
                 </div>
 
-                <!-- Add students to section -->
-                @if($availableStudents->count() > 0)
-                <div class="admissions-card">
-                    <div class="card-header">
-                        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>Add Students to Section</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="text-muted mb-3">
-                            <i class="fas fa-info-circle me-1"></i>
-                            Showing students in Grade {{ $section->grade_level }} without a section assignment.
-                        </p>
-
-                        <form action="{{ route('admin.students.bulk-assign-section') }}" method="POST" id="bulkAssignForm">
-                            @csrf
-                            <input type="hidden" name="section_id" value="{{ $section->id }}">
-
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="selectAll">
-                                    <label class="form-check-label" for="selectAll">
-                                        <strong>Select All</strong>
-                                    </label>
-                                </div>
-                                <button type="submit" class="btn btn-success" id="bulkAddBtn" disabled>
-                                    <i class="fas fa-user-plus me-1"></i>Add Selected (<span id="selectedCount">0</span>)
-                                </button>
-                            </div>
-
-                            <div class="table-responsive">
-                                <table class="table table-hover align-middle">
-                                    <thead>
-                                        <tr>
-                                            <th width="90">Select</th>
-                                            <th>Student ID</th>
-                                            <th>Name</th>
-                                            <th>Email</th>
-                                            <th>LRN</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach($availableStudents as $student)
-                                        <tr>
-                                            <td>
-                                                <div class="form-check d-flex align-items-center gap-2">
-                                                    <input class="form-check-input student-checkbox"
-                                                        type="checkbox"
-                                                        name="student_ids[]"
-                                                        value="{{ $student->id }}"
-                                                        id="student_{{ $student->id }}">
-                                                    <label class="form-check-label" for="student_{{ $student->id }}">
-                                                        Select
-                                                    </label>
-                                                </div>
-                                            </td>
-                                            <td><strong>{{ $student->custom_id }}</strong></td>
-                                            <td>
-                                                <label for="student_{{ $student->id }}" class="d-flex align-items-center mb-0" style="cursor: pointer;">
-                                                    @if($student->profile_picture)
-                                                    <img src="{{ asset('uploads/profile_picture/' . $student->profile_picture) }}"
-                                                        class="rounded-circle me-2" width="32" height="32" style="object-fit: cover;">
-                                                    @else
-                                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-2"
-                                                        style="width: 32px; height: 32px; font-size: 14px;">
-                                                        {{ strtoupper(substr($student->first_name, 0, 1)) }}
-                                                    </div>
-                                                    @endif
-                                                    {{ $student->first_name }} {{ $student->last_name }}
-                                                </label>
-                                            </td>
-                                            <td>{{ $student->email }}</td>
-                                            <td>{{ $student->lrn ?? '—' }}</td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                @else
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-2"></i>
-                    All students in Grade {{ $section->grade_level }} have been assigned to sections.
-                </div>
-                @endif
             </main>
         </div>
     </div>
@@ -466,25 +447,69 @@
         }
 
         var fields = Array.from(form.querySelectorAll('.js-assignment-field'));
+        var selectFields = Array.from(form.querySelectorAll('.js-assignment-select'));
+        var readonlyFields = Array.from(form.querySelectorAll('.js-assignment-readonly'));
         var isEditMode = form.getAttribute('data-has-errors') === '1';
+        var initialValues = new Map(fields.map(function(field) {
+            return [field.name, field.value];
+        }));
+
+        function resetToInitialValues() {
+            fields.forEach(function(field) {
+                if (initialValues.has(field.name)) {
+                    field.value = initialValues.get(field.name);
+                }
+            });
+        }
+
+        function syncReadonlyFields() {
+            selectFields.forEach(function(selectField) {
+                var readonlyField = selectField.nextElementSibling;
+                if (!readonlyField || !readonlyField.classList.contains('js-assignment-readonly')) {
+                    return;
+                }
+
+                var selectedOption = selectField.options[selectField.selectedIndex];
+                readonlyField.value = selectedOption ? selectedOption.text.trim() : 'N/A';
+            });
+        }
 
         function applyEditMode() {
             fields.forEach(function(field) {
                 field.disabled = !isEditMode;
             });
 
+            selectFields.forEach(function(selectField) {
+                selectField.classList.toggle('d-none', !isEditMode);
+            });
+
+            readonlyFields.forEach(function(readonlyField) {
+                readonlyField.classList.toggle('d-none', isEditMode);
+            });
+
             toggleBtn.innerHTML = isEditMode ?
-                '<i class="fas fa-eye me-1"></i>Read-only' :
+                '<i class="fas fa-times me-1"></i>Cancel Edit' :
                 '<i class="fas fa-pen me-1"></i>Edit';
 
             saveBtn.classList.toggle('d-none', !isEditMode);
         }
 
         toggleBtn.addEventListener('click', function() {
+            if (isEditMode) {
+                resetToInitialValues();
+            }
             isEditMode = !isEditMode;
+            syncReadonlyFields();
             applyEditMode();
         });
 
+        form.addEventListener('change', function(event) {
+            if (event.target && event.target.classList.contains('js-assignment-select')) {
+                syncReadonlyFields();
+            }
+        });
+
+        syncReadonlyFields();
         applyEditMode();
     });
 </script>
@@ -492,7 +517,7 @@
 
 <!-- Add Student Modal -->
 <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
+    <div class="modal-dialog modal-lg add-students-modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="addStudentModalLabel" style="color: #198754;">
@@ -502,21 +527,21 @@
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="studentSearch" class="form-label">Filter Students (Grade {{ $section->grade_level }})</label>
+                    <label for="studentSearch" class="form-label">Filter Students ({{ $section->grade_level }})</label>
                     <div class="position-relative">
                         <div class="input-group">
                             <span class="input-group-text"><i class="fas fa-filter"></i></span>
                             <input type="text"
-                                class="form-control"
+                                class="form-control compact-control"
                                 id="studentSearch"
                                 placeholder="Type to filter by name or ID..."
                                 autocomplete="off">
-                            <button class="btn btn-outline-secondary" type="button" id="clearFilterBtn">
-                                <i class="fas fa-times me-1"></i>Clear
+                            <button class="btn btn-outline-success compact-control" type="button" id="selectAllStudentsBtn">
+                                <i class="fas fa-check-double me-1"></i>Select All
                             </button>
                         </div>
-                        <div id="searchSuggestions" class="position-absolute w-100 bg-white border rounded shadow-sm mt-1"
-                            style="display: block; max-height: 400px; overflow-y: auto; z-index: 1050;">
+                        <div id="searchSuggestions" class="student-suggestion-panel w-100 bg-white border rounded shadow-sm mt-1"
+                            style="display: block;">
                             <!-- All students will be displayed here by default -->
                             <div class="text-center py-3">
                                 <div class="spinner-border text-primary" role="status">
@@ -524,6 +549,7 @@
                                 </div>
                             </div>
                         </div>
+                        <div id="studentPagination" class="d-flex justify-content-between align-items-center mt-2 small text-muted"></div>
                     </div>
                     <small class="text-muted">
                         @if($availableStudents->count() > 0)
@@ -538,7 +564,7 @@
                     @if($availableStudents->count() == 0)
                     <div class="alert alert-info">
                         <i class="fas fa-info-circle me-2"></i>
-                        All students in Grade {{ $section->grade_level }} have been assigned to sections.
+                        All students in {{ $section->grade_level }} have been assigned to sections.
                     </div>
                     @else
                     <div id="noResults" class="text-center text-muted py-4" style="display: none;">
@@ -604,5 +630,74 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var removeForms = document.querySelectorAll('.js-remove-student-form');
+
+        removeForms.forEach(function(removeForm) {
+            removeForm.addEventListener('submit', function(event) {
+                if (removeForm.dataset.localConfirmPass === 'true') {
+                    delete removeForm.dataset.localConfirmPass;
+                    return;
+                }
+
+                event.preventDefault();
+                var studentName = removeForm.getAttribute('data-student-name') || 'this student';
+
+                var confirmPromise;
+                if (window.Swal && typeof window.Swal.fire === 'function') {
+                    confirmPromise = window.Swal.fire({
+                        icon: 'warning',
+                        title: 'Remove student from section?',
+                        text: 'Remove ' + studentName + ' from this section?',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, remove',
+                        cancelButtonText: 'Cancel',
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        reverseButtons: true,
+                        focusCancel: true,
+                    });
+                } else if (window.AppSwal && typeof window.AppSwal.confirmDelete === 'function') {
+                    confirmPromise = window.AppSwal.confirmDelete();
+                } else {
+                    confirmPromise = Promise.resolve({
+                        isConfirmed: window.confirm('Remove ' + studentName + ' from this section?')
+                    });
+                }
+
+                confirmPromise.then(function(result) {
+                    if (!result || !result.isConfirmed) {
+                        return;
+                    }
+
+                    if (window.Swal && typeof window.Swal.fire === 'function') {
+                        window.Swal.fire({
+                            title: 'Processing request...',
+                            text: 'Please wait while we remove the student.',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
+                            showCancelButton: false,
+                            showConfirmButton: false,
+                            didOpen: function() {
+                                window.Swal.showLoading();
+                            }
+                        });
+                    }
+
+                    removeForm.dataset.localConfirmPass = 'true';
+                    if (typeof removeForm.requestSubmit === 'function') {
+                        removeForm.requestSubmit();
+                    } else {
+                        removeForm.submit();
+                    }
+                });
+            }, true);
+        });
+    });
+</script>
+@endpush
 
 @endsection

@@ -26,6 +26,17 @@
         padding-bottom: 0.25rem;
         font-size: 0.92rem;
     }
+
+    .grade-sheet-input[type="number"]::-webkit-outer-spin-button,
+    .grade-sheet-input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .grade-sheet-input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
 </style>
 
 <div class="dashboard-container">

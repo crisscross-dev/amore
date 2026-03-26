@@ -25,6 +25,17 @@ class SectionAssignmentController extends Controller
             if (! $isFaculty) {
                 return back()->withErrors(['adviser_id' => 'Selected adviser must be a faculty account.']);
             }
+
+            $existingAdviserSection = Section::query()
+                ->where('adviser_id', (int) $validated['adviser_id'])
+                ->where('id', '!=', $section->id)
+                ->first();
+
+            if ($existingAdviserSection) {
+                return back()->withErrors([
+                    'adviser_id' => 'Selected adviser is already assigned to section ' . $existingAdviserSection->name . '. Each faculty can only advise one section.',
+                ]);
+            }
         }
 
         $section->update([
@@ -145,6 +156,17 @@ class SectionAssignmentController extends Controller
 
             if (! $isFacultyAdviser) {
                 return back()->withErrors(['adviser_id' => 'Selected adviser must be a faculty account.']);
+            }
+
+            $existingAdviserSection = Section::query()
+                ->where('adviser_id', $adviserId)
+                ->where('id', '!=', $section->id)
+                ->first();
+
+            if ($existingAdviserSection) {
+                return back()->withErrors([
+                    'adviser_id' => 'Selected adviser is already assigned to section ' . $existingAdviserSection->name . '. Each faculty can only advise one section.',
+                ]);
             }
         }
 

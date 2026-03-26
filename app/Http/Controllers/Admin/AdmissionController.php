@@ -167,7 +167,7 @@ class AdmissionController extends Controller
             DB::commit();
 
             return redirect()
-                ->route('admin.admissions.show', ['type' => $type, 'id' => $id])
+                ->route('admin.admissions.index')
                 ->with('success', 'Admission approved successfully! Student account was created and is ready for section assignment in Enrollment.');
         } catch (\Exception $e) {
             DB::rollBack();

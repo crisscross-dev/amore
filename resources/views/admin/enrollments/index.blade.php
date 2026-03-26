@@ -9,6 +9,50 @@
 
 <!-- Admin Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css'])
+@push('styles')
+<style>
+    #assignSectionSubjectsBox,
+    #assignSectionSubjectsList li {
+        color: #212529;
+    }
+
+    #assignSectionSubjectsEmpty {
+        color: #6c757d !important;
+    }
+
+    .stats-counters-small .card {
+        margin-bottom: 0.75rem !important;
+    }
+
+    .stats-counters-small .card-body {
+        padding: 0.7rem 0.9rem;
+    }
+
+    .stats-counters-small .h3 {
+        font-size: 1.3rem;
+        margin-bottom: 0;
+        line-height: 1.1;
+    }
+
+    .stats-counters-small .small {
+        font-size: 0.75rem;
+    }
+
+    .stats-counters-small .fs-1 {
+        font-size: 1.5rem !important;
+    }
+
+    .search-input-compact {
+        height: calc(2.25rem + 2px);
+        padding: 0;
+    }
+
+    .assign-modal-scroll {
+        max-height: 62vh;
+        overflow-y: auto;
+    }
+</style>
+@endpush
 
 <div class="dashboard-container">
     <div class="container-fluid px-4">
@@ -113,7 +157,7 @@
                 @endif
 
                 <!-- Statistics Cards -->
-                <div class="row mb-4">
+                <div class="row mb-4 stats-counters-small">
                     <div class="col-xl-3 col-md-6">
                         <div class="card bg-warning text-white mb-4">
                             <div class="card-body">
@@ -170,11 +214,10 @@
 
                 <!-- Filters -->
                 <div class="admissions-card mb-4">
-                    <div class="card-body">
-                        <form action="{{ route('admin.enrollments.index') }}" method="GET" class="row g-3">
+                    <div class="card-body p-2">
+                        <form id="enrollmentFiltersForm" action="{{ route('admin.enrollments.index') }}" method="GET" class="row g-3 m-0">
                             <div class="col-md-3">
-                                <label class="form-label">Status</label>
-                                <select name="status" class="form-select">
+                                <select name="status" class="form-select filter-auto-submit">
                                     <option value="">All Statuses</option>
                                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                                     <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
@@ -182,8 +225,7 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Grade Level</label>
-                                <select name="grade_level" class="form-select">
+                                <select name="grade_level" class="form-select filter-auto-submit">
                                     <option value="">All Grade Levels</option>
                                     @foreach($gradeLevels as $level)
                                     <option value="{{ $level }}" {{ request('grade_level') == $level ? 'selected' : '' }}>{{ $level }}</option>
@@ -191,93 +233,16 @@
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">School Year</label>
-                                <select name="school_year_id" class="form-select">
+                                <select name="school_year_id" class="form-select filter-auto-submit">
                                     @foreach($schoolYears as $sy)
                                     <option value="{{ $sy->id }}" {{ request('school_year_id') == $sy->id ? 'selected' : '' }}>{{ $sy->year_name }}</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label">Search</label>
-                                <input type="text" name="search" class="form-control" placeholder="Student name" value="{{ request('search') }}">
-                            </div>
-                            <div class="col-12">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-funnel me-1"></i>Filter
-                                </button>
-                                <a href="{{ route('admin.enrollments.index') }}" class="btn btn-secondary">
-                                    <i class="bi bi-x-circle me-1"></i>Clear
-                                </a>
+                                <input type="text" name="search" class="form-control search-input-compact" placeholder="Student name" value="{{ request('search') }}">
                             </div>
                         </form>
-                    </div>
-                </div>
-
-                <!-- Enrollments Table -->
-                <div class="admissions-card">
-                    <div class="card-header bg-success text-white">
-                        <i class="fas fa-list-ul me-2"></i>Enrollment Requests
-                    </div>
-                    <div class="card-body">
-                        @if($enrollments->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Student</th>
-                                        <th>Grade Level</th>
-                                        <th>School Year</th>
-                                        <th>Enrollment Date</th>
-                                        <th>Documents</th>
-                                        <th>Status</th>
-                                        <th>Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($enrollments as $enrollment)
-                                    <tr>
-                                        <td>
-                                            {{ $enrollment->student->first_name }} {{ $enrollment->student->last_name }}
-                                            <br><small class="text-muted">{{ $enrollment->student->email }}</small>
-                                        </td>
-                                        <td>{{ $enrollment->current_grade_level }} → <strong>{{ $enrollment->enrolling_grade_level }}</strong></td>
-                                        <td>{{ $enrollment->schoolYear->year_name }}</td>
-                                        <td>{{ $enrollment->enrollment_date->format('M d, Y') }}</td>
-                                        <td>
-                                            <span class="badge bg-info">{{ $enrollment->documents->count() }} uploaded</span>
-                                        </td>
-                                        <td>
-                                            @if($enrollment->status === 'pending')
-                                            <span class="badge bg-warning text-dark">Pending</span>
-                                            @elseif($enrollment->status === 'approved')
-                                            <span class="badge bg-success">Approved</span>
-                                            @elseif($enrollment->status === 'rejected')
-                                            <span class="badge bg-danger">Rejected</span>
-                                            @endif
-                                        </td>
-                                        <td>
-                                            <a href="{{ route('admin.enrollments.show', $enrollment) }}" class="btn btn-sm btn-primary" title="Review Enrollment">
-                                                <i class="fas fa-eye me-1"></i>Review
-                                            </a>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <div class="mt-3">
-                            {{ $enrollments->links() }}
-                        </div>
-                        @else
-                        <tr>
-                            <td colspan="7" class="text-center py-4">
-                                <i class="fas fa-inbox fa-3x text-muted mb-3 d-block"></i>
-                                <p class="text-muted">No enrollment requests found matching your criteria.</p>
-                            </td>
-                        </tr>
-                        @endif
                     </div>
                 </div>
 
@@ -310,9 +275,21 @@
                                         <td>{{ strtoupper($admission->school_level) }}</td>
                                         <td>{{ optional($admission->approved_at)->format('M d, Y h:i A') ?: 'N/A' }}</td>
                                         <td class="text-end">
-                                            <a href="{{ route('admin.enrollments.review-admission', $admission) }}" class="btn btn-sm btn-primary">
+                                            <button
+                                                type="button"
+                                                class="btn btn-sm btn-primary open-assign-modal"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#assignSectionModal"
+                                                data-admission-id="{{ $admission->id }}"
+                                                data-enroll-url="{{ route('admin.enrollments.enroll-admission', $admission) }}"
+                                                data-name="{{ trim($admission->first_name . ' ' . $admission->middle_name . ' ' . $admission->last_name) }}"
+                                                data-email="{{ $admission->email ?: 'N/A' }}"
+                                                data-contact="{{ $admission->phone ?: 'N/A' }}"
+                                                data-lrn="{{ $admission->lrn ?: 'N/A' }}"
+                                                data-grade-level="{{ $admission->grade_level ?: '' }}"
+                                                data-school-level="{{ strtoupper($admission->school_level ?: 'N/A') }}">
                                                 <i class="fas fa-user-plus me-1"></i>Assign Section
-                                            </a>
+                                            </button>
                                         </td>
                                     </tr>
                                     @endforeach
@@ -331,8 +308,262 @@
                         @endif
                     </div>
                 </div>
+
+                @php
+                $sectionMetaMap = $sections->mapWithKeys(function ($section) {
+                $subjectNames = $section->subjectTeachers
+                ->pluck('subject.name')
+                ->filter()
+                ->unique()
+                ->values();
+
+                return [(string) $section->id => [
+                'id' => $section->id,
+                'name' => $section->name,
+                'grade_level' => $section->grade_level,
+                'subjects' => $subjectNames,
+                ]];
+                });
+                $sectionMetaMapEncoded = base64_encode($sectionMetaMap->toJson());
+                @endphp
+
+                <div class="modal fade" id="assignSectionModal" tabindex="-1" aria-labelledby="assignSectionModalLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title" id="assignSectionModalLabel"><i class="fas fa-user-plus me-2"></i>Assign Section</h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <form id="assignSectionForm" method="POST" action="">
+                                @csrf
+                                <input type="hidden" name="admission_id" id="assign_admission_id" value="{{ old('admission_id') }}">
+                                <div class="modal-body assign-modal-scroll">
+                                    <div class="row g-3 mb-3">
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Student Name</small>
+                                            <strong id="assign_student_name">-</strong>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted d-block">Email</small>
+                                            <strong id="assign_student_email">-</strong>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">Contact</small>
+                                            <strong id="assign_student_contact">-</strong>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">LRN</small>
+                                            <strong id="assign_student_lrn">-</strong>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <small class="text-muted d-block">Grade / Level</small>
+                                            <strong id="assign_student_grade">-</strong>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-info py-2 mb-3">
+                                        <small>
+                                            <strong>School Year:</strong>
+                                            {{ $selectedSchoolYear?->year_name ?? 'No school year found. Please create one first.' }}
+                                        </small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="assign_section_id" class="form-label">Assign Section <span class="text-danger">*</span></label>
+                                        <select name="section_id" id="assign_section_id" class="form-select @error('section_id') is-invalid @enderror" required>
+                                            <option value="">Select section</option>
+                                        </select>
+                                        @error('section_id')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted" id="assign_section_help">Only sections matching the applicant grade level are shown.</small>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label class="form-label">Subjects in Selected Section</label>
+                                        <div id="assignSectionSubjectsBox" class="border rounded p-2 bg-light-subtle" style="min-height: 72px;">
+                                            <p class="text-muted mb-0" id="assignSectionSubjectsEmpty">Select a section to view assigned subjects.</p>
+                                            <ul class="mb-0 ps-3 d-none" id="assignSectionSubjectsList"></ul>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-0">
+                                        <label for="assign_admin_remarks" class="form-label">Remarks (Optional)</label>
+                                        <textarea name="admin_remarks" id="assign_admin_remarks" rows="3" class="form-control @error('admin_remarks') is-invalid @enderror">{{ old('admin_remarks') }}</textarea>
+                                        @error('admin_remarks')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                    <button type="submit" class="btn btn-primary" {{ $selectedSchoolYear ? '' : 'disabled' }}>
+                                        <i class="fas fa-user-plus me-1"></i>Assign Section
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <div id="assign-section-map" data-map="{{ $sectionMetaMapEncoded }}" class="d-none"></div>
+                <div
+                    id="assign-modal-state"
+                    data-old-section="{{ old('section_id', '') }}"
+                    data-old-admission="{{ old('admission_id', '') }}"
+                    data-has-errors="{{ $errors->has('section_id') || $errors->has('admin_remarks') ? '1' : '0' }}"
+                    class="d-none"></div>
             </main>
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const enrollmentFiltersForm = document.getElementById('enrollmentFiltersForm');
+        const autoSubmitFilters = document.querySelectorAll('.filter-auto-submit');
+        const modalElement = document.getElementById('assignSectionModal');
+        const formElement = document.getElementById('assignSectionForm');
+        const sectionSelect = document.getElementById('assign_section_id');
+        const admissionIdInput = document.getElementById('assign_admission_id');
+        const sectionHelp = document.getElementById('assign_section_help');
+        const subjectsList = document.getElementById('assignSectionSubjectsList');
+        const subjectsEmpty = document.getElementById('assignSectionSubjectsEmpty');
+        const sectionMapElement = document.getElementById('assign-section-map');
+        const modalStateElement = document.getElementById('assign-modal-state');
+        const assignButtons = document.querySelectorAll('.open-assign-modal');
+        const oldSectionId = modalStateElement ? modalStateElement.getAttribute('data-old-section') : '';
+
+        let sectionMetaMap = {};
+        let activeGrade = '';
+
+        autoSubmitFilters.forEach((filterElement) => {
+            filterElement.addEventListener('change', function() {
+                if (enrollmentFiltersForm) {
+                    enrollmentFiltersForm.submit();
+                }
+            });
+        });
+
+        try {
+            const encodedMap = sectionMapElement ? sectionMapElement.getAttribute('data-map') : '';
+            sectionMetaMap = encodedMap ? JSON.parse(atob(encodedMap)) : {};
+        } catch (error) {
+            sectionMetaMap = {};
+        }
+
+        const normalizeGradeLevel = (gradeValue) => {
+            if (!gradeValue) {
+                return '';
+            }
+
+            const matches = String(gradeValue).match(/(7|8|9|10|11|12)/);
+            return matches ? matches[1] : String(gradeValue).trim();
+        };
+
+        const renderSubjects = () => {
+            const sectionId = sectionSelect.value;
+            const selectedSection = sectionMetaMap[sectionId];
+            const subjects = selectedSection && Array.isArray(selectedSection.subjects) ? selectedSection.subjects : [];
+
+            subjectsList.innerHTML = '';
+
+            if (!sectionId) {
+                subjectsEmpty.textContent = 'Select a section to view assigned subjects.';
+                subjectsEmpty.classList.remove('d-none');
+                subjectsList.classList.add('d-none');
+                return;
+            }
+
+            if (!subjects.length) {
+                subjectsEmpty.textContent = 'No subjects are assigned to this section yet.';
+                subjectsEmpty.classList.remove('d-none');
+                subjectsList.classList.add('d-none');
+                return;
+            }
+
+            subjects.forEach((subjectName) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = subjectName;
+                subjectsList.appendChild(listItem);
+            });
+
+            subjectsEmpty.classList.add('d-none');
+            subjectsList.classList.remove('d-none');
+        };
+
+        const populateSections = (gradeValue, selectedSectionId = '') => {
+            sectionSelect.innerHTML = '<option value="">Select section</option>';
+
+            const normalizedGrade = normalizeGradeLevel(gradeValue);
+            const filteredSections = Object.values(sectionMetaMap).filter((section) => {
+                const sectionGrade = normalizeGradeLevel(section.grade_level);
+                return !normalizedGrade || sectionGrade === normalizedGrade;
+            });
+
+            filteredSections.forEach((section) => {
+                const option = document.createElement('option');
+                option.value = section.id;
+                option.textContent = `${section.name} (${section.grade_level})`;
+                if (selectedSectionId && String(selectedSectionId) === String(section.id)) {
+                    option.selected = true;
+                }
+                sectionSelect.appendChild(option);
+            });
+
+            if (!filteredSections.length) {
+                sectionHelp.textContent = 'No available sections match this applicant grade level.';
+            } else {
+                sectionHelp.textContent = 'Only sections matching the applicant grade level are shown.';
+            }
+
+            renderSubjects();
+        };
+
+        const setModalStudentData = (buttonElement) => {
+            const admissionId = buttonElement.getAttribute('data-admission-id') || '';
+            const enrollUrl = buttonElement.getAttribute('data-enroll-url') || '';
+            const name = buttonElement.getAttribute('data-name') || 'N/A';
+            const email = buttonElement.getAttribute('data-email') || 'N/A';
+            const contact = buttonElement.getAttribute('data-contact') || 'N/A';
+            const lrn = buttonElement.getAttribute('data-lrn') || 'N/A';
+            const gradeLevel = buttonElement.getAttribute('data-grade-level') || '';
+            const schoolLevel = buttonElement.getAttribute('data-school-level') || 'N/A';
+
+            activeGrade = gradeLevel;
+            formElement.action = enrollUrl;
+            admissionIdInput.value = admissionId;
+
+            document.getElementById('assign_student_name').textContent = name;
+            document.getElementById('assign_student_email').textContent = email;
+            document.getElementById('assign_student_contact').textContent = contact;
+            document.getElementById('assign_student_lrn').textContent = lrn;
+            document.getElementById('assign_student_grade').textContent = `${gradeLevel || 'N/A'} / ${schoolLevel}`;
+
+            populateSections(activeGrade, oldSectionId || '');
+        };
+
+        assignButtons.forEach((buttonElement) => {
+            buttonElement.addEventListener('click', function() {
+                setModalStudentData(buttonElement);
+            });
+        });
+
+        sectionSelect.addEventListener('change', renderSubjects);
+
+        const hasValidationErrors = modalStateElement && modalStateElement.getAttribute('data-has-errors') === '1';
+        const oldAdmissionId = modalStateElement ? modalStateElement.getAttribute('data-old-admission') : '';
+
+        if (hasValidationErrors) {
+            const matchingButton = oldAdmissionId ?
+                document.querySelector(`.open-assign-modal[data-admission-id="${oldAdmissionId}"]`) :
+                null;
+
+            if (matchingButton) {
+                setModalStudentData(matchingButton);
+                const modalInstance = new bootstrap.Modal(modalElement);
+                modalInstance.show();
+            }
+        }
+    });
+</script>
 @endsection

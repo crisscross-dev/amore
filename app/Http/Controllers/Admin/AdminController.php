@@ -197,7 +197,7 @@ class AdminController extends Controller
             abort(403);
         }
 
-        $request->validate([
+        $rules = [
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
             'last_name' => 'required|string|max:255',
@@ -205,15 +205,21 @@ class AdminController extends Controller
             'contact_number' => 'nullable|string|max:20',
             'grade_level' => 'nullable|string|max:50',
             'department' => 'nullable|string|max:255',
-        ]);
+        ];
 
-        $user->first_name = $request->first_name;
-        $user->middle_name = $request->middle_name;
-        $user->last_name = $request->last_name;
-        $user->email = $request->email;
-        $user->contact_number = $request->contact_number;
-        $user->grade_level = $request->grade_level;
-        $user->department = $request->department;
+        if ($user->account_type === 'faculty') {
+            $rules['department'] = 'required|string|in:elementary,junior high,senior high';
+        }
+
+        $validated = $request->validate($rules);
+
+        $user->first_name = $validated['first_name'];
+        $user->middle_name = $validated['middle_name'] ?? null;
+        $user->last_name = $validated['last_name'];
+        $user->email = $validated['email'];
+        $user->contact_number = $validated['contact_number'] ?? null;
+        $user->grade_level = $validated['grade_level'] ?? null;
+        $user->department = $validated['department'] ?? null;
         $user->save();
 
         if ($request->filled('tab')) {

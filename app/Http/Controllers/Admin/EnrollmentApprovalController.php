@@ -78,6 +78,16 @@ class EnrollmentApprovalController extends Controller
             ->paginate(10, ['*'], 'admissions_page')
             ->withQueryString();
 
+        $selectedSchoolYear = $activeSchoolYear ?: SchoolYear::query()->orderByDesc('start_date')->first();
+        $sections = Section::query()
+            ->with(['subjectTeachers.subject'])
+            ->when($selectedSchoolYear, function ($query) use ($selectedSchoolYear) {
+                $query->where('academic_year', $selectedSchoolYear->year_name);
+            })
+            ->orderBy('grade_level')
+            ->orderBy('name')
+            ->get();
+
         // Get statistics
         $activeSchoolYear = SchoolYear::active()->first();
         $stats = [
@@ -95,7 +105,9 @@ class EnrollmentApprovalController extends Controller
             'admissionsReady',
             'stats',
             'schoolYears',
-            'gradeLevels'
+            'gradeLevels',
+            'sections',
+            'selectedSchoolYear'
         ));
     }
 
@@ -196,7 +208,7 @@ class EnrollmentApprovalController extends Controller
         });
 
         return redirect()
-            ->route('admin.enrollments.review-admission', $admission)
+            ->route('admin.enrollments.index')
             ->with('success', 'Student enrollment is complete and section has been assigned.');
     }
 

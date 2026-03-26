@@ -42,7 +42,7 @@ class AdmissionController extends Controller
     {
         $rules = $this->getValidationRules($request);
         $rules['grade_level'] = 'required|in:Grade 7,Grade 8,Grade 9,Grade 10';
-        
+
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
@@ -56,7 +56,7 @@ class AdmissionController extends Controller
         $data = $request->all();
         $data['school_level'] = 'jhs';
         $data['status'] = 'pending';
-        
+
         // Save to database
         $admission = Admission::create($data);
 
@@ -73,15 +73,15 @@ class AdmissionController extends Controller
     {
         $rules = $this->getValidationRules($request);
         $rules['grade_level'] = 'required|in:Grade 11,Grade 12';
-        
+
         // Add SHS-specific validation for strand
         $rules['strand'] = 'required|in:STEM,ABM,HUMSS,TVL';
-        
+
         // Add TVL specialization validation if TVL is selected
         if ($request->strand === 'TVL') {
             $rules['tvl_specialization'] = 'required|string|max:255';
         }
-        
+
         $validator = Validator::make($request->all(), $rules);
 
         if ($validator->fails()) {
@@ -95,7 +95,7 @@ class AdmissionController extends Controller
         $data = $request->all();
         $data['school_level'] = 'shs';
         $data['status'] = 'pending';
-        
+
         // Save to database
         $admission = Admission::create($data);
 
@@ -129,8 +129,8 @@ class AdmissionController extends Controller
             'gender' => 'required|in:Male,Female',
             'citizenship' => 'required|string|max:255',
             'religion' => 'required|string|max:255',
-            'height' => 'required|numeric|min:0',
-            'weight' => 'required|numeric|min:0',
+            'height' => 'required|numeric|min:0|max:999.99',
+            'weight' => 'required|numeric|min:0|max:999.99',
             'address' => 'required|string|max:500',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
@@ -149,7 +149,7 @@ class AdmissionController extends Controller
             $rules['school_name'] = 'required|string|max:255';
         } elseif ($request->school_type === 'Private') {
             $rules['private_type'] = 'required|in:ESC,Non-ESC';
-            
+
             if ($request->private_type === 'ESC') {
                 $rules['student_esc_no'] = 'required|string|max:8';
                 $rules['esc_school_id'] = 'required|string|max:6';

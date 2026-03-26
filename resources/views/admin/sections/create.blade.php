@@ -34,6 +34,8 @@
                         'section' => $section,
                         'schoolYears' => $schoolYears,
                         'subjects' => $subjects,
+                        'facultyMembers' => $facultyMembers,
+                        'adviserAssignments' => $adviserAssignments,
                         'action' => route('admin.sections.store'),
                         'method' => 'POST',
                         'submitLabel' => 'Create Section',

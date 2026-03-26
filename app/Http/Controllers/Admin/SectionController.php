@@ -30,9 +30,14 @@ class SectionController extends Controller
             ->orderBy('first_name')
             ->get();
 
+        $adviserAssignments = Section::query()
+            ->whereNotNull('adviser_id')
+            ->get(['id', 'name', 'grade_level', 'adviser_id'])
+            ->keyBy('adviser_id');
+
         [$schoolYears, $subjects] = $this->sectionFormOptions();
 
-        return view('admin.sections.index', compact('sections', 'facultyMembers', 'schoolYears', 'subjects'));
+        return view('admin.sections.index', compact('sections', 'facultyMembers', 'schoolYears', 'subjects', 'adviserAssignments'));
     }
 
     public function teachingLoads(Request $request)
@@ -119,6 +124,11 @@ class SectionController extends Controller
             ->orderBy('first_name')
             ->get();
 
+        $adviserAssignments = Section::query()
+            ->whereNotNull('adviser_id')
+            ->get(['id', 'name', 'grade_level', 'adviser_id'])
+            ->keyBy('adviser_id');
+
         $subjectAssignments = \App\Models\SectionSubjectTeacher::with(['teacher', 'subject'])
             ->where('section_id', $section->id)
             ->whereHas('subject', function ($query) {
@@ -138,18 +148,31 @@ class SectionController extends Controller
             'availableStudents',
             'facultyMembers',
             'subjects',
-            'subjectAssignments'
+            'subjectAssignments',
+            'adviserAssignments'
         ));
     }
 
     public function create()
     {
         [$schoolYears, $subjects] = $this->sectionFormOptions();
+        $facultyMembers = User::query()
+            ->where('account_type', 'faculty')
+            ->where('status', 'active')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'last_name']);
+        $adviserAssignments = Section::query()
+            ->whereNotNull('adviser_id')
+            ->get(['id', 'name', 'grade_level', 'adviser_id'])
+            ->keyBy('adviser_id');
 
         return view('admin.sections.create', [
             'section' => new Section(),
             'schoolYears' => $schoolYears,
             'subjects' => $subjects,
+            'facultyMembers' => $facultyMembers,
+            'adviserAssignments' => $adviserAssignments,
         ]);
     }
 
@@ -159,6 +182,13 @@ class SectionController extends Controller
             'grade_level' => 'required|string|max:255',
             'description' => 'nullable|string',
             'capacity' => 'nullable|integer|min:1',
+            'adviser_id' => [
+                'nullable',
+                Rule::exists('users', 'id')->where(function ($query) {
+                    return $query->where('account_type', 'faculty')
+                        ->where('status', 'active');
+                }),
+            ],
             'academic_year' => [
                 'nullable',
                 'string',
@@ -187,6 +217,20 @@ class SectionController extends Controller
             'name.unique' => 'That section already exists for the selected grade level and academic year.',
         ]);
 
+        if (!empty($validated['adviser_id'])) {
+            $existingAdviserSection = Section::query()
+                ->where('adviser_id', (int) $validated['adviser_id'])
+                ->first();
+
+            if ($existingAdviserSection) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'adviser_id' => 'Selected adviser is already assigned to section ' . $existingAdviserSection->name . '. Each faculty can only advise one section.',
+                    ]);
+            }
+        }
+
         // Handle checkbox: if not checked, it won't be in request
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;
 
@@ -214,6 +258,16 @@ class SectionController extends Controller
     public function edit(Section $section)
     {
         [$schoolYears, $subjects] = $this->sectionFormOptions();
+        $facultyMembers = User::query()
+            ->where('account_type', 'faculty')
+            ->where('status', 'active')
+            ->orderBy('last_name')
+            ->orderBy('first_name')
+            ->get(['id', 'first_name', 'last_name']);
+        $adviserAssignments = Section::query()
+            ->whereNotNull('adviser_id')
+            ->get(['id', 'name', 'grade_level', 'adviser_id'])
+            ->keyBy('adviser_id');
 
         $selectedSubjectIds = SectionSubjectTeacher::query()
             ->where('section_id', $section->id)
@@ -221,7 +275,7 @@ class SectionController extends Controller
             ->map(fn($id) => (int) $id)
             ->all();
 
-        return view('admin.sections.edit', compact('section', 'schoolYears', 'subjects', 'selectedSubjectIds'));
+        return view('admin.sections.edit', compact('section', 'schoolYears', 'subjects', 'selectedSubjectIds', 'facultyMembers', 'adviserAssignments'));
     }
 
     public function update(Request $request, Section $section)
@@ -230,6 +284,13 @@ class SectionController extends Controller
             'grade_level' => 'required|string|max:255',
             'description' => 'nullable|string',
             'capacity' => 'nullable|integer|min:1',
+            'adviser_id' => [
+                'nullable',
+                Rule::exists('users', 'id')->where(function ($query) {
+                    return $query->where('account_type', 'faculty')
+                        ->where('status', 'active');
+                }),
+            ],
             'academic_year' => [
                 'nullable',
                 'string',
@@ -259,6 +320,21 @@ class SectionController extends Controller
         ], [
             'name.unique' => 'That section already exists for the selected grade level and academic year.',
         ]);
+
+        if (!empty($validated['adviser_id'])) {
+            $existingAdviserSection = Section::query()
+                ->where('adviser_id', (int) $validated['adviser_id'])
+                ->where('id', '!=', $section->id)
+                ->first();
+
+            if ($existingAdviserSection) {
+                return back()
+                    ->withInput()
+                    ->withErrors([
+                        'adviser_id' => 'Selected adviser is already assigned to section ' . $existingAdviserSection->name . '. Each faculty can only advise one section.',
+                    ]);
+            }
+        }
 
         // Handle checkbox: if not checked, it won't be in request
         $validated['is_active'] = $request->has('is_active') ? 1 : 0;

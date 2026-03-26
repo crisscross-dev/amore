@@ -184,7 +184,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Add Student Modal Search Functionality
     const studentSearch = document.getElementById("studentSearch");
-    const clearFilterBtn = document.getElementById("clearFilterBtn");
+    const selectAllStudentsBtn = document.getElementById(
+        "selectAllStudentsBtn",
+    );
     const studentItems = document.querySelectorAll(".student-item");
     const noResults = document.getElementById("noResults");
     const selectedStudentsDiv = document.getElementById("selectedStudents");
@@ -196,9 +198,78 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     const confirmAddBtn = document.getElementById("confirmAddStudents");
     const searchSuggestions = document.getElementById("searchSuggestions");
+    const studentPagination = document.getElementById("studentPagination");
 
     let selectedStudents = [];
     let availableStudentsData = [];
+    let currentFilteredStudents = [];
+    let currentPage = 1;
+    const pageSize = 20;
+
+    function getPageStats(totalItems) {
+        const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+        if (currentPage > totalPages) {
+            currentPage = totalPages;
+        }
+        if (currentPage < 1) {
+            currentPage = 1;
+        }
+
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+
+        return {
+            totalPages,
+            startIndex,
+            endIndex,
+        };
+    }
+
+    function renderPagination(totalItems) {
+        if (!studentPagination) {
+            return;
+        }
+
+        if (totalItems === 0) {
+            studentPagination.innerHTML = "";
+            return;
+        }
+
+        const stats = getPageStats(totalItems);
+        studentPagination.innerHTML = `
+      <span>Showing ${stats.startIndex + 1}-${stats.endIndex} of ${totalItems}</span>
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="studentPagePrev" ${currentPage <= 1 ? "disabled" : ""}>Prev</button>
+        <span>Page ${currentPage} of ${stats.totalPages}</span>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="studentPageNext" ${currentPage >= stats.totalPages ? "disabled" : ""}>Next</button>
+      </div>
+    `;
+
+        const prevBtn = document.getElementById("studentPagePrev");
+        const nextBtn = document.getElementById("studentPageNext");
+
+        if (prevBtn) {
+            prevBtn.addEventListener("click", function () {
+                if (currentPage > 1) {
+                    currentPage -= 1;
+                    renderStudentList(currentFilteredStudents);
+                }
+            });
+        }
+
+        if (nextBtn) {
+            nextBtn.addEventListener("click", function () {
+                const totalPages = Math.max(
+                    1,
+                    Math.ceil(currentFilteredStudents.length / pageSize),
+                );
+                if (currentPage < totalPages) {
+                    currentPage += 1;
+                    renderStudentList(currentFilteredStudents);
+                }
+            });
+        }
+    }
 
     if (studentSearch) {
         console.log(
@@ -226,6 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Function to render student list
         function renderStudentList(students) {
+            currentFilteredStudents = students;
             console.log(
                 "renderStudentList called with",
                 students.length,
@@ -240,16 +312,21 @@ document.addEventListener("DOMContentLoaded", () => {
             <p class="mb-0">${searchTerm ? `No students found matching "${searchTerm}"` : "No students available"}</p>
           </div>
         `;
+                renderPagination(0);
                 return;
             }
 
-            searchSuggestions.innerHTML = students
+            const stats = getPageStats(students.length);
+            const pagedStudents = students.slice(
+                stats.startIndex,
+                stats.endIndex,
+            );
+
+            searchSuggestions.innerHTML = pagedStudents
                 .map((student) => {
-                    const isChecked = selectedStudents.find(
+                    const isSelected = selectedStudents.find(
                         (s) => s.id === student.id,
-                    )
-                        ? "checked"
-                        : "";
+                    );
                     const pictureHtml = student.picture
                         ? `<img src="/uploads/profile_picture/${student.picture}" class="rounded-circle me-2" width="40" height="40" style="object-fit: cover;">`
                         : `<div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center me-2" style="width: 40px; height: 40px; font-size: 16px;">
@@ -257,21 +334,18 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>`;
 
                     return `
-          <div class="suggestion-item p-3 border-bottom" style="transition: background-color 0.2s;" 
+          <div class="suggestion-item p-3 border-bottom ${isSelected ? "bg-success-subtle" : ""}" style="transition: background-color 0.2s; cursor: pointer;" 
                data-student-id="${student.id}">
             <div class="d-flex align-items-center justify-content-between">
               <div class="d-flex align-items-center flex-grow-1">
-                <input type="checkbox" 
-                       class="form-check-input student-select-checkbox me-3" 
-                       data-student-id="${student.id}"
-                       data-student-name="${student.displayName}"
-                       ${isChecked}
-                       style="cursor: pointer; width: 20px; height: 20px;">
                 ${pictureHtml}
                 <div>
                   <strong class="d-block">${student.displayName}</strong>
                   <small class="text-muted">${student.customId} • ${student.email}</small>
                 </div>
+              </div>
+              <div class="ms-2 text-${isSelected ? "success" : "muted"}">
+                <i class="fas ${isSelected ? "fa-check-circle" : "fa-circle"}"></i>
               </div>
             </div>
           </div>
@@ -279,31 +353,35 @@ document.addEventListener("DOMContentLoaded", () => {
                 })
                 .join("");
 
-            // Add change handlers to checkboxes
-            searchSuggestions
-                .querySelectorAll(".student-select-checkbox")
-                .forEach((checkbox) => {
-                    checkbox.addEventListener("change", function () {
-                        const studentId = this.dataset.studentId;
-                        const studentName = this.dataset.studentName;
+            renderPagination(students.length);
 
-                        if (this.checked) {
-                            // Add to selected list
-                            if (
-                                !selectedStudents.find(
-                                    (s) => s.id === studentId,
-                                )
-                            ) {
-                                selectedStudents.push({
-                                    id: studentId,
-                                    name: studentName,
-                                });
-                            }
-                        } else {
-                            // Remove from selected list
+            // Click whole student box to toggle selection
+            searchSuggestions
+                .querySelectorAll(".suggestion-item")
+                .forEach((item) => {
+                    item.addEventListener("click", function () {
+                        const studentId = this.dataset.studentId;
+                        const student = availableStudentsData.find(
+                            (s) => s.id === studentId,
+                        );
+
+                        if (!student) {
+                            return;
+                        }
+
+                        const existing = selectedStudents.find(
+                            (s) => s.id === studentId,
+                        );
+
+                        if (existing) {
                             selectedStudents = selectedStudents.filter(
                                 (s) => s.id !== studentId,
                             );
+                        } else {
+                            selectedStudents.push({
+                                id: studentId,
+                                name: student.displayName,
+                            });
                         }
 
                         updateSelectedDisplay();
@@ -316,6 +394,7 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("filterStudents called");
             const searchTerm = studentSearch.value.toLowerCase().trim();
             console.log("Search term:", searchTerm);
+            currentPage = 1;
 
             // Filter students
             let filtered = availableStudentsData.filter((student) => {
@@ -364,13 +443,6 @@ document.addEventListener("DOMContentLoaded", () => {
                             selectedStudents = selectedStudents.filter(
                                 (s) => s.id !== studentId,
                             );
-
-                            // Uncheck the checkbox
-                            const checkbox = document.querySelector(
-                                `.student-select-checkbox[data-student-id="${studentId}"]`,
-                            );
-                            if (checkbox) checkbox.checked = false;
-
                             updateSelectedDisplay();
                         });
                     });
@@ -380,21 +452,77 @@ document.addEventListener("DOMContentLoaded", () => {
                 selectedStudentsDiv.style.display = "none";
                 confirmAddBtn.disabled = true;
             }
+
+            renderStudentList(currentFilteredStudents);
+
+            if (selectAllStudentsBtn) {
+                const stats = getPageStats(currentFilteredStudents.length);
+                const pageStudents = currentFilteredStudents.slice(
+                    stats.startIndex,
+                    stats.endIndex,
+                );
+                const visibleCount = pageStudents.length;
+                const selectedVisibleCount = pageStudents.filter((student) =>
+                    selectedStudents.some((picked) => picked.id === student.id),
+                ).length;
+
+                selectAllStudentsBtn.disabled = visibleCount === 0;
+                if (visibleCount > 0 && selectedVisibleCount === visibleCount) {
+                    selectAllStudentsBtn.innerHTML =
+                        '<i class="fas fa-eraser me-1"></i>Clear All';
+                } else {
+                    selectAllStudentsBtn.innerHTML =
+                        '<i class="fas fa-check-double me-1"></i>Select All';
+                }
+            }
         }
 
         // Initialize - show all students immediately
         console.log("About to call filterStudents() for initial display");
         filterStudents();
+        updateSelectedDisplay();
 
         // Live filter as you type (instant, no delay)
         studentSearch.addEventListener("input", filterStudents);
 
-        // Clear filter button
-        if (clearFilterBtn) {
-            clearFilterBtn.addEventListener("click", function () {
-                studentSearch.value = "";
-                filterStudents();
-                studentSearch.focus();
+        if (selectAllStudentsBtn) {
+            selectAllStudentsBtn.addEventListener("click", function () {
+                const stats = getPageStats(currentFilteredStudents.length);
+                const visibleStudents = currentFilteredStudents.slice(
+                    stats.startIndex,
+                    stats.endIndex,
+                );
+                if (!visibleStudents.length) {
+                    return;
+                }
+
+                const allVisibleSelected = visibleStudents.every((student) =>
+                    selectedStudents.some((picked) => picked.id === student.id),
+                );
+
+                if (allVisibleSelected) {
+                    const visibleIds = new Set(
+                        visibleStudents.map((student) => student.id),
+                    );
+                    selectedStudents = selectedStudents.filter(
+                        (student) => !visibleIds.has(student.id),
+                    );
+                } else {
+                    visibleStudents.forEach((student) => {
+                        if (
+                            !selectedStudents.some(
+                                (picked) => picked.id === student.id,
+                            )
+                        ) {
+                            selectedStudents.push({
+                                id: student.id,
+                                name: student.displayName,
+                            });
+                        }
+                    });
+                }
+
+                updateSelectedDisplay();
             });
         }
 
@@ -467,10 +595,12 @@ document.addEventListener("DOMContentLoaded", () => {
         if (addStudentModal) {
             addStudentModal.addEventListener("hidden.bs.modal", function () {
                 selectedStudents = [];
+                currentPage = 1;
                 updateSelectedDisplay();
                 if (studentSearch) {
                     studentSearch.value = "";
                 }
+                filterStudents();
             });
         }
     }

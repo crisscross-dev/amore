@@ -1,5 +1,3 @@
-
-
 @if($faculty->count() > 0)
 <div class="table-responsive mt-3">
     <table class="table table-hover align-middle">
@@ -15,7 +13,7 @@
         </thead>
         <tbody>
             @foreach($faculty as $member)
-            <tr class="js-account-row" data-view-modal="#facultyViewModal{{ $member->id }}" title="Double-click to view details">
+            <tr>
                 <td><strong>{{ $member->custom_id ?? $member->id }}</strong></td>
                 <td>
                     <div class="d-flex align-items-center">
@@ -157,7 +155,11 @@
                         </div>
                         <div class="col-md-6">
                             <label class="form-label">Department</label>
-                            <input type="text" name="department" class="form-control" value="{{ $member->department }}">
+                            <select name="department" class="form-select" style="height: 50px !important; padding: 0.75rem 2.25rem 0.75rem 1rem; line-height: 1.5;" required>
+                                <option value="elementary" {{ strtolower((string) old('department', $member->department)) === 'elementary' ? 'selected' : '' }}>elementary</option>
+                                <option value="junior high" {{ strtolower((string) old('department', $member->department)) === 'junior high' ? 'selected' : '' }}>junior high</option>
+                                <option value="senior high" {{ strtolower((string) old('department', $member->department)) === 'senior high' ? 'selected' : '' }}>senior high</option>
+                            </select>
                         </div>
                         <input type="hidden" name="grade_level" value="{{ $member->grade_level }}">
                     </div>

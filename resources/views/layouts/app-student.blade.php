@@ -56,8 +56,7 @@
     </div>
 
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
-    @vite(['resources/js/app.js'])
-    <script src="{{ asset('js/swal.js') }}"></script>
+    @vite(['resources/js/app.js', 'resources/js/swal.js'])
 
     @stack('scripts')
 </body>

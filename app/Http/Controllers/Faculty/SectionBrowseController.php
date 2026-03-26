@@ -33,8 +33,12 @@ class SectionBrowseController extends Controller
             ->orderBy('name');
 
         if ($user->account_type === 'faculty') {
-            $query->whereHas('subjectTeachers', function ($assignmentQuery) use ($user) {
-                $assignmentQuery->where('teacher_id', $user->id);
+            $query->where(function ($facultyScopeQuery) use ($user) {
+                $facultyScopeQuery
+                    ->where('adviser_id', $user->id)
+                    ->orWhereHas('subjectTeachers', function ($assignmentQuery) use ($user) {
+                        $assignmentQuery->where('teacher_id', $user->id);
+                    });
             });
         }
 
@@ -57,8 +61,12 @@ class SectionBrowseController extends Controller
 
         $gradeLevels = Section::query()
             ->when($user->account_type === 'faculty', function ($levelQuery) use ($user) {
-                $levelQuery->whereHas('subjectTeachers', function ($assignmentQuery) use ($user) {
-                    $assignmentQuery->where('teacher_id', $user->id);
+                $levelQuery->where(function ($facultyScopeQuery) use ($user) {
+                    $facultyScopeQuery
+                        ->where('adviser_id', $user->id)
+                        ->orWhereHas('subjectTeachers', function ($assignmentQuery) use ($user) {
+                            $assignmentQuery->where('teacher_id', $user->id);
+                        });
                 });
             })
             ->select('grade_level')
@@ -82,7 +90,9 @@ class SectionBrowseController extends Controller
                 ->where('teacher_id', $user->id)
                 ->exists();
 
-            abort_unless($isAssigned, 403);
+            $isAdviser = (int) $section->adviser_id === (int) $user->id;
+
+            abort_unless($isAssigned || $isAdviser, 403);
         }
 
         $section->load(['adviser', 'students']);

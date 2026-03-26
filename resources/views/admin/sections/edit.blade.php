@@ -34,6 +34,8 @@
                         'section' => $section,
                         'schoolYears' => $schoolYears,
                         'subjects' => $subjects,
+                        'facultyMembers' => $facultyMembers,
+                        'adviserAssignments' => $adviserAssignments,
                         'selectedSubjectIds' => $selectedSubjectIds,
                         'action' => route('admin.sections.update', $section),
                         'method' => 'PUT',

@@ -89,11 +89,20 @@ class GradeController extends Controller
             ->groupBy('student_id')
             ->map(fn(Collection $entries) => $entries->keyBy('subject_id'));
 
-        $expectedEntries = $students->count() * max(1, count($subjectIds));
+        $requiredPairCount = $students->count() * max(1, count($subjectIds));
+        $lockedRequiredPairCount = $students->sum(function (User $student) use ($subjectIds, $gradeEntriesByStudent) {
+            $studentEntries = $gradeEntriesByStudent->get($student->id, collect());
 
-        $sheetLocked = $gradeEntries->isNotEmpty()
-            && $gradeEntries->count() === $expectedEntries
-            && $gradeEntries->every(fn(GradeEntry $entry) => $entry->status !== 'draft');
+            return collect($subjectIds)->filter(function (int $subjectId) use ($studentEntries) {
+                $entry = $studentEntries->get($subjectId);
+
+                return $entry
+                    && $entry->grade_value !== null
+                    && $entry->status !== 'draft';
+            })->count();
+        });
+
+        $sheetLocked = $requiredPairCount > 0 && $lockedRequiredPairCount === $requiredPairCount;
 
         $quarterTerms = self::QUARTER_TERMS;
 
@@ -242,7 +251,12 @@ class GradeController extends Controller
 
         $requiredEntryCount = $studentCount * max(1, count($allowedSubjectIds));
 
-        if ($entries->count() !== $requiredEntryCount) {
+        $uniqueEntryCount = $entries
+            ->map(fn(GradeEntry $entry) => $entry->student_id . '|' . $entry->subject_id)
+            ->unique()
+            ->count();
+
+        if ($uniqueEntryCount < $requiredEntryCount) {
             return back()->withErrors(['grade_values' => 'Please save grades for all students before uploading the sheet.']);
         }
 
