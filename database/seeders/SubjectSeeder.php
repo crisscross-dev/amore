@@ -32,7 +32,7 @@ class SubjectSeeder extends Seeder
             'Math',
             'Science',
             'AP',
-            'EsP',
+            'ESP',
             'TLE',
             'MAPEH - Music',
             'MAPEH - Arts',
@@ -40,7 +40,7 @@ class SubjectSeeder extends Seeder
             'MAPEH - Health',
         ];
 
-        // Remove standalone MAPEH for grades where components are used.
+        // Remove standalone MAPEH for JHS grades where components are used.
         Subject::query()
             ->whereIn('grade_level', ['7', '8', '9', '10'])
             ->where('name', 'MAPEH')
@@ -49,11 +49,10 @@ class SubjectSeeder extends Seeder
         foreach (['7', '8'] as $gradeLevel) {
             foreach ($grade7to8Subjects as $subjectName) {
                 $subjects[] = [
-                    'name' => $subjectName,
+                    'name' => mb_strtoupper(trim($subjectName), 'UTF-8'),
                     'description' => null,
                     'subject_type' => null,
                     'grade_level' => $gradeLevel,
-                    'hours_per_week' => null,
                 ];
             }
         }
@@ -61,11 +60,10 @@ class SubjectSeeder extends Seeder
         foreach (['9', '10'] as $gradeLevel) {
             foreach ($grade9to10Subjects as $subjectName) {
                 $subjects[] = [
-                    'name' => $subjectName,
+                    'name' => mb_strtoupper(trim($subjectName), 'UTF-8'),
                     'description' => null,
                     'subject_type' => null,
                     'grade_level' => $gradeLevel,
-                    'hours_per_week' => null,
                 ];
             }
         }

@@ -10,7 +10,7 @@
 <!-- Student Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-student.css', 'resources/js/admin-calendar.js'])
 
-<div id="student-calendar-page" class="dashboard-container" data-calendar-month="{{ $currentMonth }}" data-calendar-year="{{ $currentYear }}">
+<div id="student-calendar-page" class="dashboard-container" data-calendar-month="{{ $currentMonth }}" data-calendar-year="{{ $currentYear }}" data-live-url="{{ route('calendar.live-signature') }}" data-live-signature="{{ $calendarLiveSignature }}">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -80,41 +80,7 @@
                 </div>
 
                 <!-- Success/Error Messages -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
 
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
-
-                <!-- Page Header -->
-                <div class="welcome-card mb-4">
-                    <div class="d-flex align-items-center justify-content-between">
-                        <div>
-                            <h4 class="mb-2">
-                                <i class="fas fa-calendar-alt me-2"></i>
-                                Academic Calendar
-                            </h4>
-                            <p class="mb-0 opacity-90">
-                                View important dates, events, and schedules for Amore Academy
-                            </p>
-                        </div>
-                        <div class="d-none d-lg-block">
-                            <a href="{{ route('dashboard.student') }}" class="btn btn-warning btn-lg">
-                                <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
-                            </a>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Calendar Card -->
                 <div class="activity-card mb-4">
@@ -203,7 +169,7 @@
                                                         @if ($hasEvents && isset($eventsByDay[$dayNumber]))
                                                             <div class="event-indicator">
                                                                 @foreach($eventsByDay[$dayNumber]->take(1) as $event)
-                                                                    <i class="fas fa-circle" style="font-size: 6px; color: {{ $event->color }}"></i>
+                                                                    <i class="fas fa-circle" style="font-size: 6px;" data-text-color="{{ $event->color }}"></i>
                                                                 @endforeach
                                                                 @if($eventsByDay[$dayNumber]->count() > 1)
                                                                     <small class="badge bg-success rounded-pill" style="font-size: 0.6rem;">+{{ $eventsByDay[$dayNumber]->count() - 1 }}</small>
@@ -244,7 +210,7 @@
                     <div class="card-header d-flex justify-content-between align-items-center">
                         <span>
                             <i class="fas fa-bell me-2"></i>
-                            Upcoming Events & Announcements
+                            Announcement
                         </span>
                         <span class="badge bg-white text-success">{{ $upcomingEvents->count() + $announcements->count() }} items</span>
                     </div>
@@ -256,25 +222,25 @@
                                 @if($announcements->count() > 0)
                                     <div class="list-group-item border-0 px-0 bg-light">
                                         <small class="text-success fw-bold">
-                                            <i class="fas fa-bullhorn me-1"></i>RECENT ANNOUNCEMENTS
+                                            <i class="fas fa-bullhorn me-1"></i>RECENT ANNOUNCEMENT
                                         </small>
                                     </div>
                                     @foreach($announcements as $announcement)
                                         <a href="{{ route('announcements.show', $announcement) }}"
                                            class="list-group-item list-group-item-action border-0 border-bottom px-0 announcement-item"
-                                           style="border-left: 4px solid {{ $announcement->priority_color }} !important;">
+                                           data-border-left-color="{{ $announcement->priority_color }}">
                                             <div class="d-flex align-items-start">
-                                                <div class="rounded p-3 me-3" style="background-color: {{ $announcement->priority_color }}15;">
-                                                    <i class="fas {{ $announcement->priority_icon }}" style="font-size: 1.5rem; color: {{ $announcement->priority_color }}"></i>
+                                                <div class="rounded p-3 me-3" data-bg-color="{{ $announcement->priority_color }}" data-bg-alpha="15">
+                                                    <i class="fas {{ $announcement->priority_icon }}" style="font-size: 1.5rem;" data-text-color="{{ $announcement->priority_color }}"></i>
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
-                                                        <h6 class="mb-0 fw-bold">{{ $announcement->title }}</h6>
+                                                        <h6 class="mb-0 fw-bold text-success">{{ $announcement->title }}</h6>
                                                         <div class="d-flex gap-1">
                                                             @if($announcement->is_pinned)
                                                                 <span class="badge bg-warning"><i class="fas fa-thumbtack"></i></span>
                                                             @endif
-                                                            <span class="badge" style="background-color: {{ $announcement->priority_color }}">
+                                                            <span class="badge" data-bg-color="{{ $announcement->priority_color }}">
                                                                 {{ ucfirst($announcement->priority) }}
                                                             </span>
                                                         </div>
@@ -308,13 +274,13 @@
                                              tabindex="0"
                                              aria-label="Click to view {{ $event->start_date->format('F Y') }} calendar">
                                             <div class="d-flex align-items-start">
-                                                <div class="rounded p-3 me-3" style="background-color: {{ $event->color }}15;">
-                                                    <i class="fas {{ $event->type_icon }}" style="font-size: 1.5rem; color: {{ $event->color }}"></i>
+                                                <div class="rounded p-3 me-3" data-bg-color="{{ $event->color }}" data-bg-alpha="15">
+                                                    <i class="fas {{ $event->type_icon }}" style="font-size: 1.5rem;" data-text-color="{{ $event->color }}"></i>
                                                 </div>
                                                 <div class="flex-grow-1">
                                                     <div class="d-flex justify-content-between align-items-start mb-2">
                                                         <h6 class="mb-0 fw-bold">{{ $event->title }}</h6>
-                                                        <span class="badge" style="background-color: {{ $event->color }}">
+                                                        <span class="badge" data-bg-color="{{ $event->color }}">
                                                             {{ $event->start_date->diffForHumans() }}
                                                         </span>
                                                     </div>
@@ -350,10 +316,10 @@
                         <!-- View All Buttons -->
                         <div class="d-flex gap-2 mt-4">
                             <a href="{{ route('announcements.index') }}" class="btn btn-outline-success flex-fill">
-                                <i class="fas fa-bullhorn me-2"></i>All Announcements
+                                <i class="fas fa-bullhorn me-2"></i>All Announcement
                             </a>
                             <a href="{{ route('calendar.all') }}" class="btn btn-outline-success flex-fill">
-                                <i class="fas fa-calendar-alt me-2"></i>All Events
+                                <i class="fas fa-calendar-alt me-2"></i>All Event
                             </a>
                         </div>
                     </div>
@@ -362,6 +328,38 @@
         </div>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-text-color]').forEach(function (element) {
+        var color = element.getAttribute('data-text-color');
+        if (color) {
+            element.style.color = color;
+        }
+    });
+
+    document.querySelectorAll('[data-border-left-color]').forEach(function (element) {
+        var color = element.getAttribute('data-border-left-color');
+        if (color) {
+            element.style.borderLeft = '4px solid ' + color;
+        }
+    });
+
+    document.querySelectorAll('[data-bg-color]').forEach(function (element) {
+        var color = element.getAttribute('data-bg-color');
+        var alpha = element.getAttribute('data-bg-alpha');
+        if (!color) {
+            return;
+        }
+
+        if (alpha && /^#[0-9a-fA-F]{6}$/.test(color)) {
+            element.style.backgroundColor = color + alpha;
+        } else {
+            element.style.backgroundColor = color;
+        }
+    });
+});
+</script>
 
 @endsection
 

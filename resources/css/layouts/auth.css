@@ -30,7 +30,57 @@
     max-width: 500px;
     margin: 0 auto;
     border-radius: var(--border-radius-xl);
-    background: var(--color-surface);
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 18px 36px rgba(15, 23, 42, 0.24);
+    overflow: hidden;
+    position: relative;
+}
+
+.login-form::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, #0ea866, #1aa26a, #0f8a56);
+}
+
+.login-form .form-label {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.login-form .form-control {
+    min-height: 54px;
+    border-radius: 0.78rem;
+    border-color: #cbd5e1;
+    color: #111827;
+    background: rgba(255, 255, 255, 0.96);
+    padding-left: 1rem;
+    padding-right: 1rem;
+}
+
+.login-form .form-control::placeholder {
+    color: #9aa6b2;
+}
+
+.login-form .form-control:focus {
+    border-color: #15803d;
+    box-shadow: 0 0 0 0.2rem rgba(21, 128, 61, 0.14);
+}
+
+.login-form .input-group .btn-outline-secondary {
+    border-color: #cbd5e1;
+    color: #64748b;
+    background: rgba(255, 255, 255, 0.96);
+}
+
+.login-form .input-group .btn-outline-secondary:hover {
+    border-color: #a8b7c8;
+    color: #14532d;
+    background: #f3f7f4;
 }
 
 /* Form Logo */
@@ -71,9 +121,100 @@
 }
 
 .login-button {
-    font-weight: 600;
-    padding: 0.75rem;
-    border-radius: var(--border-radius-md);
+    font-weight: 700;
+    padding: 0.84rem;
+    border-radius: 0.82rem;
+    border: 0;
+    min-height: 54px;
+    font-size: 1.04rem;
+    background-image: linear-gradient(135deg, #0ea866 0%, #0f8a56 48%, #0b6a41 100%);
+    color: #fff;
+    box-shadow: 0 12px 22px rgba(11, 106, 65, 0.24);
+    transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.login-form .login-button.btn {
+    position: relative;
+    overflow: hidden;
+    background-image: linear-gradient(135deg, #0ea866 0%, #0f8a56 48%, #0b6a41 100%) !important;
+    border: 0 !important;
+    color: #ffffff !important;
+}
+
+.login-form .login-button.btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+    transition: transform 0.55s ease;
+}
+
+.login-form .login-button.btn:hover::after,
+.login-form .login-button.btn:focus-visible::after {
+    transform: translateX(100%);
+}
+
+.login-button:hover,
+.login-button:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 26px rgba(11, 106, 65, 0.3);
+    filter: saturate(1.05);
+    color: #fff;
+}
+
+.forgot-password-link {
+    color: #556577;
+    text-decoration: none;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    position: relative;
+    padding-bottom: 1px;
+}
+
+.forgot-password-link:hover,
+.forgot-password-link:focus {
+    color: #166534;
+    text-decoration: none;
+}
+
+.forgot-password-link::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 100%;
+    bottom: -2px;
+    height: 1px;
+    background: currentColor;
+    transform: scaleX(0.35);
+    transform-origin: left;
+    transition: transform 0.2s ease;
+}
+
+.forgot-password-link:hover::after,
+.forgot-password-link:focus-visible::after {
+    transform: scaleX(1);
+}
+
+.create-account-button {
+    min-height: 52px;
+    border-radius: 0.82rem;
+    border: 1px solid #91bda3;
+    background: linear-gradient(180deg, rgba(244, 251, 247, 0.98), rgba(231, 246, 237, 0.96));
+    color: #1f3b2e;
+    font-weight: 700;
+    font-size: 1.02rem;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35);
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.create-account-button:hover,
+.create-account-button:focus {
+    border-color: #6ca685;
+    background: linear-gradient(180deg, #f2faf5, #dff1e7);
+    color: #166534;
+    transform: translateY(-1px);
+    box-shadow: 0 8px 18px rgba(22, 101, 52, 0.14);
 }
 
 .auth-card .alert {
@@ -100,5 +241,11 @@
     
     .form-logo {
         width: 80px;
+    }
+
+    .login-button,
+    .create-account-button,
+    .login-form .form-control {
+        min-height: 50px;
     }
 }

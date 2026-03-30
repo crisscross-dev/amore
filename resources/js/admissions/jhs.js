@@ -2,18 +2,21 @@
  * JHS Admission Form JavaScript
  */
 
-import { initializeCommonFormLogic, initializePhoneFormatting } from './common.js';
+import {
+    initializeCommonFormLogic,
+    initializePhoneFormatting,
+} from "./common.js";
 
 // Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('JHS Admission Form initialized');
-    
+document.addEventListener("DOMContentLoaded", function () {
+    console.log("JHS Admission Form initialized");
+
     // Initialize common form logic
     initializeCommonFormLogic();
-    
+
     // Initialize phone formatting
     initializePhoneFormatting();
-    
+
     // JHS-specific initialization
     initializeJHSForm();
 });
@@ -23,76 +26,156 @@ document.addEventListener('DOMContentLoaded', function() {
  */
 function initializeJHSForm() {
     // Add any JHS-specific logic here
-    console.log('JHS-specific form logic initialized');
-    
-    // Initialize school type logic
-    initializeSchoolTypeLogic();
-    
-    // Example: Add grade level validation or specific field handling
-    setupFormAnimations();
-}
+    console.log("JHS-specific form logic initialized");
 
-/**
- * Setup form animations
- */
-function setupFormAnimations() {
-    const formSections = document.querySelectorAll('.form-section');
-    
-    formSections.forEach((section, index) => {
-        section.style.opacity = '0';
-        section.style.transform = 'translateY(20px)';
-        
-        setTimeout(() => {
-            section.style.transition = 'all 0.5s ease';
-            section.style.opacity = '1';
-            section.style.transform = 'translateY(0)';
-        }, index * 100);
+    // Keep age policy validation while using global flatpickr on the date input
+    initializeMinimumAgeValidation();
+    initializeGuardianEmergencySync();
+
+    // Force stable visible state without animation to reduce input lag
+    const formSections = document.querySelectorAll(".form-section");
+    formSections.forEach((section) => {
+        section.style.transition = "none";
+        section.style.opacity = "1";
+        section.style.transform = "none";
     });
 }
 
-/**
- * Initialize school type logic (Public/Private, ESC/Non-ESC)
- */
-function initializeSchoolTypeLogic() {
-    const publicRadio = document.getElementById('school_type_public');
-    const privateRadio = document.getElementById('school_type_private');
-    const escRadio = document.getElementById('private_type_esc');
-    const nonEscRadio = document.getElementById('private_type_non_esc');
-    
-    const publicSchool = document.getElementById('publicSchool');
-    const privateOptions = document.getElementById('privateOptions');
-    const escFields = document.getElementById('escFields');
-    const nonEscField = document.getElementById('nonEscField');
-    
-    // Handle Public/Private school type selection
-    publicRadio?.addEventListener('change', function() {
-        if (this.checked) {
-            publicSchool?.classList.remove('hidden');
-            privateOptions?.classList.add('hidden');
-            escFields?.classList.add('hidden');
-            nonEscField?.classList.add('hidden');
+function initializeGuardianEmergencySync() {
+    const motherCheckbox = document.getElementById("useMotherAsEmergency");
+    const fatherCheckbox = document.getElementById("useFatherAsEmergency");
+    const motherNameInput = document.querySelector('input[name="mother_name"]');
+    const fatherNameInput = document.querySelector('input[name="father_name"]');
+    const emergencyNameInput = document.querySelector(
+        'input[name="emergency_contact_name"]',
+    );
+    const emergencyRelationshipInput = document.querySelector(
+        'input[name="emergency_contact_relationship"]',
+    );
+
+    if (
+        !motherCheckbox ||
+        !fatherCheckbox ||
+        !motherNameInput ||
+        !fatherNameInput ||
+        !emergencyNameInput ||
+        !emergencyRelationshipInput
+    ) {
+        return;
+    }
+
+    const applySource = (source) => {
+        if (source === "mother") {
+            emergencyNameInput.value = (motherNameInput.value || "").trim();
+            emergencyRelationshipInput.value = "Mother";
+            motherCheckbox.checked = true;
+            fatherCheckbox.checked = false;
+            return;
+        }
+
+        if (source === "father") {
+            emergencyNameInput.value = (fatherNameInput.value || "").trim();
+            emergencyRelationshipInput.value = "Father";
+            fatherCheckbox.checked = true;
+            motherCheckbox.checked = false;
+        }
+    };
+
+    const clearIfOwnedBy = (source) => {
+        const relation = (emergencyRelationshipInput.value || "")
+            .trim()
+            .toLowerCase();
+        if (
+            (source === "mother" && relation === "mother") ||
+            (source === "father" && relation === "father")
+        ) {
+            emergencyNameInput.value = "";
+            emergencyRelationshipInput.value = "";
+        }
+    };
+
+    motherCheckbox.addEventListener("change", () => {
+        if (motherCheckbox.checked) {
+            applySource("mother");
+        } else {
+            clearIfOwnedBy("mother");
         }
     });
-    
-    privateRadio?.addEventListener('change', function() {
-        if (this.checked) {
-            publicSchool?.classList.add('hidden');
-            privateOptions?.classList.remove('hidden');
+
+    fatherCheckbox.addEventListener("change", () => {
+        if (fatherCheckbox.checked) {
+            applySource("father");
+        } else {
+            clearIfOwnedBy("father");
         }
     });
-    
-    // Handle ESC/Non-ESC selection
-    escRadio?.addEventListener('change', function() {
-        if (this.checked) {
-            escFields?.classList.remove('hidden');
-            nonEscField?.classList.add('hidden');
+
+    motherNameInput.addEventListener("input", () => {
+        if (motherCheckbox.checked) {
+            emergencyNameInput.value = (motherNameInput.value || "").trim();
         }
     });
-    
-    nonEscRadio?.addEventListener('change', function() {
-        if (this.checked) {
-            nonEscField?.classList.remove('hidden');
-            escFields?.classList.add('hidden');
+
+    fatherNameInput.addEventListener("input", () => {
+        if (fatherCheckbox.checked) {
+            emergencyNameInput.value = (fatherNameInput.value || "").trim();
         }
     });
+
+    const initialRelation = (emergencyRelationshipInput.value || "")
+        .trim()
+        .toLowerCase();
+    if (initialRelation === "mother") {
+        applySource("mother");
+    } else if (initialRelation === "father") {
+        applySource("father");
+    }
+}
+
+function initializeMinimumAgeValidation() {
+    const dobInput = document.getElementById("date_of_birth");
+    const ageError = document.getElementById("age-error");
+    const minAge = 11;
+
+    if (!dobInput) {
+        return;
+    }
+
+    const validateMinimumAge = () => {
+        if (!dobInput.value) {
+            if (ageError) {
+                ageError.style.display = "none";
+            }
+            dobInput.setCustomValidity("");
+            return;
+        }
+
+        const birthDate = new Date(dobInput.value);
+        const today = new Date();
+        let age = today.getFullYear() - birthDate.getFullYear();
+        const monthDiff = today.getMonth() - birthDate.getMonth();
+
+        if (
+            monthDiff < 0 ||
+            (monthDiff === 0 && today.getDate() < birthDate.getDate())
+        ) {
+            age--;
+        }
+
+        if (age < minAge) {
+            if (ageError) {
+                ageError.textContent = `The student must be at least ${minAge} years old to enroll in Junior High School.`;
+                ageError.style.display = "block";
+            }
+            dobInput.setCustomValidity("Age requirement not met");
+        } else {
+            if (ageError) {
+                ageError.style.display = "none";
+            }
+            dobInput.setCustomValidity("");
+        }
+    };
+
+    dobInput.addEventListener("change", validateMinimumAge);
+    validateMinimumAge();
 }

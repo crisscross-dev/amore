@@ -28,12 +28,14 @@ export default defineConfig({
                 "resources/css/admin/subject-management.css",
                 "resources/css/admin/grade-approvals.css",
                 "resources/css/admin/grade-management.css",
+                "resources/css/admin/schedule-picker-modal.css",
                 "resources/css/faculty/grade-management.css",
                 "resources/css/student/grade-view.css",
                 "resources/css/pagination.css",
                 "resources/css/swal-custom.css",
                 // New Admission System Assets
                 "resources/css/admissions.css",
+                "resources/css/admissions/date-picker-modal.css",
                 "resources/js/admissions/jhs.js",
                 "resources/js/admissions/shs.js",
                 // Home/Welcome Page Assets

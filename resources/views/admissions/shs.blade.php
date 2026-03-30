@@ -82,7 +82,7 @@
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Date of Birth <span class="text-danger">*</span></label>
-                                    <input type="date" class="form-control" id="date_of_birth" name="dob" value="{{ old('dob') }}" required>
+                                    <input type="date" class="form-control" id="date_of_birth" name="dob" value="{{ old('dob') }}" required readonly inputmode="none" autocomplete="off">
                                     <div id="age-error" class="text-danger small mt-1" style="display: none;"></div>
                                     @error('dob')
                                     <div class="text-danger small">{{ $message }}</div>
@@ -97,39 +97,6 @@
                                     @enderror
                                 </div>
                             </div>
-
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    const dobInput = document.getElementById('date_of_birth');
-                                    const ageInput = document.getElementById('age');
-                                    const ageError = document.getElementById('age-error');
-                                    const minAge = 15;
-
-                                    dobInput.addEventListener('change', function() {
-                                        if (this.value) {
-                                            const birthDate = new Date(this.value);
-                                            const today = new Date();
-                                            let age = today.getFullYear() - birthDate.getFullYear();
-                                            const monthDiff = today.getMonth() - birthDate.getMonth();
-
-                                            if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-                                                age--;
-                                            }
-
-                                            ageInput.value = age;
-
-                                            if (age < minAge) {
-                                                ageError.textContent = `The student must be at least ${minAge} years old to enroll in Senior High School.`;
-                                                ageError.style.display = 'block';
-                                                dobInput.setCustomValidity('Age requirement not met');
-                                            } else {
-                                                ageError.style.display = 'none';
-                                                dobInput.setCustomValidity('');
-                                            }
-                                        }
-                                    });
-                                });
-                            </script>
 
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -164,30 +131,37 @@
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Height (cm) <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" name="height" value="{{ old('height') }}" step="0.01" max="999.99" placeholder="e.g., 165.5" onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'" required>
-                                    @error('height')
+                                    <label class="form-label">Street <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="address_street" value="{{ old('address_street') }}" placeholder="e.g., 123 Mabini St." required>
+                                    @error('address_street')
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-6">
-                                    <label class="form-label">Weight (kg) <span class="text-danger">*</span></label>
-                                    <input type="number" class="form-control" name="weight" value="{{ old('weight') }}" step="0.01" max="999.99" placeholder="e.g., 55.5" onkeydown="return event.key !== 'e' && event.key !== 'E' && event.key !== '+' && event.key !== '-'" required>
-                                    @error('weight')
+                                    <label class="form-label">Barangay <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="address_barangay" value="{{ old('address_barangay') }}" placeholder="e.g., Barangay San Isidro" required>
+                                    @error('address_barangay')
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
                                 </div>
                             </div>
 
                             <div class="row g-3">
-                                <div class="col-md-6">
-                                    <label class="form-label">Address <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" name="address" value="{{ old('address') }}" placeholder="Enter complete address (Street, Barangay, City, Province)" required>
-                                    @error('address')
+                                <div class="col-md-4">
+                                    <label class="form-label">City / Municipality <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="address_city" value="{{ old('address_city') }}" placeholder="e.g., Quezon City" required>
+                                    @error('address_city')
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
                                 </div>
-                                <div class="col-md-6">
+                                <div class="col-md-4">
+                                    <label class="form-label">Province <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" name="address_province" value="{{ old('address_province') }}" placeholder="e.g., Metro Manila" required>
+                                    @error('address_province')
+                                    <div class="text-danger small">{{ $message }}</div>
+                                    @enderror
+                                </div>
+                                <div class="col-md-4">
                                     <label class="form-label">Phone Number <span class="text-danger">*</span></label>
                                     <input type="tel" class="form-control" name="phone" value="{{ old('phone') }}" placeholder="09XXXXXXXXX" maxlength="11" pattern="[0-9]{11}" oninput="this.value = this.value.replace(/[^0-9]/g, '')" required>
                                     @error('phone')
@@ -195,6 +169,8 @@
                                     @enderror
                                 </div>
                             </div>
+
+                            <input type="hidden" id="address" name="address" value="{{ old('address') }}">
 
                             <div class="row g-3">
                                 <div class="col-md-6">
@@ -204,9 +180,6 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
                                 </div>
-                            </div>
-
-                            <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Grade Level Applying For <span class="text-danger">*</span></label>
                                     <select class="form-select" name="grade_level" required>
@@ -218,6 +191,10 @@
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
                                 </div>
+                            </div>
+
+                            <div class="row g-3">
+
                             </div>
                         </div>
 
@@ -398,13 +375,17 @@
                         <!-- Family Information Section -->
                         <div class="form-section">
                             <h4 class="section-title">
-                                <i class="fas fa-users me-2"></i>Family Information
+                                <i class="fas fa-users me-2"></i>Guardian Information
                             </h4>
 
                             <div class="row g-3">
                                 <div class="col-md-6">
                                     <label class="form-label">Mother's Maiden Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="mother_name" value="{{ old('mother_name') }}" placeholder="Enter mother's maiden name" oninput="this.value = this.value.replace(/[^a-zA-Z\s.'\-]/g, '')" required>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="useMotherAsEmergency">
+                                        <label class="form-check-label small text-muted" for="useMotherAsEmergency">use this as emergency contact</label>
+                                    </div>
                                     @error('mother_name')
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror
@@ -420,8 +401,12 @@
 
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Father's Maiden Name <span class="text-danger">*</span></label>
+                                    <label class="form-label">Father's Name <span class="text-danger">*</span></label>
                                     <input type="text" class="form-control" name="father_name" value="{{ old('father_name') }}" placeholder="Enter father's name" oninput="this.value = this.value.replace(/[^a-zA-Z\s.'\-]/g, '')" required>
+                                    <div class="form-check mt-2">
+                                        <input class="form-check-input" type="checkbox" id="useFatherAsEmergency">
+                                        <label class="form-check-label small text-muted" for="useFatherAsEmergency">use this as emergency contact</label>
+                                    </div>
                                     @error('father_name')
                                     <div class="text-danger small">{{ $message }}</div>
                                     @enderror

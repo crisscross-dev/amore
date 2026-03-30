@@ -28,7 +28,6 @@ class SectionAssignmentConflictTest extends TestCase
             'name' => 'Araling Panlipunan',
             'subject_type' => 'core',
             'grade_level' => '7',
-            'hours_per_week' => 3,
             'is_active' => true,
         ]);
 
@@ -36,7 +35,6 @@ class SectionAssignmentConflictTest extends TestCase
             'name' => 'Edukasyon sa Pagpapakatao',
             'subject_type' => 'core',
             'grade_level' => '7',
-            'hours_per_week' => 2,
             'is_active' => true,
         ]);
 

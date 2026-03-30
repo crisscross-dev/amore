@@ -58,7 +58,7 @@
 
         <div class="faculty-management-card faculty-management-table">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fas fa-list me-2 text-success"></i>Approved Grades</h5>
+            <h5 class="mb-0 text-success"><i class="fas fa-list me-2 text-success"></i>Approved Grades</h5>
             <span class="badge bg-success bg-opacity-75">{{ $grades->count() }} records</span>
           </div>
 

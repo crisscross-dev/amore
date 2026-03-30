@@ -5,6 +5,93 @@ import "flatpickr/dist/themes/material_green.css";
 
 window.Swal = Swal;
 
+function resolveBoundaryYear(fp, value, fallback) {
+    if (!value) {
+        return fallback;
+    }
+
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+        return value.getFullYear();
+    }
+
+    if (typeof value === "string") {
+        const parsed = fp.parseDate(value, fp.config.dateFormat);
+        if (parsed instanceof Date && !Number.isNaN(parsed.getTime())) {
+            return parsed.getFullYear();
+        }
+    }
+
+    return fallback;
+}
+
+function getYearBounds(fp) {
+    return {
+        minYear: 1970,
+        maxYear: 2040,
+    };
+}
+
+function mountYearDropdown(_selectedDates, _dateStr, fp) {
+    const currentMonth = fp.calendarContainer?.querySelector(
+        ".flatpickr-current-month",
+    );
+    const yearWrapper = currentMonth?.querySelector(".numInputWrapper");
+
+    if (!currentMonth || !yearWrapper) {
+        return;
+    }
+
+    let yearSelect = currentMonth.querySelector(".flatpickr-year-dropdown");
+    if (!yearSelect) {
+        yearSelect = document.createElement("select");
+        yearSelect.className = "flatpickr-year-dropdown";
+        yearSelect.setAttribute("aria-label", "Select year");
+        yearSelect.style.marginLeft = "0.35rem";
+        yearSelect.style.border = "1px solid #ced4da";
+        yearSelect.style.borderRadius = "0.35rem";
+        yearSelect.style.padding = "0.1rem 0.3rem";
+        yearSelect.style.backgroundColor = "#fff";
+
+        yearSelect.addEventListener("change", () => {
+            const nextYear = Number.parseInt(yearSelect.value, 10);
+            if (!Number.isNaN(nextYear)) {
+                fp.changeYear(nextYear);
+                fp.redraw();
+            }
+        });
+
+        currentMonth.appendChild(yearSelect);
+    }
+
+    const { minYear, maxYear } = getYearBounds(fp);
+    const expectedLength = maxYear - minYear + 1;
+    const currentFirst = Number.parseInt(
+        yearSelect.options[0]?.value || "",
+        10,
+    );
+    const currentLast = Number.parseInt(
+        yearSelect.options[yearSelect.options.length - 1]?.value || "",
+        10,
+    );
+
+    if (
+        yearSelect.options.length !== expectedLength ||
+        currentFirst !== minYear ||
+        currentLast !== maxYear
+    ) {
+        yearSelect.innerHTML = "";
+        for (let year = minYear; year <= maxYear; year += 1) {
+            const option = document.createElement("option");
+            option.value = String(year);
+            option.textContent = String(year);
+            yearSelect.appendChild(option);
+        }
+    }
+
+    yearSelect.value = String(fp.currentYear);
+    yearWrapper.style.display = "none";
+}
+
 function initializeGlobalDatePickers(root = document) {
     const dateInputs = root.querySelectorAll(
         'input[type="date"]:not([data-flatpickr="off"])',
@@ -18,10 +105,17 @@ function initializeGlobalDatePickers(root = document) {
             return;
         }
 
+        const readOnlyClickOnly = input.hasAttribute("readonly");
         flatpickr(input, {
             dateFormat: "Y-m-d",
-            allowInput: true,
+            allowInput: !readOnlyClickOnly,
             disableMobile: true,
+            clickOpens: true,
+            monthSelectorType: "dropdown",
+            onReady: [mountYearDropdown],
+            onOpen: [mountYearDropdown],
+            onYearChange: [mountYearDropdown],
+            onMonthChange: [mountYearDropdown],
         });
 
         input.dataset.fpInitialized = "1";
@@ -32,12 +126,19 @@ function initializeGlobalDatePickers(root = document) {
             return;
         }
 
+        const readOnlyClickOnly = input.hasAttribute("readonly");
         flatpickr(input, {
             enableTime: true,
             time_24hr: false,
             dateFormat: "Y-m-d\\TH:i",
-            allowInput: true,
+            allowInput: !readOnlyClickOnly,
             disableMobile: true,
+            clickOpens: true,
+            monthSelectorType: "dropdown",
+            onReady: [mountYearDropdown],
+            onOpen: [mountYearDropdown],
+            onYearChange: [mountYearDropdown],
+            onMonthChange: [mountYearDropdown],
         });
 
         input.dataset.fpInitialized = "1";

@@ -36,13 +36,6 @@
                 </div>
 
                 <!-- Success Message -->
-                @if(session('success'))
-                    <div class="mb-3">
-                        <x-ui.alert type="success" :dismissible="true">
-                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        </x-ui.alert>
-                    </div>
-                @endif
 
                 <!-- Error Messages -->
                 @if($errors->any())
@@ -131,8 +124,7 @@
                                         <x-form.input 
                                             id="middle_name" 
                                             name="middle_name" 
-                                            :value="old('middle_name', Auth::user()->middle_name)"
-                                            required 
+                                            :value="old('middle_name', Auth::user()->middle_name)" 
                                         />
                                     </div>
 
@@ -246,7 +238,7 @@
                                     <i class="fas fa-shield-alt"></i>
                                 </div>
                                 <h5 class="mb-4">
-                                    <i class="fas fa-lock me-2"></i>Security Settings
+                                    <i class="fas fa-lock me-2"></i>Security Setting
                                 </h5>
 
                                 <div class="alert alert-info border-0">
@@ -255,6 +247,22 @@
                                 </div>
 
                                 <div class="row g-3">
+                                    <!-- Old Password -->
+                                    <div class="col-12">
+                                        <x-form.label for="current_password">
+                                            <i class="fas fa-unlock-alt me-1"></i>Old Password
+                                        </x-form.label>
+                                        <x-form.input 
+                                            type="password"
+                                            id="current_password" 
+                                            name="current_password" 
+                                            placeholder="Enter your current password"
+                                        />
+                                        <small class="text-muted">
+                                            <i class="fas fa-shield-alt me-1"></i>Required before changing password
+                                        </small>
+                                    </div>
+
                                     <!-- New Password -->
                                     <div class="col-md-6">
                                         <x-form.label for="password">

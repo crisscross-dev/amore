@@ -10,7 +10,9 @@
 <!-- Admin Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css', 'resources/js/announcements.js'])
 
-<div class="dashboard-container">
+<div class="dashboard-container announcement-live-page"
+    data-live-url="{{ route('announcements.live-signature') }}"
+    data-live-signature="{{ $announcementLiveSignature ?? '' }}">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -82,7 +84,7 @@
                 <div class="header-title d-flex align-items-center justify-content-between mb-2">
                     <h5 class="mb-2 fw-semibold text-success">
                         <i class="fas fa-bullhorn me-2"></i>
-                        Announcements
+                        Announcement
                     </h5>
                     <div class="d-none d-lg-block">
                         <a href="{{ route('announcements.create') }}" class="btn btn-success btn-m">
@@ -100,21 +102,7 @@
                 </div>
 
                 <!-- Success/Error Messages -->
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
-                @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
-                    {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
                 <!-- Search and Filter -->
                 <div class="activity-card mb-4">
@@ -163,13 +151,13 @@
                     @foreach($announcements as $announcement)
                     <div class="col-12 mb-4">
                         <div class="activity-card announcement-card {{ $announcement->is_pinned ? 'pinned-announcement' : '' }}"
-                            style="border-left: 4px solid {{ $announcement->priority_color }};">
+                            style="border-left: 4px solid <?php echo e($announcement->priority_color); ?>;">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
                                     @if($announcement->is_pinned)
                                     <i class="fas fa-thumbtack text-warning me-2" title="Pinned"></i>
                                     @endif
-                                    <i class="fas {{ $announcement->priority_icon }} me-2" style="color: {{ $announcement->priority_color }};"></i>
+                                    <i class="fas {{ $announcement->priority_icon }} me-2" style="color: <?php echo e($announcement->priority_color); ?>;"></i>
                                     <strong>{{ ucfirst($announcement->priority) }} Priority</strong>
                                 </div>
                                 <div class="d-flex gap-2 align-items-center">
@@ -196,9 +184,9 @@
                             </div>
 
                             <div class="card-body">
-                                <h5 class="text-success fw-bold mb-3">{{ $announcement->title }}</h5>
+                                <h5 class="announcement-title fw-bold mb-3">{{ $announcement->title }}</h5>
 
-                                <p class="mb-3">
+                                <p class="announcement-description mb-3">
                                     {{ Str::limit(strip_tags($announcement->content), 200) }}
                                 </p>
 
@@ -308,5 +296,15 @@
         </div>
     </div>
 </div>
+
+<style>
+.announcement-card .announcement-title {
+    color: #111827 !important;
+}
+
+.announcement-card .announcement-description {
+    color: #111827 !important;
+}
+</style>
 
 @endsection

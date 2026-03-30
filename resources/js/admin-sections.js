@@ -1,3 +1,5 @@
+import "./schedule-picker-modal";
+
 // Admin Sections page script
 // Purpose: lightweight enhancements for sections listing and forms
 

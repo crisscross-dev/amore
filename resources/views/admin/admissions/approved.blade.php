@@ -4,13 +4,42 @@
 
 @section('content')
 
+@php($philippineTz = 'Asia/Manila')
+
 <!-- Font Awesome CDN -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 <!-- Admin Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css', 'resources/css/pagination.css', 'resources/js/admissions.js'])
 
-<div class="dashboard-container">
+<style>
+    .admissions-dashboard__details-btn {
+        opacity: 0;
+        transform: translateY(4px);
+        pointer-events: none;
+        transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .admissions-dashboard__table-row:hover .admissions-dashboard__details-btn,
+    .admissions-dashboard__table-row:focus-within .admissions-dashboard__details-btn {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    @media (hover: none) {
+        .admissions-dashboard__details-btn {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    }
+</style>
+
+<div class="dashboard-container admissions-live-page"
+    data-live-url="{{ route('admin.admissions.live-signature') }}"
+    data-live-signature="{{ $admissionsLiveSignature ?? '' }}"
+    data-live-mode="approved">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -87,29 +116,15 @@
                     </div>
 
                     <!-- Flash Messages -->
-                    @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle"></i>
-                        <strong>Success!</strong> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
 
-                    @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <strong>Error!</strong> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
 
                     <!-- Admissions List -->
                     <div class="admissions-card admissions-dashboard__card admissions-dashboard__card--list">
                         <div class="card-header admissions-dashboard__card-header">
-                            <h5><i class="fas fa-list me-2"></i>Applications List</h5>
+                            <h5><i class="fas fa-list me-2"></i>Application List</h5>
                             <div class="view-rejected-btn">
                                 <a href="{{ route('admin.enrollments.index') }}" class="btn btn-warning">
-                                    <i class="fas fa-user-edit me-2"></i>Go to Enrollments
+                                    <i class="fas fa-user-edit me-2"></i>Go to Enrollment
                                 </a>
                             </div>
                         </div>
@@ -154,11 +169,19 @@
                                                     {{ $admission->strand }}@if($admission->strand === 'TVL' && $admission->tvl_specialization) - {{ $admission->tvl_specialization }}@endif
                                                 </div>
                                                 @endif
+                                                <div class="mt-2">
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-success admissions-dashboard__details-btn"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#approvedAdmissionShowModal-{{ $admission->id }}">
+                                                        <i class="fas fa-eye me-1"></i>View Details
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td>{{ $admission->lrn }}</td>
                                             <td>{{ strtoupper($admission->school_level) }}</td>
-                                            <td>{{ $admission->created_at->format('M d, Y') }}</td>
-                                            <td>{{ $admission->approved_at ? $admission->approved_at->format('M d, Y') : 'N/A' }}</td>
+                                            <td>{{ $admission->created_at->copy()->timezone($philippineTz)->format('M d, Y') }}</td>
+                                            <td>{{ $admission->approved_at ? $admission->approved_at->copy()->timezone($philippineTz)->format('M d, Y') : 'N/A' }}</td>
                                             <td>{{ $admission->school_name }}</td>
                                             <td>@include('admin.admissions._status_badge', ['status' => $admission->status])</td>
                                         </tr>
@@ -182,7 +205,7 @@
                                                 <div class="col-12">
                                                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
                                                         <div>
-                                                            <div class="h5 mb-1">{{ $admission->full_name }}</div>
+                                                            <div class="h5 mb-1 text-success">{{ $admission->full_name }}</div>
                                                             <div class="text-muted small">Applicant ID: {{ $admission->applicant_id ?? 'N/A' }}</div>
                                                         </div>
                                                         <div>@include('admin.admissions._status_badge', ['status' => $admission->status])</div>
@@ -190,7 +213,7 @@
                                                 </div>
 
                                                 <div class="col-12">
-                                                    <h6 class="mb-2"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                                                    <h6 class="mb-2 text-dark"><i class="fas fa-user me-2"></i>Personal Information</h6>
                                                 </div>
                                                 <div class="col-md-6"><small class="text-muted d-block">LRN</small>
                                                     <div class="fw-semibold">{{ $admission->lrn }}</div>
@@ -209,7 +232,7 @@
                                                 </div>
 
                                                 <div class="col-12 mt-2">
-                                                    <h6 class="mb-2"><i class="fas fa-book me-2"></i>Academic Information</h6>
+                                                    <h6 class="mb-2 text-dark"><i class="fas fa-book me-2"></i>Academic Information</h6>
                                                 </div>
                                                 <div class="col-md-6"><small class="text-muted d-block">Previous School</small>
                                                     <div class="fw-semibold">{{ $admission->school_name }}</div>
@@ -232,10 +255,10 @@
                                                     <h6 class="mb-2"><i class="fas fa-history me-2"></i>Application Timeline</h6>
                                                 </div>
                                                 <div class="col-md-6"><small class="text-muted d-block">Submitted</small>
-                                                    <div class="fw-semibold">{{ $admission->created_at->format('M d, Y h:i A') }}</div>
+                                                    <div class="fw-semibold">{{ $admission->created_at->copy()->timezone($philippineTz)->format('M d, Y h:i A') }}</div>
                                                 </div>
                                                 <div class="col-md-6"><small class="text-muted d-block">Approved</small>
-                                                    <div class="fw-semibold">{{ $admission->approved_at ? $admission->approved_at->format('M d, Y h:i A') : 'N/A' }}</div>
+                                                    <div class="fw-semibold">{{ $admission->approved_at ? $admission->approved_at->copy()->timezone($philippineTz)->format('M d, Y h:i A') : 'N/A' }}</div>
                                                 </div>
 
                                                 <div class="col-12 mt-2">

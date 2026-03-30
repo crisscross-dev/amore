@@ -23,10 +23,10 @@ class GradeController extends Controller
     ];
 
     private const MAPEH_COMPONENTS_BY_GRADE = [
-        7 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-        8 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-        9 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
-        10 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
+        7 => ['MAPEH - MUSIC & ARTS', 'MAPEH - PE & HEALTH', 'MUSIC & ARTS', 'PE & HEALTH'],
+        8 => ['MAPEH - MUSIC & ARTS', 'MAPEH - PE & HEALTH', 'MUSIC & ARTS', 'PE & HEALTH'],
+        9 => ['MAPEH - MUSIC', 'MAPEH - ARTS', 'MAPEH - PE', 'MAPEH - HEALTH', 'MUSIC', 'ARTS', 'PE', 'HEALTH'],
+        10 => ['MAPEH - MUSIC', 'MAPEH - ARTS', 'MAPEH - PE', 'MAPEH - HEALTH', 'MUSIC', 'ARTS', 'PE', 'HEALTH'],
     ];
 
     public function index(Request $request): View
@@ -52,6 +52,34 @@ class GradeController extends Controller
             ->pluck('total', 'section_id');
 
         return view('faculty.grades.index', compact('assignments', 'studentCounts'));
+    }
+
+    public function liveSection(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user && in_array($user->account_type, ['faculty', 'admin'], true), 403);
+
+        $assignmentQuery = SectionSubjectTeacher::query()
+            ->with(['subject', 'section'])
+            ->when($user->account_type === 'faculty', function ($query) use ($user) {
+                $query->where('teacher_id', $user->id);
+            })
+            ->orderBy('section_id')
+            ->orderBy('subject_id');
+
+        $assignments = $assignmentQuery->get();
+        $sectionIds = $assignments->pluck('section_id')->unique()->values();
+        $studentCounts = User::query()
+            ->where('account_type', 'student')
+            ->whereIn('section_id', $sectionIds)
+            ->selectRaw('section_id, COUNT(*) as total')
+            ->groupBy('section_id')
+            ->pluck('total', 'section_id');
+
+        return response()->json([
+            'html' => view('faculty.grades.partials.index-live-section', compact('assignments', 'studentCounts'))->render(),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     public function assignment(Request $request, SectionSubjectTeacher $assignment): View
@@ -604,8 +632,9 @@ class GradeController extends Controller
         $gradeNumber = $this->extractGradeNumber((string) (optional($assignment->section)->grade_level ?? ''));
         $mapehNames = self::MAPEH_COMPONENTS_BY_GRADE[$gradeNumber] ?? [];
         $assignmentSubjectName = (string) (optional($assignment->subject)->name ?? '');
+        $normalizedAssignmentSubjectName = mb_strtoupper($assignmentSubjectName, 'UTF-8');
 
-        if (empty($mapehNames) || ! in_array($assignmentSubjectName, $mapehNames, true)) {
+        if (empty($mapehNames) || ! in_array($normalizedAssignmentSubjectName, $mapehNames, true)) {
             return collect([
                 (object) [
                     'id' => (int) $assignment->subject_id,
@@ -619,7 +648,7 @@ class GradeController extends Controller
             ->where('section_id', $assignment->section_id)
             ->where('teacher_id', $assignment->teacher_id)
             ->whereHas('subject', function ($query) use ($mapehNames) {
-                $query->whereIn('name', $mapehNames);
+                $query->whereRaw('UPPER(name) IN (' . implode(',', array_fill(0, count($mapehNames), '?')) . ')', $mapehNames);
             })
             ->get();
 
@@ -637,10 +666,11 @@ class GradeController extends Controller
                 return [
                     'id' => (int) $row->subject_id,
                     'name' => (string) (optional($row->subject)->name ?? 'N/A'),
+                    'normalized_name' => mb_strtoupper((string) (optional($row->subject)->name ?? 'N/A'), 'UTF-8'),
                 ];
             })
             ->unique('id')
-            ->keyBy('name');
+            ->keyBy('normalized_name');
 
         $ordered = collect($mapehNames)
             ->map(function (string $name) use ($subjectsByName) {

@@ -5,6 +5,13 @@
 
 class AnnouncementsManager {
     constructor() {
+        this.liveContainer = document.querySelector('.announcement-live-page');
+        this.liveUrl = this.liveContainer?.dataset.liveUrl || null;
+        this.liveSignature = this.liveContainer?.dataset.liveSignature || '';
+        this.livePollIntervalMs = 10000;
+        this.livePollTimer = null;
+        this.liveRequestInFlight = false;
+
         this.init();
     }
 
@@ -19,6 +26,7 @@ class AnnouncementsManager {
         this.handlePrioritySelection();
         this.handleCharacterCount();
         this.initTooltips();
+        this.initLiveUpdates();
     }
 
     /**
@@ -312,6 +320,94 @@ class AnnouncementsManager {
             tooltipTriggerList.map(function (tooltipTriggerEl) {
                 return new bootstrap.Tooltip(tooltipTriggerEl);
             });
+        }
+    }
+
+    initLiveUpdates() {
+        if (!this.liveContainer || !this.liveUrl) {
+            return;
+        }
+
+        this.startLivePolling();
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this.checkLiveSignature();
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            this.stopLivePolling();
+        }, { once: true });
+    }
+
+    startLivePolling() {
+        this.stopLivePolling();
+
+        this.livePollTimer = window.setInterval(() => {
+            if (!document.hidden) {
+                this.checkLiveSignature();
+            }
+        }, this.livePollIntervalMs);
+    }
+
+    stopLivePolling() {
+        if (this.livePollTimer) {
+            clearInterval(this.livePollTimer);
+            this.livePollTimer = null;
+        }
+    }
+
+    buildLiveUrl() {
+        const url = new URL(this.liveUrl, window.location.origin);
+        const currentParams = new URLSearchParams(window.location.search);
+
+        currentParams.forEach((value, key) => {
+            url.searchParams.set(key, value);
+        });
+
+        return url;
+    }
+
+    async checkLiveSignature() {
+        if (!this.liveUrl || this.liveRequestInFlight) {
+            return;
+        }
+
+        this.liveRequestInFlight = true;
+
+        try {
+            const response = await fetch(this.buildLiveUrl(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const payload = await response.json();
+            const nextSignature = payload?.signature || '';
+
+            if (!nextSignature) {
+                return;
+            }
+
+            if (!this.liveSignature) {
+                this.liveSignature = nextSignature;
+                this.liveContainer.dataset.liveSignature = nextSignature;
+                return;
+            }
+
+            if (nextSignature !== this.liveSignature) {
+                window.location.reload();
+            }
+        } catch (error) {
+            console.debug('Announcement live polling skipped:', error);
+        } finally {
+            this.liveRequestInFlight = false;
         }
     }
 

@@ -8,6 +8,7 @@ use App\Models\SectionSubjectTeacher;
 use App\Models\SchoolYear;
 use App\Models\Subject;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -37,7 +38,24 @@ class SectionController extends Controller
 
         [$schoolYears, $subjects] = $this->sectionFormOptions();
 
-        return view('admin.sections.index', compact('sections', 'facultyMembers', 'schoolYears', 'subjects', 'adviserAssignments'));
+        $sectionsLiveSignature = $this->buildSectionsIndexLiveSignature();
+
+        return view('admin.sections.index', compact(
+            'sections',
+            'facultyMembers',
+            'schoolYears',
+            'subjects',
+            'adviserAssignments',
+            'sectionsLiveSignature'
+        ));
+    }
+
+    public function liveSignatureIndex(Request $request)
+    {
+        return response()->json([
+            'signature' => $this->buildSectionsIndexLiveSignature(),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     public function teachingLoads(Request $request)
@@ -137,11 +155,32 @@ class SectionController extends Controller
             ->get()
             ->keyBy('subject_id');
 
+        $occupiedSchedules = \App\Models\SectionSubjectTeacher::query()
+            ->select(['section_id', 'subject_id', 'room', 'day_of_week', 'start_time', 'end_time'])
+            ->whereNotNull('room')
+            ->whereNotNull('day_of_week')
+            ->whereNotNull('start_time')
+            ->whereNotNull('end_time')
+            ->get()
+            ->map(function ($assignment) {
+                return [
+                    'section_id' => (int) $assignment->section_id,
+                    'subject_id' => (int) $assignment->subject_id,
+                    'room' => (string) $assignment->room,
+                    'day' => (string) $assignment->day_of_week,
+                    'start' => strlen((string) $assignment->start_time) > 5 ? substr((string) $assignment->start_time, 0, 5) : (string) $assignment->start_time,
+                    'end' => strlen((string) $assignment->end_time) > 5 ? substr((string) $assignment->end_time, 0, 5) : (string) $assignment->end_time,
+                ];
+            })
+            ->values();
+
         $subjects = $subjectAssignments
             ->pluck('subject')
             ->filter()
             ->sortBy('name')
             ->values();
+
+        $sectionShowLiveSignature = $this->buildSectionShowLiveSignature($section);
 
         return view('admin.sections.show', compact(
             'section',
@@ -149,8 +188,18 @@ class SectionController extends Controller
             'facultyMembers',
             'subjects',
             'subjectAssignments',
-            'adviserAssignments'
+            'adviserAssignments',
+            'occupiedSchedules',
+            'sectionShowLiveSignature'
         ));
+    }
+
+    public function liveSignatureShow(Request $request, Section $section)
+    {
+        return response()->json([
+            'signature' => $this->buildSectionShowLiveSignature($section),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     public function create()
@@ -435,23 +484,23 @@ class SectionController extends Controller
     {
         if (in_array($gradeNumber, [7, 8], true)) {
             return [
-                'MAPEH - Music & Arts',
-                'MAPEH - PE & Health',
-                'Music & Arts',
-                'PE & Health',
+                'MAPEH - MUSIC & ARTS',
+                'MAPEH - PE & HEALTH',
+                'MUSIC & ARTS',
+                'PE & HEALTH',
             ];
         }
 
         if (in_array($gradeNumber, [9, 10], true)) {
             return [
-                'MAPEH - Music',
-                'MAPEH - Arts',
+                'MAPEH - MUSIC',
+                'MAPEH - ARTS',
                 'MAPEH - PE',
-                'MAPEH - Health',
-                'Music',
-                'Arts',
+                'MAPEH - HEALTH',
+                'MUSIC',
+                'ARTS',
                 'PE',
-                'Health',
+                'HEALTH',
             ];
         }
 
@@ -469,5 +518,107 @@ class SectionController extends Controller
         }
 
         return null;
+    }
+
+    private function buildSectionsIndexLiveSignature(): string
+    {
+        $sectionsCount = Section::query()->count();
+        $sectionsStamp = $this->timestampOrZero(Section::query()->max('updated_at'));
+
+        $adviserAssignmentsCount = Section::query()->whereNotNull('adviser_id')->count();
+        $adviserAssignmentsStamp = $this->timestampOrZero(
+            Section::query()->whereNotNull('adviser_id')->max('updated_at')
+        );
+
+        $subjectAssignmentsCount = SectionSubjectTeacher::query()->count();
+        $subjectAssignmentsStamp = $this->timestampOrZero(SectionSubjectTeacher::query()->max('updated_at'));
+
+        $facultyQuery = User::query()
+            ->where('account_type', 'faculty')
+            ->where('status', 'active');
+        $facultyCount = (clone $facultyQuery)->count();
+        $facultyStamp = $this->timestampOrZero((clone $facultyQuery)->max('updated_at'));
+
+        return implode('|', [
+            $sectionsCount,
+            $sectionsStamp,
+            $adviserAssignmentsCount,
+            $adviserAssignmentsStamp,
+            $subjectAssignmentsCount,
+            $subjectAssignmentsStamp,
+            $facultyCount,
+            $facultyStamp,
+        ]);
+    }
+
+    private function buildSectionShowLiveSignature(Section $section): string
+    {
+        $section->refresh();
+        $sectionStamp = $this->timestampOrZero($section->updated_at);
+
+        $sectionStudentsQuery = User::query()
+            ->where('account_type', 'student')
+            ->where('section_id', $section->id);
+        $sectionStudentsCount = (clone $sectionStudentsQuery)->count();
+        $sectionStudentsStamp = $this->timestampOrZero((clone $sectionStudentsQuery)->max('updated_at'));
+
+        $availableStudentsQuery = User::query()
+            ->where('account_type', 'student')
+            ->where('grade_level', $section->grade_level)
+            ->where('status', 'active')
+            ->whereNull('section_id');
+        $availableStudentsCount = (clone $availableStudentsQuery)->count();
+        $availableStudentsStamp = $this->timestampOrZero((clone $availableStudentsQuery)->max('updated_at'));
+
+        $facultyQuery = User::query()
+            ->where('account_type', 'faculty')
+            ->where('status', 'active');
+        $facultyCount = (clone $facultyQuery)->count();
+        $facultyStamp = $this->timestampOrZero((clone $facultyQuery)->max('updated_at'));
+
+        $sectionAssignmentsQuery = SectionSubjectTeacher::query()
+            ->where('section_id', $section->id);
+        $sectionAssignmentsCount = (clone $sectionAssignmentsQuery)->count();
+        $sectionAssignmentsStamp = $this->timestampOrZero((clone $sectionAssignmentsQuery)->max('updated_at'));
+
+        $globalScheduleStamp = $this->timestampOrZero(
+            SectionSubjectTeacher::query()
+                ->whereNotNull('room')
+                ->whereNotNull('day_of_week')
+                ->whereNotNull('start_time')
+                ->whereNotNull('end_time')
+                ->max('updated_at')
+        );
+
+        $activeSubjectsQuery = Subject::query()->where('is_active', true);
+        $activeSubjectsCount = (clone $activeSubjectsQuery)->count();
+        $activeSubjectsStamp = $this->timestampOrZero((clone $activeSubjectsQuery)->max('updated_at'));
+
+        return implode('|', [
+            $section->id,
+            $sectionStamp,
+            $sectionStudentsCount,
+            $sectionStudentsStamp,
+            $availableStudentsCount,
+            $availableStudentsStamp,
+            $facultyCount,
+            $facultyStamp,
+            $sectionAssignmentsCount,
+            $sectionAssignmentsStamp,
+            $globalScheduleStamp,
+            $activeSubjectsCount,
+            $activeSubjectsStamp,
+        ]);
+    }
+
+    private function timestampOrZero($value): int
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        return $timestamp !== false ? $timestamp : 0;
     }
 }

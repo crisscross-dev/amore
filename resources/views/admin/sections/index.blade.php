@@ -10,7 +10,9 @@
 <!-- Admin Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css', 'resources/js/admin-sections.js'])
 
-<div class="dashboard-container">
+<div class="dashboard-container sections-index-live-page"
+    data-live-url="{{ route('admin.sections.live-signature') }}"
+    data-live-signature="{{ $sectionsLiveSignature ?? '' }}">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -89,7 +91,7 @@
                 <div class="header-title d-flex align-items-center justify-content-between mb-2">
                     <h5 class="mb-2 fw-semibold text-success">
                         <i class="fas fa-layer-group me-2"></i>
-                        Manage Sections
+                        Manage Section
                     </h5>
                     <div class="d-none d-lg-block">
                         <button type="button" class="btn btn-primary btn-m" data-bs-toggle="modal" data-bs-target="#createSectionModal">
@@ -106,12 +108,6 @@
                 </div>
 
                 <!-- Flash Messages -->
-                @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
                 @if($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -142,7 +138,7 @@
                                         <th>Academic Year</th>
                                         <th>Capacity</th>
                                         <th>Status</th>
-                                        <th class="text-center">Actions</th>
+                                        <th class="text-center">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -152,13 +148,13 @@
                                             <strong>{{ $section->name }}</strong>
                                         </td>
                                         <td>
-                                            <span class="badge bg-info">Grade {{ $section->grade_level }}</span>
+                                            <span class="badge bg-info">{{ $section->grade_level }}</span>
                                         </td>
                                         <td>
                                             @if($section->adviser)
                                             <span class="fw-semibold text-success">{{ $section->adviser->first_name }} {{ $section->adviser->last_name }}</span>
                                             @else
-                                            <span class="text-muted">Unassigned</span>
+                                            <span class="fw-semibold text-danger">Unassigned</span>
                                             @endif
                                         </td>
                                         <td>{{ $section->academic_year ?? '—' }}</td>
@@ -328,13 +324,100 @@
     </div>
 </div>
 
-@if(session('success'))
-<div id="section-flash-data" class="d-none" data-success="{{ session('success') }}"></div>
-@endif
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const liveContainer = document.querySelector('.sections-index-live-page');
+        const liveUrl = liveContainer ? (liveContainer.getAttribute('data-live-url') || '') : '';
+        let liveSignature = liveContainer ? (liveContainer.getAttribute('data-live-signature') || '') : '';
+        let liveRequestInFlight = false;
+        let livePollTimer = null;
+
+        const anyModalOpen = () => !!document.querySelector('.modal.show');
+
+        const buildLiveUrl = () => {
+            const url = new URL(liveUrl, window.location.origin);
+            const currentParams = new URLSearchParams(window.location.search);
+
+            currentParams.forEach((value, key) => {
+                url.searchParams.set(key, value);
+            });
+
+            return url.toString();
+        };
+
+        const checkLiveSignature = async () => {
+            if (!liveUrl || liveRequestInFlight) {
+                return;
+            }
+
+            liveRequestInFlight = true;
+
+            try {
+                const response = await fetch(buildLiveUrl(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                const nextSignature = payload && payload.signature ? payload.signature : '';
+
+                if (!nextSignature) {
+                    return;
+                }
+
+                if (!liveSignature) {
+                    liveSignature = nextSignature;
+                    if (liveContainer) {
+                        liveContainer.setAttribute('data-live-signature', nextSignature);
+                    }
+                    return;
+                }
+
+                if (nextSignature !== liveSignature) {
+                    if (anyModalOpen()) {
+                        return;
+                    }
+
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.debug('Sections index live polling skipped:', error);
+            } finally {
+                liveRequestInFlight = false;
+            }
+        };
+
+        if (liveUrl) {
+            livePollTimer = window.setInterval(() => {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            }, 10000);
+
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            });
+
+            window.addEventListener('beforeunload', function() {
+                if (livePollTimer) {
+                    clearInterval(livePollTimer);
+                    livePollTimer = null;
+                }
+            }, {
+                once: true
+            });
+        }
+
         const flashNode = document.getElementById('section-flash-data');
         const successMessage = flashNode ? flashNode.dataset.success : '';
         if (successMessage && window.AppSwal && typeof window.AppSwal.showSuccess === 'function') {

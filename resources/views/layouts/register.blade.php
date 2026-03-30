@@ -18,11 +18,6 @@
                 <h2 class="fw-bold text-success heading-times">CREATE YOUR ACCOUNT</h2>
                 <p class="text-success">Join Amore Academy Today!</p>
             </div>            <!-- Success Message -->
-            @if(session('success'))
-                <x-ui.alert type="success" :dismissible="true">
-                    {{ session('success') }}
-                </x-ui.alert>
-            @endif
 
             <!-- Error Messages -->
             @if($errors->any())
@@ -37,18 +32,22 @@
 
             <form method="POST" action="{{ route('register.store') }}" enctype="multipart/form-data">
                 @csrf
+                <input type="hidden" name="registration_nonce" value="{{ $registrationNonce ?? '' }}">
 
                 <!-- Personal Information -->
                 <h5 class="fw-bold text-success mb-3">Personal Information</h5>
                 <div class="row mb-3">
-                    <div class="col-md-4 mb-2">
-                        <x-form.input name="first_name" placeholder="Enter First Name" class="border-success" required />
+                    <div class="col-md-3 mb-2">
+                        <x-form.input name="first_name" placeholder="Enter First Name" class="border-success js-name-field" required />
                     </div>
-                    <div class="col-md-4 mb-2">
-                        <x-form.input name="middle_name" placeholder="Enter Middle Name" class="border-success" required />
+                    <div class="col-md-3 mb-2">
+                        <x-form.input name="middle_name" placeholder="Enter Middle Name" class="border-success js-name-field" required />
                     </div>
-                    <div class="col-md-4 mb-2">
-                        <x-form.input name="last_name" placeholder="Enter Last Name" class="border-success" required />
+                    <div class="col-md-3 mb-2">
+                        <x-form.input name="last_name" placeholder="Enter Last Name" class="border-success js-name-field" required />
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <x-form.input name="suffix" placeholder="Suffix (e.g., Jr., III)" class="border-success" />
                     </div>
                 </div>
 
@@ -57,7 +56,14 @@
                         <x-form.input type="email" name="email" placeholder="Enter Email Address" class="border-success" required />
                     </div>
                     <div class="col-md-6 mb-2">
-                        <x-form.input name="contact_number" placeholder="Contact Number" class="border-success" required />
+                        <x-form.input
+                            name="contact_number"
+                            placeholder="Contact Number"
+                            class="border-success js-contact-number"
+                            inputmode="numeric"
+                            maxlength="11"
+                            pattern="\d{11}"
+                            required />
                     </div>
                 </div>
 

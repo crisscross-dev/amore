@@ -108,21 +108,7 @@
                 </div>
 
                 <!-- Success/Error Messages -->
-                @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle me-2"></i>
-                        {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
 
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i>
-                        {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
 
                 <div class="row">
                     <!-- Form Section -->
@@ -260,7 +246,7 @@
                 <div class="col-lg-4">
                     <!-- Current Event Info -->
                     <div class="activity-card mb-4">
-                        <div class="card-header" style="background: {{ $event->color }}; color: white;">
+                        <div class="card-header" style="background: <?php echo e($event->color); ?>; color: white;">
                             <i class="{{ $event->type_icon }} me-2"></i>Current Event
                         </div>
                         <div class="card-body">

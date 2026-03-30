@@ -5,7 +5,9 @@
 @section('content')
 @vite(['resources/css/layouts/dashboard-roles/dashboard-student.css'])
 
-<div class="dashboard-container">
+<div class="dashboard-container student-enrollment-show-live-page"
+    data-live-url="{{ route('student.enrollment.show.live-signature', $enrollment) }}"
+    data-live-signature="{{ $enrollmentShowLiveSignature ?? '' }}">
     <div class="container-fluid px-4">
         <div class="row">
             <main class="col-12">
@@ -17,17 +19,7 @@
                     <a href="{{ route('student.enrollment.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back</a>
                 </div>
 
-                @if(session('success'))
-                    <x-ui.alert type="success" :dismissible="true">
-                        {{ session('success') }}
-                    </x-ui.alert>
-                @endif
 
-                @if(session('error'))
-                    <x-ui.alert type="danger" :dismissible="true">
-                        {{ session('error') }}
-                    </x-ui.alert>
-                @endif
 
                 <!-- Enrollment Information Card -->
                 <div class="card mb-4">
@@ -80,5 +72,98 @@
         </div>
     </div>
 </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var liveContainer = document.querySelector('.student-enrollment-show-live-page');
+        var liveUrl = liveContainer ? (liveContainer.getAttribute('data-live-url') || '') : '';
+        var liveSignature = liveContainer ? (liveContainer.getAttribute('data-live-signature') || '') : '';
+        var liveRequestInFlight = false;
+        var livePollTimer = null;
+
+        function buildLiveUrl() {
+            var url = new URL(liveUrl, window.location.origin);
+            var currentParams = new URLSearchParams(window.location.search);
+
+            currentParams.forEach(function(value, key) {
+                url.searchParams.set(key, value);
+            });
+
+            return url.toString();
+        }
+
+        function checkLiveSignature() {
+            if (!liveUrl || liveRequestInFlight) {
+                return;
+            }
+
+            liveRequestInFlight = true;
+
+            fetch(buildLiveUrl(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return null;
+                    }
+
+                    return response.json();
+                })
+                .then(function(payload) {
+                    if (!payload || !payload.signature) {
+                        return;
+                    }
+
+                    var nextSignature = payload.signature;
+
+                    if (!liveSignature) {
+                        liveSignature = nextSignature;
+                        if (liveContainer) {
+                            liveContainer.setAttribute('data-live-signature', nextSignature);
+                        }
+                        return;
+                    }
+
+                    if (nextSignature !== liveSignature) {
+                        window.location.reload();
+                    }
+                })
+                .catch(function(error) {
+                    console.debug('Student enrollment show live polling skipped:', error);
+                })
+                .finally(function() {
+                    liveRequestInFlight = false;
+                });
+        }
+
+        if (!liveUrl) {
+            return;
+        }
+
+        livePollTimer = window.setInterval(function() {
+            if (!document.hidden) {
+                checkLiveSignature();
+            }
+        }, 10000);
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkLiveSignature();
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (livePollTimer) {
+                clearInterval(livePollTimer);
+                livePollTimer = null;
+            }
+        }, {
+            once: true
+        });
+    });
+</script>
 @endsection
 

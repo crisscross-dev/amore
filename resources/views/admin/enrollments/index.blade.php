@@ -54,7 +54,9 @@
 </style>
 @endpush
 
-<div class="dashboard-container">
+<div class="dashboard-container enrollments-live-page"
+    data-live-url="{{ route('admin.enrollments.live-signature') }}"
+    data-live-signature="{{ $enrollmentsLiveSignature ?? '' }}">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -132,7 +134,7 @@
                 <div class="header-title d-flex align-items-center justify-content-between mb-2">
                     <h5 class="mb-2 fw-semibold text-success">
                         <i class="fas fa-user-plus me-2"></i>
-                        Enrollment Approvals
+                        Enrollment Approval
                     </h5>
                     <!-- <div class="d-none d-lg-block">
                         <a href="{{ route('calendar.create') }}" class="btn btn-success btn-m">
@@ -142,19 +144,7 @@
                 </div>
 
                 <!-- Flash Messages -->
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
-                @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
                 <!-- Statistics Cards -->
                 <div class="row mb-4 stats-counters-small">
@@ -218,7 +208,7 @@
                         <form id="enrollmentFiltersForm" action="{{ route('admin.enrollments.index') }}" method="GET" class="row g-3 m-0">
                             <div class="col-md-3">
                                 <select name="status" class="form-select filter-auto-submit">
-                                    <option value="">All Statuses</option>
+                                    <option value="">All Status</option>
                                     <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending</option>
                                     <option value="approved" {{ request('status') == 'approved' ? 'selected' : '' }}>Approved</option>
                                     <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
@@ -419,6 +409,12 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const liveContainer = document.querySelector('.enrollments-live-page');
+        const liveUrl = liveContainer ? (liveContainer.getAttribute('data-live-url') || '') : '';
+        let liveSignature = liveContainer ? (liveContainer.getAttribute('data-live-signature') || '') : '';
+        let liveRequestInFlight = false;
+        let livePollTimer = null;
+
         const enrollmentFiltersForm = document.getElementById('enrollmentFiltersForm');
         const autoSubmitFilters = document.querySelectorAll('.filter-auto-submit');
         const modalElement = document.getElementById('assignSectionModal');
@@ -435,6 +431,90 @@
 
         let sectionMetaMap = {};
         let activeGrade = '';
+
+        const anyModalOpen = () => !!document.querySelector('.modal.show');
+
+        const buildLiveUrl = () => {
+            const url = new URL(liveUrl, window.location.origin);
+            const currentParams = new URLSearchParams(window.location.search);
+
+            currentParams.forEach((value, key) => {
+                url.searchParams.set(key, value);
+            });
+
+            return url.toString();
+        };
+
+        const checkLiveSignature = async () => {
+            if (!liveUrl || liveRequestInFlight) {
+                return;
+            }
+
+            liveRequestInFlight = true;
+
+            try {
+                const response = await fetch(buildLiveUrl(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                const nextSignature = payload && payload.signature ? payload.signature : '';
+
+                if (!nextSignature) {
+                    return;
+                }
+
+                if (!liveSignature) {
+                    liveSignature = nextSignature;
+                    if (liveContainer) {
+                        liveContainer.setAttribute('data-live-signature', nextSignature);
+                    }
+                    return;
+                }
+
+                if (nextSignature !== liveSignature) {
+                    if (anyModalOpen()) {
+                        return;
+                    }
+
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.debug('Enrollments live polling skipped:', error);
+            } finally {
+                liveRequestInFlight = false;
+            }
+        };
+
+        if (liveUrl) {
+            livePollTimer = window.setInterval(() => {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            }, 10000);
+
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            });
+
+            window.addEventListener('beforeunload', function() {
+                if (livePollTimer) {
+                    clearInterval(livePollTimer);
+                    livePollTimer = null;
+                }
+            }, {
+                once: true
+            });
+        }
 
         autoSubmitFilters.forEach((filterElement) => {
             filterElement.addEventListener('change', function() {

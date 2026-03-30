@@ -10,6 +10,204 @@
 <!-- Student Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-student.css'])
 
+<style>
+    .student-dashboard-meta {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.9);
+    }
+
+    .student-dashboard-contact {
+        font-size: 0.82rem;
+        color: rgba(255, 255, 255, 0.78);
+    }
+
+    .quick-stats-row .stat-card {
+        border-radius: 16px;
+        padding: 1.05rem;
+        box-shadow: 0 8px 20px rgba(2, 6, 23, 0.08);
+        border: 1px solid rgba(22, 101, 52, 0.1);
+        height: 100%;
+    }
+
+    .quick-stats-row .stat-card-link {
+        display: block;
+        text-decoration: none;
+        color: inherit;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .quick-stats-row .stat-card-link:hover {
+        transform: translateY(-2px);
+        border-color: rgba(22, 101, 52, 0.25);
+        box-shadow: 0 12px 24px rgba(2, 6, 23, 0.12);
+    }
+
+    .quick-stats-row .stat-icon {
+        font-size: 1.2rem;
+        color: #166534;
+        width: 1.4rem;
+        text-align: center;
+    }
+
+    .quick-stats-row .stat-label {
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+        margin-bottom: 0.3rem;
+    }
+
+    .quick-stats-row .stat-value {
+        font-size: 1.55rem;
+        font-weight: 700;
+        color: #166534;
+        line-height: 1.1;
+    }
+
+    .quick-stats-row .stat-subtext {
+        margin-top: 0.25rem;
+        font-size: 0.82rem;
+        color: #6b7280;
+    }
+
+    .dashboard-notifications-card .card-header .notification-badge {
+        border-radius: 999px;
+        background: #fee2e2;
+        color: #b91c1c;
+        font-size: 0.78rem;
+        font-weight: 700;
+        padding: 0.18rem 0.56rem;
+    }
+
+    .notification-item {
+        border: none;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.9rem 1rem;
+    }
+
+    .notification-item:last-child {
+        border-bottom: none;
+    }
+
+    .notification-icon {
+        width: 18px;
+        min-width: 18px;
+        margin-top: 0.2rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.95rem;
+    }
+
+    .notification-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 0.45rem;
+        background: #22c55e;
+    }
+
+    .notification-dot.read {
+        background: #cbd5e1;
+    }
+
+    .notification-meta {
+        font-size: 0.78rem;
+        color: #64748b;
+    }
+
+    .announcement-side-card .list-group-item {
+        border: none;
+        border-bottom: 1px solid #e2e8f0;
+        padding: 0.85rem 1rem;
+        transition: background-color 0.2s ease, border-left-color 0.2s ease;
+    }
+
+    .announcement-side-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .announcement-side-card .card-body {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
+    .announcement-side-card .announcement-scroll-area {
+        height: 100%;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .announcement-side-card .announcement-scroll-area::-webkit-scrollbar {
+        width: 7px;
+    }
+
+    .announcement-side-card .announcement-scroll-area::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+
+    .announcement-side-card .announcement-item {
+        box-sizing: border-box;
+        border-left: 3px solid transparent;
+    }
+
+    .announcement-side-card .announcement-item.announcement-unread {
+        background: #f0fdf4;
+        border-left-color: #22c55e;
+    }
+
+    .announcement-side-card .announcement-title {
+        font-size: 1.08rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.2rem;
+        line-height: 1.25;
+    }
+
+    .announcement-side-card .announcement-date {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.32rem;
+        font-size: 0.75rem;
+        color: #64748b;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        margin-bottom: 0.35rem;
+    }
+
+    .announcement-side-card .announcement-description {
+        font-size: 0.92rem;
+        color: #475569;
+        margin-bottom: 0;
+        line-height: 1.45;
+        display: -webkit-box;
+        line-clamp: 2;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .announcement-side-card .announcement-new {
+        display: inline-flex;
+        align-items: center;
+        margin-left: 0.4rem;
+        border-radius: 999px;
+        background: #dcfce7;
+        color: #166534;
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 0.08rem 0.4rem;
+    }
+
+    .announcement-side-card .list-group-item:last-child {
+        border-bottom: none;
+    }
+
+</style>
+
 <div class="dashboard-container">
     <div class="container-fluid px-4">
         <div class="row">
@@ -71,9 +269,14 @@
                         <div>
                             <h4 class="mb-1">
                                 <i class="fas fa-hand-wave me-2"></i>
-                                Welcome back, {{ Auth::user()->first_name ?? 'User' }} {{ Auth::user()->last_name ?? '' }}!
+                                Hello, {{ Auth::user()->first_name ?? 'Student' }} {{ Auth::user()->last_name ?? '' }}
                             </h4>
-                            <p class="mb-0 opacity-75 small">
+                            <p class="mb-1 student-dashboard-meta">
+                                <i class="fas fa-calendar-day me-1"></i>{{ $dateLabel }}
+                                <span class="mx-2">•</span>
+                                <i class="fas fa-book-open me-1"></i>{{ $semesterLabel }}
+                            </p>
+                            <p class="mb-0 student-dashboard-contact">
                                 <i class="fas fa-envelope me-1"></i>{{ Auth::user()->email }}
                                 @if(Auth::user()->contact_number)
                                 <span class="ms-3"><i class="fas fa-phone me-1"></i>{{ Auth::user()->contact_number }}</span>
@@ -91,222 +294,132 @@
                     </div>
                 </div>
 
-                <!-- Quick Actions Section -->
-                <div class="row mb-4">
-                    <div class="col-12">
-                        <div class="activity-card">
+                <div class="row g-3 my-4 quick-stats-row">
+                    <div class="col-md-4">
+                        <a href="{{ route('student.registration-form.download') }}" class="bg-white stat-card stat-card-link" data-search-target="download registration form pdf file">
+                            <div class="stat-label">Quick Action</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-file-pdf stat-icon"></i>
+                                <div class="stat-value" style="font-size: 1.2rem;">Download Registration Form</div>
+                            </div>
+                            <div class="stat-subtext">PDF format</div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ route('student.registration-form.preview') }}" target="_blank" class="bg-white stat-card stat-card-link" data-search-target="preview registration form browser">
+                            <div class="stat-label">Quick Action</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-eye stat-icon"></i>
+                                <div class="stat-value" style="font-size: 1.2rem;">Preview Registration Form</div>
+                            </div>
+                            <div class="stat-subtext">View in browser</div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ route('student.enrollment.index') }}" class="bg-white stat-card stat-card-link" data-search-target="enrollment status requirements">
+                            <div class="stat-label">Quick Action</div>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="fas fa-user-plus stat-icon"></i>
+                                <div class="stat-value" style="font-size: 1.2rem;">Enrollment Status</div>
+                            </div>
+                            <div class="stat-subtext">{{ $stats['enrollment_status'] ?? 'Not enrolled' }}</div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="row g-4 mb-4">
+                    <div class="col-lg-8">
+                        <div class="activity-card dashboard-notifications-card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <span>
-                                    <i class="fas fa-bolt me-2"></i>
-                                    Quick Actions
+                                    <i class="fas fa-bell me-2"></i>
+                                    Notifications
+                                </span>
+                                <span class="notification-badge">{{ $unreadNotifications }} unread</span>
+                            </div>
+                            <div class="card-body p-0">
+                                @if($notifications->count() > 0)
+                                <div class="list-group list-group-flush">
+                                    @foreach($notifications as $notification)
+                                    <a href="{{ $notification['url'] }}" class="list-group-item list-group-item-action notification-item">
+                                        <div class="d-flex align-items-start gap-2">
+                                            <span class="notification-icon text-{{ $notification['color'] }}">
+                                                <i class="fas fa-{{ $notification['icon'] }}"></i>
+                                            </span>
+                                            <div class="flex-grow-1">
+                                                <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
+                                                    <h6 class="mb-1 fw-semibold text-dark">
+                                                        <span class="notification-dot {{ $notification['is_unread'] ? '' : 'read' }}"></span>
+                                                        {{ $notification['title'] }}
+                                                    </h6>
+                                                    <small class="notification-meta">{{ $notification['date']->format('M d, Y h:i A') }}</small>
+                                                </div>
+                                                <p class="mb-0 text-muted small">{{ $notification['description'] }}</p>
+                                            </div>
+                                        </div>
+                                    </a>
+                                    @endforeach
+                                </div>
+                                @if($notifications->hasPages())
+                                <div class="p-3 border-top bg-white">
+                                    {{ $notifications->onEachSide(1)->links() }}
+                                </div>
+                                @endif
+                                @else
+                                <div class="p-4 text-center text-muted">
+                                    <i class="fas fa-bell-slash fa-3x mb-3 opacity-50"></i>
+                                    <p class="mb-0">No notifications available right now.</p>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-4">
+                        <div class="activity-card announcement-side-card h-100">
+                            <div class="card-header d-flex align-items-center">
+                                <span>
+                                    <i class="fas fa-bullhorn me-2"></i>
+                                    Announcement
                                 </span>
                             </div>
-                            <div class="card-body">
-                                <div class="row g-3">
-                                    <div class="col-md-4">
-                                        <a href="{{ route('student.registration-form.download') }}" class="btn btn-outline-primary w-100 py-3">
-                                            <i class="fas fa-file-pdf fa-2x mb-2 d-block"></i>
-                                            <span class="fw-bold">Download Registration Form</span>
-                                            <small class="d-block text-muted mt-1">PDF format</small>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <a href="{{ route('student.registration-form.preview') }}" target="_blank" class="btn btn-outline-secondary w-100 py-3">
-                                            <i class="fas fa-eye fa-2x mb-2 d-block"></i>
-                                            <span class="fw-bold">Preview Registration Form</span>
-                                            <small class="d-block text-muted mt-1">View in browser</small>
-                                        </a>
-                                    </div>
-                                    <div class="col-md-4">
-                                        <a href="{{ route('student.enrollment.index') }}" class="btn btn-outline-success w-100 py-3">
-                                            <i class="fas fa-user-plus fa-2x mb-2 d-block"></i>
-                                            <span class="fw-bold">Enrollment Status</span>
-                                            <small class="d-block text-muted mt-1">View enrollment</small>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Announcements Preview -->
-                <div class="activity-card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-bullhorn me-2"></i>
-                            Latest Announcements
-                        </span>
-                        <a href="{{ route('announcements.index') }}" class="btn btn-sm btn-outline-light">
-                            View All <i class="fas fa-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                    <div class="card-body p-0">
-                        @if($announcements->count() > 0)
-                        <div class="list-group list-group-flush">
-                            @foreach($announcements->take(3) as $announcement)
-                            <a href="{{ route('announcements.show', $announcement->id) }}" class="list-group-item list-group-item-action">
-                                <div class="d-flex w-100 justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="bg-primary bg-opacity-10 rounded-circle p-2 me-3">
-                                                <i class="fas fa-bullhorn text-primary"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-1 fw-bold text-dark">{{ $announcement->title }}</h6>
-                                                <small class="text-muted">
-                                                    <i class="far fa-calendar-alt me-1"></i>
-                                                    {{ $announcement->created_at->format('M d, Y') }}
-                                                    <span class="mx-2">•</span>
-                                                    <i class="far fa-user me-1"></i>
-                                                    {{ $announcement->createdBy->first_name ?? 'Admin' }} {{ $announcement->createdBy->last_name ?? '' }}
-                                                </small>
-                                            </div>
-                                        </div>
-                                        <p class="mb-2 text-muted">
-                                            {{ \Str::limit(strip_tags($announcement->content), 120) }}
-                                        </p>
-                                        @if($announcement->is_pinned)
-                                        <span class="badge bg-warning text-dark">
-                                            <i class="fas fa-thumbtack me-1"></i>Pinned
-                                        </span>
-                                        @endif
-                                        <span class="badge bg-light text-dark">
-                                            <i class="fas fa-user-graduate me-1"></i>{{ $announcement->target_audience }}
-                                        </span>
-                                    </div>
-                                </div>
-                            </a>
-                            @endforeach
-                        </div>
-                        @else
-                        <div class="p-4 text-center text-muted">
-                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
-                            <p class="mb-0">No announcements yet. Check back later!</p>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Upcoming Events -->
-                <div class="activity-card mb-4">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-calendar-alt me-2"></i>
-                            Upcoming Events
-                        </span>
-                        <a href="{{ route('calendar.index') }}" class="btn btn-sm btn-outline-light">
-                            View Calendar <i class="fas fa-arrow-right ms-1"></i>
-                        </a>
-                    </div>
-                    <div class="card-body p-0">
-                        @if($upcomingEvents->count() > 0)
-                        <div class="list-group list-group-flush">
-                            @foreach($upcomingEvents as $event)
-                            <div class="list-group-item">
-                                <div class="d-flex w-100 justify-content-between align-items-start">
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center mb-2">
-                                            <div class="rounded-circle p-2 me-3 event-color-chip" data-event-color="{{ $event->color }}" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center;">
-                                                <i class="fas fa-calendar-day event-color-icon" style="font-size: 1.2rem;"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="mb-1 fw-bold">{{ $event->title }}</h6>
-                                                <small class="text-muted">
-                                                    <i class="far fa-clock me-1"></i>
-                                                    {{ $event->start_date->format('M d, Y') }}
-                                                    @if($event->end_date && !$event->start_date->isSameDay($event->end_date))
-                                                    - {{ $event->end_date->format('M d, Y') }}
-                                                    @endif
-                                                    @if(!$event->is_all_day)
-                                                    at {{ $event->start_date->format('g:i A') }}
-                                                    @endif
-                                                </small>
-                                            </div>
-                                        </div>
-                                        @if($event->description)
-                                        <p class="mb-2 text-muted">
-                                            {{ \Str::limit(strip_tags($event->description), 100) }}
-                                        </p>
-                                        @endif
-                                        <span class="badge event-type-badge" data-event-color="{{ $event->color }}">
-                                            <i class="fas fa-tag me-1"></i>{{ ucfirst($event->event_type ?? 'Event') }}
-                                        </span>
-                                        @if($event->is_all_day)
-                                        <span class="badge bg-light text-dark">
-                                            <i class="fas fa-sun me-1"></i>All Day
-                                        </span>
-                                        @endif
-                                    </div>
-                                </div>
-                            </div>
-                            @endforeach
-                        </div>
-                        @else
-                        <div class="p-4 text-center text-muted">
-                            <i class="fas fa-calendar-times fa-3x mb-3 opacity-50"></i>
-                            <p class="mb-0">No upcoming events scheduled.</p>
-                        </div>
-                        @endif
-                    </div>
-                </div>
-
-                <!-- Recent Activity -->
-                <div class="activity-card">
-                    <div class="card-header d-flex justify-content-between align-items-center">
-                        <span>
-                            <i class="fas fa-history me-2"></i>
-                            Recent Activity
-                        </span>
-                        <span class="badge bg-white text-success">{{ $recentActivities->count() }} activities</span>
-                    </div>
-                    <div class="card-body p-0">
-                        @if($recentActivities->count() > 0)
-                        <div class="table-responsive">
-                            <table class="table activity-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th><i class="fas fa-tasks me-2"></i>Activity</th>
-                                        <th><i class="fas fa-calendar me-2"></i>Date</th>
-                                        <th class="text-center"><i class="fas fa-flag me-2"></i>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach($recentActivities as $activity)
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <div class="bg-{{ $activity['color'] }} bg-opacity-10 rounded-circle p-2 me-3">
-                                                    <i class="fas fa-{{ $activity['icon'] }} text-{{ $activity['color'] }}"></i>
-                                                </div>
-                                                <div>
-                                                    <strong>{{ $activity['title'] }}</strong>
-                                                    <br>
-                                                    <small class="text-muted">{{ $activity['description'] }}</small>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="text-muted">
-                                            <i class="far fa-calendar-alt me-2"></i>
-                                            {{ $activity['date']->format('M d, Y') }}
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-{{ $activity['color'] }}">
-                                                <i class="fas fa-{{ $activity['type'] === 'announcement' ? 'info-circle' : ($activity['color'] === 'success' ? 'check' : ($activity['color'] === 'warning' ? 'hourglass-half' : 'times')) }} me-1"></i>
-                                                {{ ucfirst($activity['type']) }}
-                                            </span>
-                                        </td>
-                                    </tr>
+                            <div class="card-body p-0">
+                                @if($announcements->count() > 0)
+                                <div class="announcement-scroll-area">
+                                    <div class="list-group list-group-flush">
+                                    @foreach($announcements->take(4) as $announcement)
+                                    @php
+                                    $isUnreadAnnouncement = $announcement->created_at->gte(now()->subDays(2));
+                                    @endphp
+                                    <a href="{{ route('announcements.show', $announcement->id) }}" class="list-group-item list-group-item-action announcement-item {{ $isUnreadAnnouncement ? 'announcement-unread' : '' }}">
+                                        <h6 class="announcement-title">
+                                            {{ $announcement->title }}
+                                            @if($isUnreadAnnouncement)
+                                            <span class="announcement-new">New</span>
+                                            @endif
+                                        </h6>
+                                        <small class="announcement-date">
+                                            <i class="fas fa-calendar-day"></i>
+                                            {{ $announcement->created_at->format('M d, Y') }}
+                                        </small>
+                                        <p class="announcement-description">{{ \Str::limit(strip_tags($announcement->content), 130) }}</p>
+                                    </a>
                                     @endforeach
-                                </tbody>
-                            </table>
+                                    </div>
+                                </div>
+                                @else
+                                <div class="p-4 text-center text-muted">
+                                    <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
+                                    <p class="mb-0">No announcements yet. Check back later!</p>
+                                </div>
+                                @endif
+                            </div>
+                            <div class="card-footer bg-white border-0 border-top p-3 text-center">
+                                <a href="{{ route('announcements.index') }}" class="btn btn-sm btn-outline-success px-4">
+                                    View All
+                                </a>
+                            </div>
                         </div>
-                        @else
-                        <div class="p-4 text-center text-muted">
-                            <i class="fas fa-inbox fa-3x mb-3 opacity-50"></i>
-                            <p class="mb-0">No recent activities yet. Check back later!</p>
-                        </div>
-                        @endif
                     </div>
                 </div>
             </main>

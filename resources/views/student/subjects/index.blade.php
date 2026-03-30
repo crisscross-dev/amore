@@ -5,7 +5,9 @@
 @section('content')
 @vite(['resources/css/layouts/dashboard-roles/dashboard-student.css','resources/css/student/grade-view.css'])
 
-<div class="dashboard-container">
+<div class="dashboard-container student-subjects-live-page"
+  data-live-url="{{ route('student.subjects.live-signature') }}"
+  data-live-signature="{{ $subjectsLiveSignature ?? '' }}">
   <div class="container-fluid px-4">
     <div class="row">
       <main class="col-12">
@@ -87,4 +89,97 @@
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var liveContainer = document.querySelector('.student-subjects-live-page');
+    var liveUrl = liveContainer ? (liveContainer.getAttribute('data-live-url') || '') : '';
+    var liveSignature = liveContainer ? (liveContainer.getAttribute('data-live-signature') || '') : '';
+    var liveRequestInFlight = false;
+    var livePollTimer = null;
+
+    function buildLiveUrl() {
+      var url = new URL(liveUrl, window.location.origin);
+      var currentParams = new URLSearchParams(window.location.search);
+
+      currentParams.forEach(function(value, key) {
+        url.searchParams.set(key, value);
+      });
+
+      return url.toString();
+    }
+
+    function checkLiveSignature() {
+      if (!liveUrl || liveRequestInFlight) {
+        return;
+      }
+
+      liveRequestInFlight = true;
+
+      fetch(buildLiveUrl(), {
+          headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json'
+          }
+        })
+        .then(function(response) {
+          if (!response.ok) {
+            return null;
+          }
+
+          return response.json();
+        })
+        .then(function(payload) {
+          if (!payload || !payload.signature) {
+            return;
+          }
+
+          var nextSignature = payload.signature;
+
+          if (!liveSignature) {
+            liveSignature = nextSignature;
+            if (liveContainer) {
+              liveContainer.setAttribute('data-live-signature', nextSignature);
+            }
+            return;
+          }
+
+          if (nextSignature !== liveSignature) {
+            window.location.reload();
+          }
+        })
+        .catch(function(error) {
+          console.debug('Student subjects live polling skipped:', error);
+        })
+        .finally(function() {
+          liveRequestInFlight = false;
+        });
+    }
+
+    if (!liveUrl) {
+      return;
+    }
+
+    livePollTimer = window.setInterval(function() {
+      if (!document.hidden) {
+        checkLiveSignature();
+      }
+    }, 10000);
+
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        checkLiveSignature();
+      }
+    });
+
+    window.addEventListener('beforeunload', function() {
+      if (livePollTimer) {
+        clearInterval(livePollTimer);
+        livePollTimer = null;
+      }
+    }, {
+      once: true
+    });
+  });
+</script>
 @endsection

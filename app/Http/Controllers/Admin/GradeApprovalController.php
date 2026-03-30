@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\AdminGradeEditLog;
 use App\Models\GradeEntry;
 use App\Models\SectionSubjectTeacher;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\View\View;
 
 class GradeApprovalController extends Controller
@@ -20,46 +22,23 @@ class GradeApprovalController extends Controller
         10 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
     ];
 
-    public function index(): View
+    public function index(Request $request): View
     {
-        $sheetGroups = GradeEntry::query()
-            ->with(['section', 'subject', 'creator'])
-            ->where('status', 'submitted')
-            ->orderBy('submitted_at', 'desc')
-            ->get()
-            ->groupBy(function (GradeEntry $grade) {
-                $subjectName = trim((string) ($grade->subject->name ?? ''));
-                $isMapehComponent = str_starts_with(strtoupper($subjectName), 'MAPEH');
-                $subjectGroupKey = $isMapehComponent ? 'mapeh' : ('subject-' . $grade->subject_id);
+        $activeSheetFilter = $this->resolveActiveSheetFilter($request);
+        $sheetGroups = $this->buildSheetGroups($activeSheetFilter);
 
-                return $grade->section_id . '-' . $subjectGroupKey . '-' . $grade->term . '-' . $grade->created_by;
-            })
-            ->map(function ($grades) {
-                $first = $grades->sortByDesc('submitted_at')->first();
-                $isMapehGroup = $grades->contains(function (GradeEntry $entry) {
-                    $name = trim((string) ($entry->subject->name ?? ''));
+        return view('admin.grade_approvals.index', compact('sheetGroups', 'activeSheetFilter'));
+    }
 
-                    return str_starts_with(strtoupper($name), 'MAPEH');
-                });
+    public function liveSection(Request $request)
+    {
+        $activeSheetFilter = $this->resolveActiveSheetFilter($request);
+        $sheetGroups = $this->buildSheetGroups($activeSheetFilter);
 
-                return [
-                    'representative' => $first,
-                    'dedupe_key' => $first->section_id . '-' . ($isMapehGroup ? 'mapeh' : $first->subject_id) . '-' . $first->term,
-                    'section_name' => $first->section->name ?? 'N/A',
-                    'grade_level' => $first->section->grade_level ?? 'N/A',
-                    'subject_name' => $isMapehGroup ? 'MAPEH' : ($first->subject->name ?? 'N/A'),
-                    'teacher_name' => trim(($first->creator->first_name ?? '') . ' ' . ($first->creator->last_name ?? '')),
-                    'term' => $first->term,
-                    'student_count' => $grades->pluck('student_id')->unique()->count(),
-                    'submitted_at_raw' => $grades->sortByDesc('submitted_at')->first()?->submitted_at,
-                    'submitted_at' => optional($grades->sortByDesc('submitted_at')->first()?->submitted_at)->format('M d, Y h:i A'),
-                ];
-            })
-            ->sortByDesc('submitted_at_raw')
-            ->unique('dedupe_key')
-            ->values();
-
-        return view('admin.grade_approvals.index', compact('sheetGroups'));
+        return response()->json([
+            'html' => view('admin.grade_approvals.partials.sheet-card', compact('sheetGroups', 'activeSheetFilter'))->render(),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     public function show(GradeEntry $grade): View
@@ -82,7 +61,7 @@ class GradeApprovalController extends Controller
             ->whereIn('subject_id', $allowedSubjectIds)
             ->where('term', $term)
             ->where('created_by', $assignment->teacher_id)
-            ->where('status', 'submitted')
+            ->where('status', $grade->status)
             ->get();
 
         $gradeEntriesByStudent = $gradeEntries
@@ -94,7 +73,10 @@ class GradeApprovalController extends Controller
 
     public function update(Request $request, GradeEntry $grade): RedirectResponse
     {
-        abort_unless($grade->status === 'submitted', 403, 'Only submitted sheets can be edited by admin.');
+        abort_unless($request->user() && $request->user()->account_type === 'admin', 403, 'Only admin can edit sheets.');
+
+        $editableStatuses = ['submitted', 'approved'];
+        abort_unless(in_array($grade->status, $editableStatuses, true), 403, 'Only submitted or approved sheets can be edited by admin.');
 
         $assignment = $this->resolveAssignmentFromGrade($grade);
         $gradeSubjects = $this->resolveGradeSubjects($assignment);
@@ -123,15 +105,19 @@ class GradeApprovalController extends Controller
             ->whereIn('subject_id', $allowedSubjectIds)
             ->where('term', $data['term'])
             ->where('created_by', $assignment->teacher_id)
-            ->where('status', 'submitted')
+            ->where('status', $grade->status)
             ->whereIn('student_id', $studentIds)
             ->get()
             ->keyBy(fn(GradeEntry $entry) => $entry->student_id . '|' . $entry->subject_id);
+
+        $updatedEntries = 0;
+        $updatedStudentIds = [];
 
         foreach ($studentIds as $studentId) {
             $rowValues = collect($gradeValues->get((string) $studentId, $gradeValues->get($studentId, [])));
             $remarkValue = $remarks->get((string) $studentId, $remarks->get($studentId));
             $remarkValue = is_string($remarkValue) ? trim($remarkValue) : $remarkValue;
+            $normalizedRemark = $remarkValue ?: null;
 
             foreach ($allowedSubjectIds as $subjectId) {
                 $existing = $existingEntries->get($studentId . '|' . $subjectId);
@@ -144,16 +130,43 @@ class GradeApprovalController extends Controller
                     continue;
                 }
 
+                $normalizedGradeValue = number_format((float) $gradeValue, 2, '.', '');
+                $existingGradeValue = number_format((float) $existing->grade_value, 2, '.', '');
+
+                if ($existingGradeValue === $normalizedGradeValue && ($existing->faculty_remark ?: null) === $normalizedRemark) {
+                    continue;
+                }
+
                 $existing->update([
-                    'grade_value' => $gradeValue,
-                    'faculty_remark' => $remarkValue ?: null,
+                    'grade_value' => $normalizedGradeValue,
+                    'faculty_remark' => $normalizedRemark,
                 ]);
+
+                $updatedEntries++;
+                $updatedStudentIds[] = (int) $studentId;
             }
+        }
+
+        if ($updatedEntries > 0 && Schema::hasTable('admin_grade_edit_logs')) {
+            AdminGradeEditLog::create([
+                'admin_id' => (int) $request->user()->id,
+                'section_id' => $assignment->section_id,
+                'teacher_id' => $assignment->teacher_id,
+                'subject_label' => $gradeSubjects->count() > 1
+                    ? 'MAPEH'
+                    : ((string) (optional($assignment->subject)->name ?: 'Subject')),
+                'term' => $data['term'],
+                'edited_entries_count' => $updatedEntries,
+                'edited_students_count' => count(array_unique($updatedStudentIds)),
+                'edited_at' => now(),
+            ]);
         }
 
         return redirect()
             ->route('admin.grade-approvals.show', $grade)
-            ->with('success', 'Grade sheet updated successfully.');
+            ->with('success', $updatedEntries > 0
+                ? 'Grade sheet updated successfully.'
+                : 'No grade changes were detected.');
     }
 
     public function approve(Request $request, GradeEntry $grade): RedirectResponse
@@ -177,7 +190,9 @@ class GradeApprovalController extends Controller
                 'rejection_reason' => null,
             ]);
 
-        return redirect()->route('admin.grade-approvals.index')->with('success', 'Grade approved.');
+        return redirect()
+            ->route('admin.grade-approvals.index', ['sheet' => 'approved'])
+            ->with('success', 'Grade approved.');
     }
 
     public function reject(Request $request, GradeEntry $grade): RedirectResponse
@@ -227,8 +242,9 @@ class GradeApprovalController extends Controller
         $gradeNumber = $this->extractGradeNumber((string) (optional($assignment->section)->grade_level ?? ''));
         $mapehNames = self::MAPEH_COMPONENTS_BY_GRADE[$gradeNumber] ?? [];
         $assignmentSubjectName = (string) (optional($assignment->subject)->name ?? '');
+        $normalizedAssignmentSubjectName = mb_strtoupper($assignmentSubjectName, 'UTF-8');
 
-        if (empty($mapehNames) || ! in_array($assignmentSubjectName, $mapehNames, true)) {
+        if (empty($mapehNames) || ! in_array($normalizedAssignmentSubjectName, collect($mapehNames)->map(fn(string $name) => mb_strtoupper($name, 'UTF-8'))->all(), true)) {
             return collect([
                 (object) [
                     'id' => (int) $assignment->subject_id,
@@ -242,7 +258,11 @@ class GradeApprovalController extends Controller
             ->where('section_id', $assignment->section_id)
             ->where('teacher_id', $assignment->teacher_id)
             ->whereHas('subject', function ($query) use ($mapehNames) {
-                $query->whereIn('name', $mapehNames);
+                $normalizedNames = collect($mapehNames)
+                    ->map(fn(string $name) => mb_strtoupper($name, 'UTF-8'))
+                    ->all();
+
+                $query->whereRaw('UPPER(name) IN (' . implode(',', array_fill(0, count($normalizedNames), '?')) . ')', $normalizedNames);
             })
             ->get();
 
@@ -260,14 +280,15 @@ class GradeApprovalController extends Controller
                 return [
                     'id' => (int) $row->subject_id,
                     'name' => (string) (optional($row->subject)->name ?? 'N/A'),
+                    'normalized_name' => mb_strtoupper((string) (optional($row->subject)->name ?? 'N/A'), 'UTF-8'),
                 ];
             })
             ->unique('id')
-            ->keyBy('name');
+            ->keyBy('normalized_name');
 
         $ordered = collect($mapehNames)
             ->map(function (string $name) use ($subjectsByName) {
-                return $subjectsByName->get($name);
+                return $subjectsByName->get(mb_strtoupper($name, 'UTF-8'));
             })
             ->filter()
             ->values();
@@ -296,5 +317,85 @@ class GradeApprovalController extends Controller
         }
 
         return null;
+    }
+
+    private function resolveActiveSheetFilter(Request $request): string
+    {
+        return $request->string('sheet')->lower()->value() === 'approved' ? 'approved' : 'pending';
+    }
+
+    private function buildSheetGroups(string $activeSheetFilter): Collection
+    {
+        $allSheetRows = GradeEntry::query()
+            ->with(['section', 'subject', 'creator'])
+            ->whereIn('status', ['submitted', 'approved'])
+            ->orderBy('submitted_at', 'desc')
+            ->get();
+
+        $groupedSheets = $allSheetRows
+            ->groupBy(function (GradeEntry $grade) {
+                $subjectName = trim((string) ($grade->subject->name ?? ''));
+                $isMapehComponent = str_starts_with(strtoupper($subjectName), 'MAPEH');
+                $subjectGroupKey = $isMapehComponent ? 'mapeh' : ('subject-' . $grade->subject_id);
+
+                return $grade->section_id . '-' . $subjectGroupKey . '-' . $grade->term . '-' . $grade->created_by;
+            });
+
+        $pendingGroupKeys = $groupedSheets
+            ->filter(function (Collection $grades) {
+                return $grades->contains(function (GradeEntry $entry) {
+                    return strtolower(trim((string) $entry->status)) === 'submitted';
+                });
+            })
+            ->keys()
+            ->flip();
+
+        return $groupedSheets
+            ->map(function ($grades) {
+                $first = $grades->sortByDesc('submitted_at')->first();
+                $isMapehGroup = $grades->contains(function (GradeEntry $entry) {
+                    $name = trim((string) ($entry->subject->name ?? ''));
+
+                    return str_starts_with(strtoupper($name), 'MAPEH');
+                });
+
+                $hasSubmittedEntries = $grades->contains(function (GradeEntry $entry) {
+                    return strtolower(trim((string) $entry->status)) === 'submitted';
+                });
+
+                $hasApprovedEntries = $grades->contains(function (GradeEntry $entry) {
+                    return strtolower(trim((string) $entry->status)) === 'approved';
+                });
+
+                $isFullyApproved = $hasApprovedEntries && ! $hasSubmittedEntries;
+                $groupKey = $first->section_id . '-' . ($isMapehGroup ? 'mapeh' : ('subject-' . $first->subject_id)) . '-' . $first->term . '-' . $first->created_by;
+
+                return [
+                    'group_key' => $groupKey,
+                    'representative' => $first,
+                    'dedupe_key' => $first->section_id . '-' . ($isMapehGroup ? 'mapeh' : $first->subject_id) . '-' . $first->term,
+                    'section_name' => $first->section->name ?? 'N/A',
+                    'grade_level' => $first->section->grade_level ?? 'N/A',
+                    'subject_name' => $isMapehGroup ? 'MAPEH' : ($first->subject->name ?? 'N/A'),
+                    'teacher_name' => trim(($first->creator->first_name ?? '') . ' ' . ($first->creator->last_name ?? '')),
+                    'term' => $first->term,
+                    'student_count' => $grades->pluck('student_id')->unique()->count(),
+                    'submitted_at_raw' => $grades->sortByDesc('submitted_at')->first()?->submitted_at,
+                    'submitted_at' => optional($grades->sortByDesc('submitted_at')->first()?->submitted_at)->format('M d, Y h:i A'),
+                    'is_fully_approved' => $isFullyApproved,
+                    'has_submitted_entries' => $hasSubmittedEntries,
+                ];
+            })
+            ->filter(function (array $sheet) use ($activeSheetFilter, $pendingGroupKeys) {
+                if ($activeSheetFilter === 'approved') {
+                    return $sheet['is_fully_approved'] === true
+                        && ! $pendingGroupKeys->has($sheet['group_key']);
+                }
+
+                return $sheet['has_submitted_entries'] === true;
+            })
+            ->sortByDesc('submitted_at_raw')
+            ->unique('dedupe_key')
+            ->values();
     }
 }

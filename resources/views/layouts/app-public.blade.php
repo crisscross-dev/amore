@@ -56,7 +56,7 @@
 <body id="top">
     <nav class="navbar navbar-expand-lg navbar-light navbar-custom app-global-header">
         <div class="container">
-            <span class="navbar-brand text-white fw-bold fs-3">Amore Academy</span>
+            <a href="{{ route('welcome') }}" class="navbar-brand text-white fw-bold fs-3">Amore Academy</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavPublic">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -71,11 +71,19 @@
                 </ul>
 
                 <div class="text-center">
+                    @auth
+                    <a href="{{ route('dashboard') }}" class="nav-item btn rounded-4 content_homepage position-relative overflow-hidden text-decoration-none d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-circle me-2"></i>
+                        <span>{{ auth()->user()->first_name ?: 'User' }}</span>
+                        <span class="btn-shimmer"></span>
+                    </a>
+                    @else
                     <a href="{{ route('login') }}" class="nav-item btn rounded-4 content_homepage position-relative overflow-hidden text-decoration-none d-flex align-items-center justify-content-center">
                         <i class="bi bi-box-arrow-in-right me-2"></i>
                         <span>Login</span>
                         <span class="btn-shimmer"></span>
                     </a>
+                    @endauth
                 </div>
             </div>
         </div>
@@ -95,15 +103,15 @@
                     </a>
                     <a href="#" class="small mr-3">
                         <span class="me-1"><i class="bi bi-telephone"></i></span>
-                        <span class="small1">10 20 123 456</span>
+                        <span class="small1">(046) 4126224</span>
                     </a>
                     <a href="#" class="small mr-3">
                         <span class="me-1"><i class="bi bi-envelope"></i></span>
-                        <span class="small1">amoreacademy@gmail.com</span>
+                        <span class="small1">academyamore2005@gmail.com</span>
                     </a>
                     <a href="#" class="small mr-3">
                         <span class="me-1"><i class="bi bi-pin-map"></i></span>
-                        <span class="small1">Trece Martires City Cavite</span>
+                        <span class="small1">Trece - Indang Road, Trece Martires City</span>
                     </a>
                 </div>
             </div>
@@ -112,6 +120,41 @@
 
     <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
     @vite(['resources/js/app.js', 'resources/js/swal.js'])
+    @php
+    $appFlashData = [
+    'success' => session('success'),
+    'error' => session('error'),
+    ];
+    @endphp
+    <script id="app-flash-data" type="application/json">{!! json_encode($appFlashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var flashDataElement = document.getElementById('app-flash-data');
+            if (!flashDataElement || !window.AppSwal) {
+                return;
+            }
+
+            var flashData = {
+                success: null,
+                error: null
+            };
+
+            try {
+                flashData = JSON.parse(flashDataElement.textContent || '{}');
+            } catch (error) {
+                flashData = {
+                    success: null,
+                    error: null
+                };
+            }
+
+            if (flashData.success) {
+                window.AppSwal.showSuccess(flashData.success);
+            } else if (flashData.error) {
+                window.AppSwal.showError(flashData.error);
+            }
+        });
+    </script>
 
     @stack('scripts')
 </body>

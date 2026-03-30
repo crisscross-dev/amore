@@ -14,6 +14,10 @@ document.addEventListener('DOMContentLoaded', function () {
     const togglePasswordIcon = document.getElementById('togglePasswordIcon');
     const passwordField = document.getElementById('password');
     const passwordConfirmField = document.getElementById('password_confirmation');
+    const nameFields = Array.from(
+        document.querySelectorAll('input[name="first_name"], input[name="middle_name"], input[name="last_name"]'),
+    );
+    const contactNumberField = document.querySelector('input[name="contact_number"]');
 
     if (togglePassword && passwordField && togglePasswordIcon) {
         togglePassword.addEventListener('click', function () {
@@ -91,6 +95,121 @@ document.addEventListener('DOMContentLoaded', function () {
                     errorDiv.remove();
                 }
             }
+        });
+    }
+
+    /* ================================
+       NAME VALIDATION (NO NUMBERS)
+    ================================= */
+    if (nameFields.length) {
+        nameFields.forEach(function (field) {
+            field.addEventListener('keydown', function (event) {
+                if (
+                    event.ctrlKey ||
+                    event.metaKey ||
+                    [
+                        'Backspace',
+                        'Delete',
+                        'Tab',
+                        'ArrowLeft',
+                        'ArrowRight',
+                        'Home',
+                        'End',
+                    ].includes(event.key)
+                ) {
+                    return;
+                }
+
+                if (/^[0-9]$/.test(event.key)) {
+                    event.preventDefault();
+                }
+            });
+
+            field.addEventListener('input', function () {
+                const sanitizedValue = String(field.value || '').replace(/[0-9]/g, '');
+                if (field.value !== sanitizedValue) {
+                    field.value = sanitizedValue;
+                }
+            });
+
+            field.addEventListener('paste', function () {
+                setTimeout(function () {
+                    field.value = String(field.value || '').replace(/[0-9]/g, '');
+                }, 0);
+            });
+        });
+    }
+
+    /* ================================
+       CONTACT NUMBER VALIDATION
+    ================================= */
+    if (contactNumberField) {
+        const validateContactNumber = function () {
+            const digits = String(contactNumberField.value || '')
+                .replace(/\D/g, '')
+                .slice(0, 11);
+
+            if (contactNumberField.value !== digits) {
+                contactNumberField.value = digits;
+            }
+
+            if (digits.length === 0) {
+                contactNumberField.setCustomValidity('');
+                return;
+            }
+
+            if (digits.length !== 11) {
+                contactNumberField.setCustomValidity('Contact number must be exactly 11 digits.');
+                return;
+            }
+
+            contactNumberField.setCustomValidity('');
+        };
+
+        contactNumberField.addEventListener('keydown', function (event) {
+            if (
+                event.ctrlKey ||
+                event.metaKey ||
+                [
+                    'Backspace',
+                    'Delete',
+                    'Tab',
+                    'ArrowLeft',
+                    'ArrowRight',
+                    'Home',
+                    'End',
+                ].includes(event.key)
+            ) {
+                return;
+            }
+
+            if (['e', 'E', '+', '-', '.'].includes(event.key)) {
+                event.preventDefault();
+                return;
+            }
+
+            if (!/^[0-9]$/.test(event.key)) {
+                event.preventDefault();
+                return;
+            }
+
+            const hasSelection =
+                typeof contactNumberField.selectionStart === 'number' &&
+                typeof contactNumberField.selectionEnd === 'number' &&
+                contactNumberField.selectionEnd > contactNumberField.selectionStart;
+
+            if (!hasSelection && String(contactNumberField.value || '').length >= 11) {
+                event.preventDefault();
+            }
+        });
+
+        contactNumberField.addEventListener('input', validateContactNumber);
+        contactNumberField.addEventListener('blur', function () {
+            validateContactNumber();
+            contactNumberField.reportValidity();
+        });
+        contactNumberField.addEventListener('paste', function () {
+            setTimeout(validateContactNumber, 0);
         });
     }
 

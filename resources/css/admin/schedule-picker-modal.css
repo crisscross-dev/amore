@@ -1,0 +1,142 @@
+#assignmentTimePickerModal .modal-dialog {
+    max-width: 860px;
+}
+
+#assignmentTimePickerModal .schedule-picker-columns {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.9rem;
+}
+
+#assignmentTimePickerModal .picker-column {
+    border: 2px solid #198754;
+    border-radius: 0.6rem;
+    overflow: hidden;
+    background-color: #fff;
+    min-height: 350px;
+    display: flex;
+    flex-direction: column;
+}
+
+#assignmentTimePickerModal .picker-column.is-locked {
+    border-color: #b9bec5;
+    background-color: #f1f3f5;
+}
+
+#assignmentTimePickerModal .picker-column.is-locked .picker-column-title {
+    color: #6c757d;
+    border-bottom-color: #b9bec5;
+    background-color: #eceff2;
+}
+
+#assignmentTimePickerModal .picker-column.is-locked .picker-column-body {
+    background-color: #eceff2;
+}
+
+#assignmentTimePickerModal .picker-column.is-locked .picker-note {
+    background-color: #eceff2;
+    color: #6c757d;
+    border-bottom-color: #c4c9cf;
+}
+
+#assignmentTimePickerModal .picker-column-title {
+    font-weight: 700;
+    color: #198754;
+    text-align: center;
+    padding: 0.7rem;
+    border-bottom: 1px solid #198754;
+    font-size: 1.05rem;
+}
+
+#assignmentTimePickerModal .picker-column-body {
+    padding: 0.45rem;
+    overflow-y: auto;
+    max-height: 300px;
+    flex: 1 1 auto;
+    background-color: #f8f9fa;
+}
+
+#assignmentTimePickerModal .picker-note {
+    padding: 0.45rem 0.6rem;
+    border-bottom: 1px solid #dee2e6;
+    background-color: #fff;
+    font-size: 0.86rem;
+    color: #495057;
+}
+
+#assignmentTimePickerModal .time-picker-list {
+    padding: 0;
+    max-height: none;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    overflow-y: visible;
+}
+
+#assignmentTimePickerModal .picker-option,
+#assignmentTimePickerModal .time-slot {
+    width: 100%;
+    text-align: center;
+    border: 1px solid #d8dee3;
+    border-radius: 0.35rem;
+    background: #fff;
+    color: #212529;
+    padding: 0.45rem 0.65rem;
+    margin-bottom: 0.2rem;
+    font-weight: 500;
+}
+
+#assignmentTimePickerModal .picker-option:last-child,
+#assignmentTimePickerModal .time-slot:last-child {
+    margin-bottom: 0;
+}
+
+#assignmentTimePickerModal .picker-option:hover,
+#assignmentTimePickerModal .time-slot:hover {
+    background-color: #edf8f2;
+}
+
+#assignmentTimePickerModal .picker-option.is-selected {
+    background-color: #198754;
+    color: #fff;
+    border-color: #198754;
+}
+
+#assignmentTimePickerModal .time-slot.is-edge {
+    background-color: #198754;
+    color: #fff;
+    border-color: #198754;
+    font-weight: 600;
+}
+
+#assignmentTimePickerModal .time-slot.is-in-range {
+    background-color: #dff3e8;
+}
+
+#assignmentTimePickerModal .time-slot.is-occupied {
+    background-color: #e9ecef;
+    border-color: #cfd4da;
+    color: #6c757d;
+}
+
+#assignmentTimePickerModal .picker-option:disabled,
+#assignmentTimePickerModal .picker-option.is-disabled,
+#assignmentTimePickerModal .time-slot:disabled,
+#assignmentTimePickerModal .time-slot.is-disabled {
+    opacity: 0.55;
+    pointer-events: none;
+    color: #6c757d;
+    background-color: #e9ecef;
+    border-color: #cfd4da;
+}
+
+#assignmentTimePickerModal .time-selection-summary {
+    font-size: 0.9rem;
+    color: #495057;
+}
+
+@media (max-width: 991px) {
+    #assignmentTimePickerModal .schedule-picker-columns {
+        grid-template-columns: 1fr;
+    }
+}

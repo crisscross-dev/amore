@@ -31,6 +31,8 @@ class CalendarController extends Controller
             ->take(5)
             ->get();
 
+        $calendarLiveSignature = $this->buildCalendarLiveSignature($year, $month);
+
         // Determine view based on role
         $view = match($user->account_type) {
             'admin' => 'admin.calendar',
@@ -46,7 +48,25 @@ class CalendarController extends Controller
             'announcements' => $announcements,
             'currentYear' => $year,
             'currentMonth' => $month,
+            'calendarLiveSignature' => $calendarLiveSignature,
             'canEdit' => $user->account_type === 'admin' // Permission flag
+        ]);
+    }
+
+    /**
+     * Lightweight polling endpoint used by calendar pages to detect updates.
+     */
+    public function liveSignature(Request $request)
+    {
+        $user = Auth::user();
+        abort_unless($user && in_array($user->account_type, ['admin', 'faculty', 'student'], true), 403);
+
+        $year = (int) $request->get('year', now()->year);
+        $month = (int) $request->get('month', now()->month);
+
+        return response()->json([
+            'signature' => $this->buildCalendarLiveSignature($year, $month),
+            'generated_at' => now()->toIso8601String(),
         ]);
     }
 
@@ -340,5 +360,44 @@ class CalendarController extends Controller
             'sports' => '#198754',
             default => '#6c757d',
         };
+    }
+
+    /**
+     * Build a compact version token representing visible calendar data state.
+     */
+    private function buildCalendarLiveSignature(int $year, int $month): string
+    {
+        $monthEventsQuery = Event::query()
+            ->whereYear('start_date', $year)
+            ->whereMonth('start_date', $month);
+
+        $monthEventCount = (clone $monthEventsQuery)->count();
+        $monthEventStamp = $this->timestampOrZero((clone $monthEventsQuery)->max('updated_at'));
+        $upcomingEventStamp = $this->timestampOrZero(
+            Event::query()->where('start_date', '>=', now())->max('updated_at')
+        );
+        $announcementStamp = $this->timestampOrZero(
+            Announcement::active()->max('updated_at')
+        );
+
+        return implode('|', [
+            $year,
+            $month,
+            $monthEventCount,
+            $monthEventStamp,
+            $upcomingEventStamp,
+            $announcementStamp,
+        ]);
+    }
+
+    private function timestampOrZero($value): int
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        return $timestamp !== false ? $timestamp : 0;
     }
 }

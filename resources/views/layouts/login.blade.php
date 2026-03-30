@@ -8,9 +8,6 @@
 <div class="container d-flex justify-content-center align-items-center login-center-container">
   <div class="col-md-5 ">
     <div class="card shadow-lg p-4 animate__animated animate__fadeIn login-form" id="hero-content">
-  <a href="index.html" class="btn btn-link text-secondary mb-3 p-0 login-back-link">
-        <span class="icon-arrow-left mr-2"></span>Back
-      </a>
       <div class="text-center mb-4">
         <h2 class="heading mb-2">Login to Your Account</h2>
         <p class="fw-bold fs-6" style="color: #495057;">Welcome back to Amore Academy</p>
@@ -30,11 +27,6 @@
         @endif
 
         <!-- Success Message -->
-        @if(session('success'))
-            <x-ui.alert type="success" :dismissible="true">
-                {{ session('success') }}
-            </x-ui.alert>
-        @endif
 
         <div class="form-group mb-3">
           <x-form.label for="email">Email address</x-form.label>
@@ -68,25 +60,132 @@
         </div>
         
         <x-ui.button type="submit" variant="secondary" class="login-button" :fullWidth="true">
-          Login
+          <i class="bi bi-box-arrow-in-right me-2"></i>Login
         </x-ui.button>
         
-        <div class="mt-3 text-center">
-          <a href="{{ route('password.request') }}" class="small text-black">Forgot password?</a>
+        <div class="mt-2 mb-0 text-center">
+          <a href="{{ route('password.request') }}" class="small forgot-password-link">Forgot password?</a>
         </div>
       </form>
-      <div class="mt-3 text-center">
-        <x-ui.button 
-          variant="secondary" 
-          class="login-button" 
-          :fullWidth="true"
+      <div class="mt-2 text-center">
+        <a
           href="{{ route('register') }}"
+          id="registerAccessTrigger"
+          class="btn create-account-button w-100"
         >
-          Create Account
-        </x-ui.button>
+          <i class="bi bi-person-plus me-2"></i>Create Account
+        </a>
       </div>
     </div>
   </div>
 </div>
 
+<div class="modal fade" id="facultyAccessModal" tabindex="-1" aria-labelledby="facultyAccessModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title text-success" id="facultyAccessModalLabel">Faculty Verification</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body pt-2">
+        <p class="mb-2 text-muted small">Creating an account requires a faculty access code from the registrar.</p>
+        <form id="facultyAccessForm" class="mt-2">
+          <label for="facultyAccessCode" class="form-label">Access Code</label>
+          <input type="password" class="form-control" id="facultyAccessCode" autocomplete="off" required>
+          <div id="facultyAccessError" class="invalid-feedback d-none">
+            Invalid access code. Please contact the registrar.
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="submit" form="facultyAccessForm" class="btn btn-success">Continue</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  id="login-runtime-data"
+  class="d-none"
+  data-register-url="{{ route('register') }}"
+  data-verify-url="{{ route('register.access.verify') }}"
+  data-csrf-token="{{ csrf_token() }}"
+></div>
+
 @endsection
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const registerBtn = document.getElementById('registerAccessTrigger');
+  const modalEl = document.getElementById('facultyAccessModal');
+  const accessForm = document.getElementById('facultyAccessForm');
+  const codeInput = document.getElementById('facultyAccessCode');
+  const errorEl = document.getElementById('facultyAccessError');
+  const runtimeData = document.getElementById('login-runtime-data');
+  const registerUrl = runtimeData ? (runtimeData.dataset.registerUrl || '') : '';
+  const verifyUrl = runtimeData ? (runtimeData.dataset.verifyUrl || '') : '';
+  const csrfToken = runtimeData ? (runtimeData.dataset.csrfToken || '') : '';
+  const defaultErrorText = errorEl.textContent;
+
+  if (!registerBtn || !modalEl || !window.bootstrap || !window.bootstrap.Modal || !accessForm || !codeInput || !errorEl) {
+    return;
+  }
+
+  const modalInstance = window.bootstrap.Modal.getOrCreateInstance(modalEl);
+
+  registerBtn.addEventListener('click', function (event) {
+    event.preventDefault();
+    codeInput.value = '';
+    codeInput.classList.remove('is-invalid');
+    errorEl.classList.add('d-none');
+    modalInstance.show();
+  });
+
+  accessForm.addEventListener('submit', async function (event) {
+    event.preventDefault();
+    const enteredCode = codeInput.value.trim();
+
+    if (!enteredCode || !verifyUrl || !registerUrl) {
+      codeInput.classList.add('is-invalid');
+      errorEl.textContent = 'Access code is required.';
+      errorEl.classList.remove('d-none');
+      return;
+    }
+
+    try {
+      const response = await fetch(verifyUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken,
+        },
+        body: JSON.stringify({ access_code: enteredCode }),
+      });
+
+      if (response.ok) {
+        codeInput.classList.remove('is-invalid');
+        errorEl.textContent = defaultErrorText;
+        errorEl.classList.add('d-none');
+        modalInstance.hide();
+        window.location.href = registerUrl;
+        return;
+      }
+
+      const payload = await response.json().catch(() => ({}));
+      codeInput.classList.add('is-invalid');
+      errorEl.textContent = payload.message || 'Invalid access code. Please contact the registrar.';
+      errorEl.classList.remove('d-none');
+    } catch (error) {
+      codeInput.classList.add('is-invalid');
+      errorEl.textContent = 'Unable to verify access code right now. Please try again.';
+      errorEl.classList.remove('d-none');
+    }
+
+  });
+});
+</script>
+@endpush

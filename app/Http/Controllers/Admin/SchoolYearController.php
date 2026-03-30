@@ -30,12 +30,18 @@ class SchoolYearController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge([
+            'year_name' => $this->normalizeYearName((string) $request->input('year_name', '')),
+        ]);
+
         $validated = $request->validate([
-            'year_name' => 'required|string|unique:school_years,year_name',
+            'year_name' => 'required|regex:/^\d{4}-\d{4}$/|unique:school_years,year_name',
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'enrollment_start' => 'required|date',
             'enrollment_end' => 'required|date|after:enrollment_start',
+        ], [
+            'year_name.regex' => 'The school year name must use digits only in YYYY-YYYY format.',
         ]);
 
         SchoolYear::create($validated);
@@ -57,12 +63,18 @@ class SchoolYearController extends Controller
      */
     public function update(Request $request, SchoolYear $schoolYear)
     {
+        $request->merge([
+            'year_name' => $this->normalizeYearName((string) $request->input('year_name', '')),
+        ]);
+
         $validated = $request->validate([
-            'year_name' => 'required|string|unique:school_years,year_name,' . $schoolYear->id,
+            'year_name' => 'required|regex:/^\d{4}-\d{4}$/|unique:school_years,year_name,' . $schoolYear->id,
             'start_date' => 'required|date',
             'end_date' => 'required|date|after:start_date',
             'enrollment_start' => 'required|date',
             'enrollment_end' => 'required|date|after:enrollment_start',
+        ], [
+            'year_name.regex' => 'The school year name must use digits only in YYYY-YYYY format.',
         ]);
 
         $schoolYear->update($validated);
@@ -101,5 +113,17 @@ class SchoolYearController extends Controller
 
         return redirect()->route('admin.school-years.index')
             ->with('success', 'School year ' . $schoolYear->year_name . ' is now active!');
+    }
+
+    private function normalizeYearName(string $yearName): string
+    {
+        $digitsOnly = preg_replace('/\D+/', '', $yearName) ?? '';
+        $digitsOnly = substr($digitsOnly, 0, 8);
+
+        if (strlen($digitsOnly) <= 4) {
+            return $digitsOnly;
+        }
+
+        return substr($digitsOnly, 0, 4) . '-' . substr($digitsOnly, 4);
     }
 }

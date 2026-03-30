@@ -54,7 +54,7 @@ class SubjectController extends Controller
         $filters = $request->only(['search', 'subject_type', 'grade_level']);
 
         $subjects = Subject::query()
-            ->with('gradeLevels')
+            ->with(['gradeLevels', 'sectionTeachers.teacher'])
             ->when($filters['search'] ?? null, function ($query, $search) {
                 $query->where(function ($builder) use ($search) {
                     $builder->where('name', 'like', "%{$search}%")
@@ -199,9 +199,6 @@ class SubjectController extends Controller
             $gradeLevels = $this->normalizeGradeLevelsInput([$payload['grade_level']]);
             $payload['subject_type'] = $this->applySubjectTypeRules($payload['subject_type'] ?? null, $gradeLevels);
 
-            $hours = $rowData['hours_per_week'] ?? null;
-            $payload['hours_per_week'] = $hours === null || $hours === '' ? null : (int) $hours;
-
             $subject = Subject::updateOrCreate([
                 'name' => $payload['name'],
                 'grade_level' => $payload['grade_level'],
@@ -243,9 +240,6 @@ class SubjectController extends Controller
         $validated['grade_levels'] = $gradeLevels;
         $validated['grade_level'] = $this->determinePrimaryGradeLevel($gradeLevels);
         $validated['subject_type'] = $this->applySubjectTypeRules($validated['subject_type'] ?? null, $gradeLevels);
-        $validated['hours_per_week'] = $validated['hours_per_week'] === null || $validated['hours_per_week'] === ''
-            ? null
-            : (int) $validated['hours_per_week'];
 
         return $validated;
     }
@@ -259,7 +253,6 @@ class SubjectController extends Controller
             'grade_level' => ['nullable', 'in:' . implode(',', array_keys(self::GRADE_LEVELS))],
             'grade_levels' => ['required_without:grade_level', 'array', 'min:1'],
             'grade_levels.*' => ['in:' . implode(',', array_keys(self::GRADE_LEVELS))],
-            'hours_per_week' => ['nullable', 'integer', 'min:1', 'max:40'],
         ];
     }
 
@@ -270,7 +263,6 @@ class SubjectController extends Controller
             'subject_type' => 'subject type',
             'grade_level' => 'grade level',
             'grade_levels' => 'grade levels',
-            'hours_per_week' => 'hours per week',
         ];
     }
 

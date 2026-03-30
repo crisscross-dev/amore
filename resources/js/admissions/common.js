@@ -26,6 +26,9 @@ export function initializeCommonFormLogic() {
     // LRN digit-only validation
     initializeLRNValidation();
 
+    // Keep composed address field in sync
+    initializeAddressComposer();
+
     // School type selection logic
     const schoolTypeRadios = document.querySelectorAll('input[name="school_type"]');
     const publicSchoolDiv = document.getElementById('publicSchool');
@@ -73,6 +76,41 @@ export function initializeCommonFormLogic() {
             }
         });
     }
+}
+
+/**
+ * Keep the combined address field synchronized with split inputs.
+ */
+function initializeAddressComposer() {
+    const streetInput = document.querySelector('input[name="address_street"]');
+    const barangayInput = document.querySelector('input[name="address_barangay"]');
+    const cityInput = document.querySelector('input[name="address_city"]');
+    const provinceInput = document.querySelector('input[name="address_province"]');
+    const addressInput = document.querySelector('input[name="address"]');
+    const form = document.getElementById('enrollmentForm');
+
+    if (!streetInput || !barangayInput || !cityInput || !provinceInput || !addressInput || !form) {
+        return;
+    }
+
+    const syncAddress = () => {
+        const parts = [
+            streetInput.value.trim(),
+            barangayInput.value.trim(),
+            cityInput.value.trim(),
+            provinceInput.value.trim(),
+        ].filter(Boolean);
+
+        addressInput.value = parts.join(', ');
+    };
+
+    [streetInput, barangayInput, cityInput, provinceInput].forEach((input) => {
+        input.addEventListener('input', syncAddress);
+        input.addEventListener('change', syncAddress);
+    });
+
+    form.addEventListener('submit', syncAddress);
+    syncAddress();
 }
 
 /**

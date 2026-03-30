@@ -1,13 +1,26 @@
 <div class="faculty-management-card p-4 mb-3">
+    @php
+    $isAdminReviewer = auth()->check() && auth()->user()->account_type === 'admin';
+    $sheetEditable = $isAdminReviewer && in_array($grade->status, ['submitted', 'approved'], true);
+    $sheetLocked = !$sheetEditable;
+    @endphp
     <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap">
         <div>
-            <div class="form-label mb-2">Term</div>
-            <span class="badge bg-success px-3 py-2">{{ $term }}</span>
+            <div class="form-label mb-2">Review Term</div>
+            <div class="d-flex align-items-center gap-2 flex-wrap">
+                <span class="badge bg-success px-3 py-2">{{ $term }}</span>
+                <span class="badge text-bg-light border">{{ $students->count() }} student{{ $students->count() === 1 ? '' : 's' }}</span>
+                @if($sheetLocked)
+                <span class="badge bg-secondary text-uppercase">{{ $grade->status }}</span>
+                @endif
+            </div>
         </div>
-        <div class="d-flex gap-2 flex-wrap">
+        <div class="d-flex gap-2 flex-wrap align-items-center">
+            @if($sheetEditable)
             <button type="button" class="btn btn-outline-success" id="toggleSheetEditBtn">
                 <i class="fas fa-pen me-1"></i>Edit
             </button>
+            @if($grade->status === 'submitted')
             <form action="{{ route('admin.grade-approvals.approve', $grade) }}" method="POST" class="d-inline">
                 @csrf
                 @method('PATCH')
@@ -15,6 +28,12 @@
                     <i class="fas fa-check me-1"></i>Approve Sheet
                 </button>
             </form>
+            @else
+            <span class="text-muted small">Approved sheet can still be updated by admin.</span>
+            @endif
+            @else
+            <span class="text-muted small">This sheet is read-only.</span>
+            @endif
         </div>
     </div>
 </div>
@@ -46,7 +65,7 @@
     </div>
     @else
     <div class="table-responsive">
-        <form action="{{ route('admin.grade-approvals.update', $grade) }}" method="POST" id="sheetUpdateForm" class="sheet-readonly" data-has-errors="{{ $errors->any() ? '1' : '0' }}">
+        <form action="{{ route('admin.grade-approvals.update', $grade) }}" method="POST" id="sheetUpdateForm" class="sheet-readonly" data-has-errors="{{ $sheetEditable && $errors->any() ? '1' : '0' }}" data-sheet-locked="{{ $sheetLocked ? '1' : '0' }}">
             @csrf
             @method('PATCH')
             <input type="hidden" name="term" value="{{ $term }}">
@@ -54,6 +73,7 @@
             <table class="table table-hover align-middle mb-0 grade-sheet-table">
                 <thead>
                     <tr>
+                        <th style="width: 56px;">#</th>
                         <th>Student</th>
                         <th>Student ID</th>
                         @if($isMapehGroup)
@@ -76,6 +96,7 @@
                     });
                     @endphp
                     <tr>
+                        <td class="text-muted small">{{ $loop->iteration }}</td>
                         <td>{{ $student->last_name }}, {{ $student->first_name }}</td>
                         <td>{{ $student->custom_id ?? 'N/A' }}</td>
                         @if($isMapehGroup)
@@ -137,8 +158,9 @@
                 </tbody>
             </table>
 
-            <div class="d-none mt-3" id="sheetSaveActions">
-                <button class="btn btn-green"><i class="fas fa-save me-1"></i>Save Grade Sheet</button>
+            <div class="d-none mt-3 d-flex align-items-center gap-2" id="sheetSaveActions">
+                <button class="btn btn-green"><i class="fas fa-save me-1"></i>Save Changes</button>
+                <span class="small text-muted">Admin updates are saved immediately to this grade sheet.</span>
             </div>
         </form>
     </div>
@@ -207,7 +229,13 @@
 
         initializeMapehAverages(form);
 
-        if (!toggleBtn || !form) {
+        if (!form) {
+            return;
+        }
+
+        var isSheetLocked = form.getAttribute('data-sheet-locked') === '1';
+
+        if (!toggleBtn || isSheetLocked) {
             return;
         }
 

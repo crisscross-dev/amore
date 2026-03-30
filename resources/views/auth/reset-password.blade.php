@@ -35,11 +35,6 @@
         @endif
 
         <!-- Success Message -->
-        @if(session('success'))
-            <x-ui.alert type="success" :dismissible="true">
-                {{ session('success') }}
-            </x-ui.alert>
-        @endif
 
         <div class="form-group mb-3">
           <x-form.label for="email">Email address</x-form.label>

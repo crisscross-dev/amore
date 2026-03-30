@@ -10,7 +10,67 @@
 <!-- Admin Dashboard CSS -->
 @vite(['resources/css/layouts/dashboard-roles/dashboard-admin.css', 'resources/css/pagination.css', 'resources/js/admissions.js'])
 
-<div class="dashboard-container">
+<style>
+    .admission-details-modal-body {
+        padding-top: 1rem;
+    }
+
+    .admission-details-header {
+        padding-bottom: 0.75rem;
+    }
+
+    .admission-details-divider {
+        border-top: 1px solid var(--bs-border-color);
+        margin: 0.5rem 0 1.1rem;
+    }
+
+    .admission-details-section {
+        margin-bottom: 1.1rem;
+    }
+
+    .admission-section-title {
+        margin-bottom: 0.85rem;
+        font-weight: 700;
+    }
+
+    .admission-field-label {
+        display: block;
+        color: var(--bs-secondary-color);
+        margin-bottom: 0.2rem;
+    }
+
+    .admission-field-value {
+        font-weight: 600;
+        color: var(--bs-dark);
+    }
+
+    .admissions-dashboard__details-btn {
+        opacity: 0;
+        transform: translateY(4px);
+        pointer-events: none;
+        transition: opacity 0.18s ease, transform 0.18s ease;
+    }
+
+    .admissions-dashboard__table-row:hover .admissions-dashboard__details-btn,
+    .admissions-dashboard__table-row:focus-within .admissions-dashboard__details-btn {
+        opacity: 1;
+        transform: translateY(0);
+        pointer-events: auto;
+    }
+
+    @media (hover: none) {
+        .admissions-dashboard__details-btn {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+    }
+</style>
+
+<div class="dashboard-container admissions-live-page"
+    data-live-url="{{ route('admin.admissions.live-signature') }}"
+    data-live-signature="{{ $admissionsLiveSignature ?? '' }}"
+    data-live-mode="pending">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -78,7 +138,7 @@
                     <div class="header-title d-flex align-items-center justify-content-between mb-2">
                         <h5 class="mb-2 fw-semibold text-success">
                             <i class="fas fa-user-check me-2"></i>
-                            Approve Admissions
+                            Approve Admission
                         </h5>
                         <div class="d-none d-lg-block">
                             <a href="{{ route('admissions.selection') }}" class="btn btn-success btn-m">
@@ -88,21 +148,7 @@
                     </div>
 
                     <!-- Flash Messages -->
-                    @if(session('success'))
-                    <div class="alert alert-success alert-dismissible fade show" role="alert">
-                        <i class="fas fa-check-circle"></i>
-                        <strong>Success!</strong> {{ session('success') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
 
-                    @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <strong>Error!</strong> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                    @endif
 
                     <!-- Statistics Cards -->
                     <div class="stats-grid admissions-dashboard__stats-grid">
@@ -138,34 +184,13 @@
 
                     </div>
 
-                    <!-- Bulk Actions Bar -->
-                    <div class="bulk-actions-bar admissions-dashboard__bulk-actions" id="bulkActionsBar" style="display: none;">
-                        <div class="bulk-actions-content admissions-dashboard__bulk-actions-content">
-                            <div class="bulk-actions-info admissions-dashboard__bulk-actions-info">
-                                <i class="fas fa-check-square"></i>
-                                <span id="selectedCount">0</span> application(s) selected
-                            </div>
-                            <div class="bulk-actions-buttons admissions-dashboard__bulk-actions-buttons">
-                                <button type="button" class="btn btn-success" id="bulkApproveBtn">
-                                    <i class="fas fa-check"></i> Approve Selected
-                                </button>
-                                <button type="button" class="btn btn-danger" id="bulkRejectBtn">
-                                    <i class="fas fa-times"></i> Reject Selected
-                                </button>
-                                <button type="button" class="btn btn-outline-secondary" id="clearSelectionBtn">
-                                    <i class="fas fa-times-circle"></i> Clear Selection
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Admissions List -->
                     <div class="admissions-card admissions-dashboard__card admissions-dashboard__card--list">
                         <div class="card-header admissions-dashboard__card-header">
-                            <h5><i class="fas fa-list me-2"></i>Applications List</h5>
+                            <h5><i class="fas fa-list me-2"></i>Application List</h5>
                             <div class="bulk-select-all admissions-dashboard__bulk-select-all">
                                 <a href="{{ route('admin.admissions.approved') }}" class="btn btn-warning">
-                                    <i class="fas fa-user-edit me-2"></i>Approved Students
+                                    <i class="fas fa-user-edit me-2"></i>Approved Student
                                 </a>
                             </div>
                         </div>
@@ -192,9 +217,6 @@
                                 <table class="table table-hover align-middle admissions-dashboard__table mb-0">
                                     <thead>
                                         <tr>
-                                            <th class="text-center admissions-dashboard__table-col-check">
-                                                <input type="checkbox" class="form-check-input" id="selectAllCheckbox" aria-label="Select all applications">
-                                            </th>
                                             <th>Applicant</th>
                                             <th>LRN</th>
                                             <th>Admission Type</th>
@@ -206,12 +228,6 @@
                                     <tbody>
                                         @foreach($admissions as $admission)
                                         <tr class="admissions-dashboard__table-row" data-modal-target="admissionShowModal-{{ $admission->id }}">
-                                            <td class="text-center admissions-dashboard__table-col-check">
-                                                <input type="checkbox" class="form-check-input admission-select"
-                                                    data-type="{{ strtolower($admission->admission_type) }}"
-                                                    data-id="{{ $admission->id }}"
-                                                    aria-label="Select {{ $admission->full_name }}">
-                                            </td>
                                             <td>
                                                 <div class="admissions-dashboard__applicant-name">{{ $admission->full_name }}</div>
                                                 @if(strtoupper($admission->school_level) === 'SHS' && $admission->strand)
@@ -219,6 +235,14 @@
                                                     {{ $admission->strand }}@if($admission->strand === 'TVL' && $admission->tvl_specialization) - {{ $admission->tvl_specialization }}@endif
                                                 </div>
                                                 @endif
+                                                <div class="mt-2">
+                                                    <button type="button"
+                                                        class="btn btn-sm btn-outline-success admissions-dashboard__details-btn"
+                                                        data-bs-toggle="modal"
+                                                        data-bs-target="#admissionShowModal-{{ $admission->id }}">
+                                                        <i class="fas fa-eye me-1"></i>View Details
+                                                    </button>
+                                                </div>
                                             </td>
                                             <td>{{ $admission->lrn }}</td>
                                             <td>{{ strtoupper($admission->school_level) }}</td>
@@ -243,118 +267,134 @@
                                             </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
-                                        <div class="modal-body admissions-dashboard__show-modal-body">
-                                            <div class="row g-3">
-                                                <div class="col-12">
-                                                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                                                        <div>
-                                                            <div class="h5 mb-1">{{ $admission->full_name }}</div>
-                                                            <div class="text-muted small">Applicant ID: {{ $admission->applicant_id ?? 'N/A' }}</div>
-                                                        </div>
-                                                        <div>@include('admin.admissions._status_badge', ['status' => $admission->status])</div>
+                                        <div class="modal-body admissions-dashboard__show-modal-body admission-details-modal-body">
+                                            <div class="admission-details-header d-flex flex-wrap align-items-center justify-content-between gap-2">
+                                                <div>
+                                                    <div class="h5 mb-1 text-dark fw-bold">{{ $admission->full_name }}</div>
+                                                    <div class="text-muted small">Applicant ID: {{ $admission->applicant_id_display }}</div>
+                                                </div>
+                                                <div>@include('admin.admissions._status_badge', ['status' => $admission->status])</div>
+                                            </div>
+
+                                            <div class="admission-details-divider"></div>
+
+                                            <section class="admission-details-section">
+                                                <h6 class="admission-section-title text-dark"><i class="fas fa-user me-2"></i>Personal Information</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-3">
+                                                        <small class="admission-field-label">LRN</small>
+                                                        <div class="admission-field-value">{{ $admission->lrn }}</div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <small class="admission-field-label">Admission Type</small>
+                                                        <div class="admission-field-value">{{ strtoupper($admission->school_level) }}</div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <small class="admission-field-label">Birthdate</small>
+                                                        <div class="admission-field-value">{{ $admission->dob ? $admission->dob->format('F d, Y') : 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <small class="admission-field-label">Age</small>
+                                                        <div class="admission-field-value">{{ $admission->age ? $admission->age . ' years old' : 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <small class="admission-field-label">Gender</small>
+                                                        <div class="admission-field-value">{{ $admission->gender ? ucfirst($admission->gender) : 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-md-3">
+                                                        <small class="admission-field-label">Religion</small>
+                                                        <div class="admission-field-value">{{ $admission->religion ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <small class="admission-field-label">Address</small>
+                                                        <div class="admission-field-value">{{ $admission->address ?? 'N/A' }}</div>
                                                     </div>
                                                 </div>
+                                            </section>
 
-                                                <div class="col-12">
-                                                    <h6 class="mb-2"><i class="fas fa-user me-2"></i>Personal Information</h6>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">LRN</small>
-                                                    <div class="fw-semibold">{{ $admission->lrn }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Admission Type</small>
-                                                    <div class="fw-semibold">{{ strtoupper($admission->school_level) }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Birthdate</small>
-                                                    <div class="fw-semibold">{{ $admission->dob ? $admission->dob->format('F d, Y') : 'N/A' }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Age</small>
-                                                    <div class="fw-semibold">{{ $admission->age ? $admission->age . ' years old' : 'N/A' }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Gender</small>
-                                                    <div class="fw-semibold">{{ $admission->gender ? ucfirst($admission->gender) : 'N/A' }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Religion</small>
-                                                    <div class="fw-semibold">{{ $admission->religion ?? 'N/A' }}</div>
-                                                </div>
-                                                <div class="col-12">
-                                                    <small class="text-muted d-block">Address</small>
-                                                    <div class="fw-semibold">{{ $admission->address ?? 'N/A' }}</div>
-                                                </div>
+                                            <div class="admission-details-divider"></div>
 
-                                                <div class="col-12 mt-2">
-                                                    <h6 class="mb-2"><i class="fas fa-book me-2"></i>Academic Information</h6>
+                                            <section class="admission-details-section">
+                                                <h6 class="admission-section-title text-dark"><i class="fas fa-book me-2"></i>Academic Information</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Previous School</small>
+                                                        <div class="admission-field-value">{{ $admission->school_name }}</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">School Type</small>
+                                                        <div class="admission-field-value">{{ $admission->school_type ? ucfirst($admission->school_type) : 'N/A' }}</div>
+                                                    </div>
+                                                    @if(strtoupper($admission->school_level) === 'SHS' && $admission->strand)
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Strand</small>
+                                                        <div class="admission-field-value">{{ $admission->strand }}</div>
+                                                    </div>
+                                                    @endif
+                                                    @if($admission->strand === 'TVL' && $admission->tvl_specialization)
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">TVL Specialization</small>
+                                                        <div class="admission-field-value">{{ $admission->tvl_specialization }}</div>
+                                                    </div>
+                                                    @endif
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Previous School</small>
-                                                    <div class="fw-semibold">{{ $admission->school_name }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">School Type</small>
-                                                    <div class="fw-semibold">{{ $admission->school_type ? ucfirst($admission->school_type) : 'N/A' }}</div>
-                                                </div>
-                                                @if(strtoupper($admission->school_level) === 'SHS' && $admission->strand)
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Strand</small>
-                                                    <div class="fw-semibold">{{ $admission->strand }}</div>
-                                                </div>
-                                                @endif
-                                                @if($admission->strand === 'TVL' && $admission->tvl_specialization)
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">TVL Specialization</small>
-                                                    <div class="fw-semibold">{{ $admission->tvl_specialization }}</div>
-                                                </div>
-                                                @endif
+                                            </section>
 
-                                                <div class="col-12 mt-2">
-                                                    <h6 class="mb-2"><i class="fas fa-users me-2"></i>Parent/Guardian Information</h6>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Father's Name</small>
-                                                    <div class="fw-semibold">{{ $admission->father_name ?? 'N/A' }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Father's Occupation</small>
-                                                    <div class="fw-semibold">{{ $admission->father_occupation ?? 'N/A' }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Mother's Name</small>
-                                                    <div class="fw-semibold">{{ $admission->mother_name ?? 'N/A' }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Mother's Occupation</small>
-                                                    <div class="fw-semibold">{{ $admission->mother_occupation ?? 'N/A' }}</div>
-                                                </div>
+                                            <div class="admission-details-divider"></div>
 
-                                                <div class="col-12 mt-2">
-                                                    <h6 class="mb-2"><i class="fas fa-history me-2"></i>Application Timeline</h6>
+                                            <section class="admission-details-section">
+                                                <h6 class="admission-section-title text-dark"><i class="fas fa-users me-2"></i>Parent/Guardian Information</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Father's Name</small>
+                                                        <div class="admission-field-value">{{ $admission->father_name ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Father's Occupation</small>
+                                                        <div class="admission-field-value">{{ $admission->father_occupation ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Mother's Name</small>
+                                                        <div class="admission-field-value">{{ $admission->mother_name ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Mother's Occupation</small>
+                                                        <div class="admission-field-value">{{ $admission->mother_occupation ?? 'N/A' }}</div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Submitted</small>
-                                                    <div class="fw-semibold">{{ $admission->created_at->format('M d, Y h:i A') }}</div>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Last Decision</small>
-                                                    <div class="fw-semibold">{{ $admission->approved_at ? $admission->approved_at->format('M d, Y h:i A') : 'N/A' }}</div>
-                                                </div>
+                                            </section>
 
-                                                <div class="col-12 mt-2">
-                                                    <h6 class="mb-2"><i class="fas fa-key me-2"></i>Login Credentials</h6>
+                                            <div class="admission-details-divider"></div>
+
+                                            <section class="admission-details-section">
+                                                <h6 class="admission-section-title text-dark"><i class="fas fa-history me-2"></i>Application Timeline</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Submitted</small>
+                                                        <div class="admission-field-value">{{ $admission->created_at->format('M d, Y h:i A') }}</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Last Decision</small>
+                                                        <div class="admission-field-value">{{ $admission->approved_at ? $admission->approved_at->format('M d, Y h:i A') : 'N/A' }}</div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Email</small>
-                                                    <div class="fw-semibold">{{ $admission->email ?? 'N/A' }}</div>
+                                            </section>
+
+                                            <div class="admission-details-divider"></div>
+
+                                            <section class="admission-details-section mb-0">
+                                                <h6 class="admission-section-title text-dark"><i class="fas fa-key me-2"></i>Login Credentials</h6>
+                                                <div class="row g-3">
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Email</small>
+                                                        <div class="admission-field-value">{{ $admission->email ?? 'N/A' }}</div>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <small class="admission-field-label">Password</small>
+                                                        <div class="admission-field-value">{{ $admission->temp_password ?? 'Not generated yet' }}</div>
+                                                    </div>
                                                 </div>
-                                                <div class="col-md-6">
-                                                    <small class="text-muted d-block">Password</small>
-                                                    <div class="fw-semibold">{{ $admission->temp_password ?? 'Not generated yet' }}</div>
-                                                </div>
-                                            </div>
+                                            </section>
                                         </div>
                                         <div class="modal-footer">
                                             @if($admission->status === 'pending')
@@ -422,74 +462,6 @@
                                 <p>No admission applications match your current filters.</p>
                             </div>
                             @endif
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bulk Reject Modal -->
-                <div class="modal fade" id="bulkRejectModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title"><i class="fas fa-times-circle me-2"></i>Reject Selected Applications</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form id="bulkRejectForm" method="POST" action="{{ route('admin.admissions.bulk-action') }}">
-                                @csrf
-                                <div class="modal-body">
-                                    <input type="hidden" name="action" value="reject">
-                                    <div id="bulkAdmissionsInput"></div>
-
-                                    <div class="alert alert-warning">
-                                        <i class="fas fa-exclamation-triangle"></i>
-                                        You are about to reject <strong id="bulkRejectCount">0</strong> application(s).
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="bulkRejectionReason" class="form-label">Rejection Reason <span class="text-danger">*</span></label>
-                                        <textarea class="form-control" id="bulkRejectionReason" name="rejection_reason"
-                                            rows="4" required placeholder="Enter reason for rejection..."></textarea>
-                                    </div>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-danger">
-                                        <i class="fas fa-times"></i> Reject Applications
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Bulk Approve Modal -->
-                <div class="modal fade" id="bulkApproveModal" tabindex="-1">
-                    <div class="modal-dialog">
-                        <div class="modal-content">
-                            <div class="modal-header">
-                                <h5 class="modal-title"><i class="fas fa-check-circle me-2"></i>Approve Selected Applications</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                            </div>
-                            <form id="bulkApproveForm" method="POST" action="{{ route('admin.admissions.bulk-action') }}">
-                                @csrf
-                                <div class="modal-body">
-                                    <input type="hidden" name="action" value="approve">
-                                    <div id="bulkApproveAdmissionsInput"></div>
-
-                                    <div class="alert alert-success">
-                                        <i class="fas fa-check-circle"></i>
-                                        You are about to approve <strong id="bulkApproveCount">0</strong> application(s).
-                                    </div>
-
-                                    <p>Are you sure you want to approve these applications?</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="submit" class="btn btn-success">
-                                        <i class="fas fa-check"></i> Approve Applications
-                                    </button>
-                                </div>
-                            </form>
                         </div>
                     </div>
                 </div>

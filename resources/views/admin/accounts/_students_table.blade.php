@@ -62,7 +62,7 @@
                 <td>{{ $student->email }}</td>
                 <td>
                     @if($student->grade_level)
-                    <span class="badge bg-info">Grade {{ $student->grade_level }}</span>
+                    <span class="badge bg-info">{{ $student->grade_level }}</span>
                     @else
                     <span class="text-muted">Not set</span>
                     @endif
@@ -188,6 +188,15 @@
                         <div class="col-md-6">
                             <label class="form-label">Grade Level</label>
                             <input type="text" name="grade_level" class="form-control" value="{{ $student->grade_level }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">New Password</label>
+                            <input type="password" name="password" class="form-control" minlength="8" placeholder="Leave blank to keep current password">
+                            <small class="text-muted">Minimum 8 characters</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" name="password_confirmation" class="form-control" minlength="8" placeholder="Confirm new password">
                         </div>
                         <input type="hidden" name="department" value="{{ $student->department }}">
                     </div>

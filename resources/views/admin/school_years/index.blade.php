@@ -79,6 +79,113 @@
         font-weight: 600;
         color: #334155;
     }
+
+    #schoolYearDatePickerModal .modal-dialog {
+        max-width: 900px;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-columns {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.9rem;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-column {
+        border: 2px solid #198754;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        background: #fff;
+        min-height: 360px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-column.is-locked {
+        border-color: #b9bec5;
+        background: #f1f3f5;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-column-title {
+        font-weight: 700;
+        color: #198754;
+        text-align: center;
+        padding: 0.7rem;
+        border-bottom: 1px solid #198754;
+        font-size: 1.05rem;
+        background: #fff;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-column.is-locked .sy-date-picker-column-title {
+        color: #6c757d;
+        border-bottom-color: #b9bec5;
+        background: #eceff2;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-column-body {
+        padding: 0.5rem;
+        overflow-y: auto;
+        max-height: 320px;
+        background: #f8f9fa;
+        flex: 1 1 auto;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-option {
+        width: 100%;
+        border: 1px solid #d8dee3;
+        border-radius: 0.42rem;
+        background: #fff;
+        color: #212529;
+        text-align: center;
+        padding: 0.5rem 0.65rem;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-option:last-child {
+        margin-bottom: 0;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-option:hover {
+        background: #edf8f2;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-option.is-selected {
+        background: #198754;
+        border-color: #198754;
+        color: #fff;
+        font-weight: 600;
+    }
+
+    #schoolYearDatePickerModal .sy-date-picker-option.is-disabled,
+    #schoolYearDatePickerModal .sy-date-picker-option:disabled {
+        opacity: 0.55;
+        pointer-events: none;
+        color: #6c757d;
+        background-color: #e9ecef;
+        border-color: #cfd4da;
+    }
+
+    .sy-date-picker-trigger .form-control[readonly] {
+        background: #fff;
+        cursor: pointer;
+        pointer-events: auto;
+    }
+
+    .sy-date-picker-trigger .btn.js-open-sy-date-picker {
+        cursor: pointer;
+    }
+
+    .sy-date-picker-trigger .form-control.sy-date-disabled {
+        background: #f1f5f9;
+        color: #94a3b8;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 991px) {
+        #schoolYearDatePickerModal .sy-date-picker-columns {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
 <div class="dashboard-container">
@@ -125,7 +232,7 @@
                             <div class="col-4">
                                 <a href="{{ route('admin.school-years.index') }}" class="btn mobile-nav-btn w-100 active">
                                     <i class="fas fa-calendar-check d-block mb-1"></i>
-                                    <small>School Years</small>
+                                    <small>School Year</small>
                                 </a>
                             </div>
                             <div class="col-4">
@@ -175,24 +282,12 @@
                 </div>
 
                 <!-- Flash Messages -->
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
-                @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
                 <!-- School Years Card -->
                 <div class="admissions-card sy-card mb-4">
                     <div class="card-header bg-success text-white">
-                        <i class="fas fa-calendar-check me-2"></i>School Years
+                        <i class="fas fa-calendar-check me-2"></i>School Year
                     </div>
                     <div class="card-body">
                         @if($schoolYears->count() > 0)
@@ -279,6 +374,9 @@
                                                     class="form-control @error('year_name') is-invalid @enderror"
                                                     id="edit_year_name_{{ $schoolYear->id }}"
                                                     name="year_name"
+                                                    data-year-name-input
+                                                    inputmode="numeric"
+                                                    maxlength="9"
                                                     value="{{ old('modal_context') === 'edit-' . $schoolYear->id ? old('year_name') : $schoolYear->year_name }}"
                                                     placeholder="e.g., 2026-2027"
                                                     required>
@@ -398,6 +496,9 @@
                                             class="form-control @error('year_name') is-invalid @enderror"
                                             id="year_name"
                                             name="year_name"
+                                            data-year-name-input
+                                            inputmode="numeric"
+                                            maxlength="9"
                                             value="{{ old('year_name') }}"
                                             placeholder="e.g., 2026-2027"
                                             required>
@@ -410,26 +511,40 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="start_date" class="form-label sy-modal-label">Academic Year Start <span class="text-danger">*</span></label>
-                                            <input
-                                                type="date"
-                                                class="form-control @error('start_date') is-invalid @enderror"
-                                                id="start_date"
-                                                name="start_date"
-                                                value="{{ old('start_date') }}"
-                                                required>
+                                            <div class="input-group sy-date-picker-trigger">
+                                                <input
+                                                    type="date"
+                                                    class="form-control @error('start_date') is-invalid @enderror"
+                                                    id="start_date"
+                                                    name="start_date"
+                                                    value="{{ old('start_date') }}"
+                                                    required
+                                                    readonly
+                                                    autocomplete="off">
+                                                <button type="button" class="btn btn-outline-success js-open-native-date" data-date-input-id="start_date">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
                                             @error('start_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="end_date" class="form-label sy-modal-label">Academic Year End <span class="text-danger">*</span></label>
-                                            <input
-                                                type="date"
-                                                class="form-control @error('end_date') is-invalid @enderror"
-                                                id="end_date"
-                                                name="end_date"
-                                                value="{{ old('end_date') }}"
-                                                required>
+                                            <div class="input-group sy-date-picker-trigger">
+                                                <input
+                                                    type="date"
+                                                    class="form-control @error('end_date') is-invalid @enderror"
+                                                    id="end_date"
+                                                    name="end_date"
+                                                    value="{{ old('end_date') }}"
+                                                    required
+                                                    readonly
+                                                    autocomplete="off">
+                                                <button type="button" class="btn btn-outline-success js-open-native-date" data-date-input-id="end_date">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
                                             @error('end_date')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -439,26 +554,40 @@
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
                                             <label for="enrollment_start" class="form-label sy-modal-label">Enrollment Start <span class="text-danger">*</span></label>
-                                            <input
-                                                type="date"
-                                                class="form-control @error('enrollment_start') is-invalid @enderror"
-                                                id="enrollment_start"
-                                                name="enrollment_start"
-                                                value="{{ old('enrollment_start') }}"
-                                                required>
+                                            <div class="input-group sy-date-picker-trigger">
+                                                <input
+                                                    type="date"
+                                                    class="form-control @error('enrollment_start') is-invalid @enderror"
+                                                    id="enrollment_start"
+                                                    name="enrollment_start"
+                                                    value="{{ old('enrollment_start') }}"
+                                                    required
+                                                    readonly
+                                                    autocomplete="off">
+                                                <button type="button" class="btn btn-outline-success js-open-native-date" data-date-input-id="enrollment_start">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
                                             @error('enrollment_start')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
                                         </div>
                                         <div class="col-md-6 mb-3">
                                             <label for="enrollment_end" class="form-label sy-modal-label">Enrollment End <span class="text-danger">*</span></label>
-                                            <input
-                                                type="date"
-                                                class="form-control @error('enrollment_end') is-invalid @enderror"
-                                                id="enrollment_end"
-                                                name="enrollment_end"
-                                                value="{{ old('enrollment_end') }}"
-                                                required>
+                                            <div class="input-group sy-date-picker-trigger">
+                                                <input
+                                                    type="date"
+                                                    class="form-control @error('enrollment_end') is-invalid @enderror"
+                                                    id="enrollment_end"
+                                                    name="enrollment_end"
+                                                    value="{{ old('enrollment_end') }}"
+                                                    required
+                                                    readonly
+                                                    autocomplete="off">
+                                                <button type="button" class="btn btn-outline-success js-open-native-date" data-date-input-id="enrollment_end">
+                                                    <i class="fas fa-calendar-alt"></i>
+                                                </button>
+                                            </div>
                                             @error('enrollment_end')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -472,6 +601,39 @@
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal fade" id="schoolYearDatePickerModal" tabindex="-1" aria-labelledby="schoolYearDatePickerLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered modal-lg">
+                        <div class="modal-content border-0 shadow-lg">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title" id="schoolYearDatePickerLabel">
+                                    <i class="fas fa-calendar-alt me-2"></i>Select Date
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <div class="sy-date-picker-columns">
+                                    <div class="sy-date-picker-column" id="syDatePickerYearColumn">
+                                        <div class="sy-date-picker-column-title">Year</div>
+                                        <div class="sy-date-picker-column-body" id="syDatePickerYearList"></div>
+                                    </div>
+                                    <div class="sy-date-picker-column" id="syDatePickerMonthColumn">
+                                        <div class="sy-date-picker-column-title">Month</div>
+                                        <div class="sy-date-picker-column-body" id="syDatePickerMonthList"></div>
+                                    </div>
+                                    <div class="sy-date-picker-column" id="syDatePickerDayColumn">
+                                        <div class="sy-date-picker-column-title">Day</div>
+                                        <div class="sy-date-picker-column-body" id="syDatePickerDayList"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="modal-footer d-flex justify-content-between">
+                                <button type="button" class="btn btn-outline-secondary" id="syDatePickerClearBtn">Clear</button>
+                                <button type="button" class="btn btn-success" id="syDatePickerApplyBtn">Apply</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -502,4 +664,136 @@
     });
 </script>
 @endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        function normalizeYearNameInput(value) {
+            var digits = String(value || '').replace(/\D+/g, '').slice(0, 8);
+            if (digits.length <= 4) {
+                return digits;
+            }
+
+            return digits.slice(0, 4) + '-' + digits.slice(4);
+        }
+
+        function isControlKey(event) {
+            return event.ctrlKey || event.metaKey || [
+                'Backspace',
+                'Delete',
+                'Tab',
+                'ArrowLeft',
+                'ArrowRight',
+                'Home',
+                'End'
+            ].indexOf(event.key) !== -1;
+        }
+
+        document.querySelectorAll('[data-year-name-input]').forEach(function(input) {
+            input.value = normalizeYearNameInput(input.value);
+
+            input.addEventListener('keydown', function(event) {
+                if (isControlKey(event)) {
+                    return;
+                }
+
+                if (['e', 'E', '+', '-', '.'].indexOf(event.key) !== -1) {
+                    event.preventDefault();
+                    return;
+                }
+
+                if (!/^\d$/.test(event.key)) {
+                    event.preventDefault();
+                }
+            });
+
+            input.addEventListener('input', function() {
+                input.value = normalizeYearNameInput(input.value);
+            });
+
+            input.addEventListener('paste', function() {
+                setTimeout(function() {
+                    input.value = normalizeYearNameInput(input.value);
+                }, 0);
+            });
+        });
+
+        function bindNativeDateTrigger(buttonSelector) {
+            document.querySelectorAll(buttonSelector).forEach(function(button) {
+                button.addEventListener('click', function() {
+                    var inputId = button.getAttribute('data-date-input-id');
+                    if (!inputId) {
+                        return;
+                    }
+
+                    var dateInput = document.getElementById(inputId);
+                    if (!dateInput || dateInput.disabled) {
+                        return;
+                    }
+
+                    dateInput.focus();
+                    if (dateInput._flatpickr && typeof dateInput._flatpickr.open === 'function') {
+                        dateInput._flatpickr.open();
+                        return;
+                    }
+
+                    if (typeof dateInput.showPicker === 'function') {
+                        dateInput.showPicker();
+                    } else {
+                        dateInput.click();
+                    }
+                });
+            });
+        }
+
+        function syncDateDependency(startInput, endInput, disabledPlaceholder) {
+            if (!startInput || !endInput) {
+                return;
+            }
+
+            var hasStart = !!startInput.value;
+            endInput.min = hasStart ? startInput.value : '';
+            endInput.disabled = !hasStart;
+            endInput.classList.toggle('sy-date-disabled', !hasStart);
+
+            if (!endInput.dataset.defaultPlaceholder) {
+                endInput.dataset.defaultPlaceholder = endInput.getAttribute('placeholder') || '';
+            }
+
+            endInput.setAttribute('placeholder', hasStart ?
+                endInput.dataset.defaultPlaceholder :
+                disabledPlaceholder);
+
+            if (!hasStart) {
+                endInput.value = '';
+                return;
+            }
+
+            if (endInput.value && endInput.value < startInput.value) {
+                endInput.value = '';
+            }
+        }
+
+        var startDateInput = document.getElementById('start_date');
+        var endDateInput = document.getElementById('end_date');
+        var enrollmentStartInput = document.getElementById('enrollment_start');
+        var enrollmentEndInput = document.getElementById('enrollment_end');
+
+        function updateDateDependencies() {
+            syncDateDependency(startDateInput, endDateInput, 'Set Academic Year Start first');
+            syncDateDependency(enrollmentStartInput, enrollmentEndInput, 'Set Enrollment Start first');
+        }
+
+        [startDateInput, enrollmentStartInput].forEach(function(input) {
+            if (!input) {
+                return;
+            }
+
+            input.addEventListener('change', updateDateDependencies);
+            input.addEventListener('input', updateDateDependencies);
+        });
+
+        bindNativeDateTrigger('.js-open-native-date');
+        updateDateDependencies();
+    });
+</script>
 @endsection

@@ -43,9 +43,6 @@
                     </div>
                 </div>
 
-                @if(session('success'))
-                <x-ui.alert type="success" :dismissible="true">{{ session('success') }}</x-ui.alert>
-                @endif
 
                 @if($errors->any())
                 <x-ui.alert type="danger" :dismissible="true">
@@ -192,7 +189,6 @@
                                         Grade {{ $mappedLevels->implode(', ') }}
                                         @endif
                                     </td>
-                                    <!-- <td>{{ $subject->hours_per_week ?? '—' }}</td> -->
                                     <td class="text-center">
                                         <div class="btn-group btn-group-sm" role="group">
                                             <a href="{{ route($routeBase . 'edit', $subject) }}" class="btn btn-outline-success">

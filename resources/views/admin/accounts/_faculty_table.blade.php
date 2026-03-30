@@ -134,7 +134,7 @@
                 <div class="modal-body">
                     <div class="row g-2">
                         <div class="col-md-6">
-                            <label class="form-label">First Name</label>
+                            <label class="form-label">First Name <span class="text-danger">*</span></label>
                             <input type="text" name="first_name" class="form-control" value="{{ $member->first_name }}" required>
                         </div>
                         <div class="col-md-6">
@@ -142,24 +142,44 @@
                             <input type="text" name="middle_name" class="form-control" value="{{ $member->middle_name }}">
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Last Name</label>
+                            <label class="form-label">Last Name <span class="text-danger">*</span></label>
                             <input type="text" name="last_name" class="form-control" value="{{ $member->last_name }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Email</label>
+                            <label class="form-label">Email <span class="text-danger">*</span></label>
                             <input type="email" name="email" class="form-control" value="{{ $member->email }}" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Contact Number</label>
-                            <input type="text" name="contact_number" class="form-control" value="{{ $member->contact_number }}">
+                            <label class="form-label">Contact Number <span class="text-danger">*</span></label>
+                            <input
+                                type="text"
+                                name="contact_number"
+                                class="form-control"
+                                value="{{ $member->contact_number }}"
+                                inputmode="numeric"
+                                maxlength="11"
+                                minlength="11"
+                                pattern="\d{11}"
+                                oninput="this.value=this.value.replace(/\D/g,'').slice(0,11)"
+                                onkeydown="if(['e','E','+','-'].includes(event.key)){event.preventDefault()}"
+                                required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label">Department</label>
+                            <label class="form-label">Department <span class="text-danger">*</span></label>
                             <select name="department" class="form-select" style="height: 50px !important; padding: 0.75rem 2.25rem 0.75rem 1rem; line-height: 1.5;" required>
                                 <option value="elementary" {{ strtolower((string) old('department', $member->department)) === 'elementary' ? 'selected' : '' }}>elementary</option>
                                 <option value="junior high" {{ strtolower((string) old('department', $member->department)) === 'junior high' ? 'selected' : '' }}>junior high</option>
                                 <option value="senior high" {{ strtolower((string) old('department', $member->department)) === 'senior high' ? 'selected' : '' }}>senior high</option>
                             </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">New Password</label>
+                            <input type="password" name="password" class="form-control" minlength="8" placeholder="Leave blank to keep current password">
+                            <small class="text-muted">Minimum 8 characters</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Confirm Password</label>
+                            <input type="password" name="password_confirmation" class="form-control" minlength="8" placeholder="Confirm new password">
                         </div>
                         <input type="hidden" name="grade_level" value="{{ $member->grade_level }}">
                     </div>

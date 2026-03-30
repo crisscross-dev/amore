@@ -7,6 +7,7 @@ use App\Models\Admission;
 use App\Models\StudentEnrollment;
 use App\Models\SchoolYear;
 use App\Models\Section;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,67 +19,17 @@ class EnrollmentApprovalController extends Controller
      */
     public function index(Request $request)
     {
-        $query = StudentEnrollment::with(['student', 'schoolYear', 'section']);
-
-        // Filter by status
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        // Filter by grade level
-        if ($request->filled('grade_level')) {
-            $query->where('enrolling_grade_level', $request->grade_level);
-        }
-
-        // Filter by school year
-        if ($request->filled('school_year_id')) {
-            $query->where('school_year_id', $request->school_year_id);
-        } else {
-            // Default to active school year
-            $activeSchoolYear = SchoolYear::active()->first();
-            if ($activeSchoolYear) {
-                $query->where('school_year_id', $activeSchoolYear->id);
-            }
-        }
-
-        // Search by student name
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->whereHas('student', function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%");
-            });
-        }
+        $selectedSchoolYear = $this->resolveSelectedSchoolYear($request);
+        $query = $this->buildEnrollmentsListQuery($request, $selectedSchoolYear, true);
 
         $enrollments = $query->orderBy('created_at', 'desc')->paginate(20);
-
-        $admissionsReadyQuery = Admission::query()
-            ->where('status', 'approved')
-            ->whereNotNull('user_id')
-            ->whereHas('user', function ($query) {
-                $query->whereNull('section_id');
-            });
-
-        if ($request->filled('grade_level')) {
-            $admissionsReadyQuery->where('grade_level', $request->grade_level);
-        }
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $admissionsReadyQuery->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('lrn', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
-            });
-        }
+        $admissionsReadyQuery = $this->buildAdmissionsReadyQuery($request);
 
         $admissionsReady = $admissionsReadyQuery
             ->orderByDesc('approved_at')
             ->paginate(10, ['*'], 'admissions_page')
             ->withQueryString();
 
-        $selectedSchoolYear = $activeSchoolYear ?: SchoolYear::query()->orderByDesc('start_date')->first();
         $sections = Section::query()
             ->with(['subjectTeachers.subject'])
             ->when($selectedSchoolYear, function ($query) use ($selectedSchoolYear) {
@@ -88,17 +39,27 @@ class EnrollmentApprovalController extends Controller
             ->orderBy('name')
             ->get();
 
-        // Get statistics
-        $activeSchoolYear = SchoolYear::active()->first();
+        // Get statistics for selected school year plus admissions queue waiting for assignment.
+        $enrollmentStatsQuery = StudentEnrollment::query()
+            ->when($selectedSchoolYear, function ($query) use ($selectedSchoolYear) {
+                $query->where('school_year_id', $selectedSchoolYear->id);
+            });
+
+        $pendingAdmissionsReadyCount = (clone $admissionsReadyQuery)->count();
+        $pendingEnrollmentsCount = (clone $enrollmentStatsQuery)->where('status', 'pending')->count();
+        $approvedCount = (clone $enrollmentStatsQuery)->where('status', 'approved')->count();
+        $rejectedCount = (clone $enrollmentStatsQuery)->where('status', 'rejected')->count();
+
         $stats = [
-            'pending' => StudentEnrollment::where('school_year_id', $activeSchoolYear->id ?? null)->pending()->count(),
-            'approved' => StudentEnrollment::where('school_year_id', $activeSchoolYear->id ?? null)->approved()->count(),
-            'rejected' => StudentEnrollment::where('school_year_id', $activeSchoolYear->id ?? null)->where('status', 'rejected')->count(),
-            'total' => StudentEnrollment::where('school_year_id', $activeSchoolYear->id ?? null)->count(),
+            'pending' => $pendingAdmissionsReadyCount + $pendingEnrollmentsCount,
+            'approved' => $approvedCount,
+            'rejected' => $rejectedCount,
+            'total' => $pendingAdmissionsReadyCount + $pendingEnrollmentsCount + $approvedCount + $rejectedCount,
         ];
 
         $schoolYears = SchoolYear::orderBy('start_date', 'desc')->get();
         $gradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10'];
+        $enrollmentsLiveSignature = $this->buildEnrollmentsLiveSignature($request, $selectedSchoolYear);
 
         return view('admin.enrollments.index', compact(
             'enrollments',
@@ -107,8 +68,22 @@ class EnrollmentApprovalController extends Controller
             'schoolYears',
             'gradeLevels',
             'sections',
-            'selectedSchoolYear'
+            'selectedSchoolYear',
+            'enrollmentsLiveSignature'
         ));
+    }
+
+    /**
+     * Lightweight polling endpoint for enrollment queue updates.
+     */
+    public function liveSignature(Request $request)
+    {
+        $selectedSchoolYear = $this->resolveSelectedSchoolYear($request);
+
+        return response()->json([
+            'signature' => $this->buildEnrollmentsLiveSignature($request, $selectedSchoolYear),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     /**
@@ -304,5 +279,125 @@ class EnrollmentApprovalController extends Controller
 
         return SchoolYear::active()->first()
             ?: SchoolYear::query()->orderByDesc('start_date')->first();
+    }
+
+    private function resolveSelectedSchoolYear(Request $request): ?SchoolYear
+    {
+        $selectedSchoolYear = null;
+
+        if ($request->filled('school_year_id')) {
+            $selectedSchoolYear = SchoolYear::query()->find($request->school_year_id);
+        }
+
+        if (! $selectedSchoolYear) {
+            $selectedSchoolYear = SchoolYear::active()->first()
+                ?: SchoolYear::query()->orderByDesc('start_date')->first();
+        }
+
+        return $selectedSchoolYear;
+    }
+
+    private function buildEnrollmentsListQuery(Request $request, ?SchoolYear $selectedSchoolYear, bool $withRelations): Builder
+    {
+        $query = StudentEnrollment::query();
+
+        if ($withRelations) {
+            $query->with(['student', 'schoolYear', 'section']);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('grade_level')) {
+            $query->where('enrolling_grade_level', $request->grade_level);
+        }
+
+        if ($request->filled('school_year_id')) {
+            $query->where('school_year_id', $request->school_year_id);
+        } elseif ($selectedSchoolYear) {
+            $query->where('school_year_id', $selectedSchoolYear->id);
+        }
+
+        if ($request->filled('search')) {
+            $search = (string) $request->search;
+            $query->whereHas('student', function (Builder $builder) use ($search) {
+                $builder->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%");
+            });
+        }
+
+        return $query;
+    }
+
+    private function buildAdmissionsReadyQuery(Request $request): Builder
+    {
+        $query = Admission::query()
+            ->where('status', 'approved')
+            ->whereNotNull('user_id')
+            ->whereHas('user', function (Builder $builder) {
+                $builder->whereNull('section_id');
+            });
+
+        if ($request->filled('grade_level')) {
+            $query->where('grade_level', $request->grade_level);
+        }
+
+        if ($request->filled('search')) {
+            $search = (string) $request->search;
+            $query->where(function (Builder $builder) use ($search) {
+                $builder->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('lrn', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        return $query;
+    }
+
+    private function buildEnrollmentsLiveSignature(Request $request, ?SchoolYear $selectedSchoolYear): string
+    {
+        $enrollmentsQuery = $this->buildEnrollmentsListQuery($request, $selectedSchoolYear, false);
+        $admissionsReadyQuery = $this->buildAdmissionsReadyQuery($request);
+
+        $enrollmentCount = (clone $enrollmentsQuery)->count();
+        $enrollmentStamp = $this->timestampOrZero((clone $enrollmentsQuery)->max('updated_at'));
+
+        $admissionsReadyCount = (clone $admissionsReadyQuery)->count();
+        $admissionsReadyStamp = $this->timestampOrZero((clone $admissionsReadyQuery)->max('updated_at'));
+
+        $statsBase = StudentEnrollment::query()
+            ->when($selectedSchoolYear, function (Builder $query) use ($selectedSchoolYear) {
+                $query->where('school_year_id', $selectedSchoolYear->id);
+            });
+
+        $pendingEnrollmentsCount = (clone $statsBase)->where('status', 'pending')->count();
+        $approvedCount = (clone $statsBase)->where('status', 'approved')->count();
+        $rejectedCount = (clone $statsBase)->where('status', 'rejected')->count();
+        $statsStamp = $this->timestampOrZero((clone $statsBase)->max('updated_at'));
+
+        return implode('|', [
+            $selectedSchoolYear?->id ?? 0,
+            $enrollmentCount,
+            $enrollmentStamp,
+            $admissionsReadyCount,
+            $admissionsReadyStamp,
+            $pendingEnrollmentsCount,
+            $approvedCount,
+            $rejectedCount,
+            $statsStamp,
+        ]);
+    }
+
+    private function timestampOrZero($value): int
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        return $timestamp !== false ? $timestamp : 0;
     }
 }

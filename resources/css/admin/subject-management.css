@@ -8,6 +8,14 @@
     background-color: transparent;
 }
 
+.subject-management-page .subject-overview-row {
+    cursor: pointer;
+}
+
+.subject-management-page .subject-overview-row td {
+    transition: background-color 0.16s ease;
+}
+
 .subject-management-page #subjectFiltersForm .form-control,
 .subject-management-page #subjectFiltersForm .form-select {
     height: 42px;

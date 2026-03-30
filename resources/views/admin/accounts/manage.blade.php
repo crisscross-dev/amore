@@ -92,7 +92,9 @@ $activeTab = 'students';
     });
 </script>
 
-<div class="dashboard-container">
+<div class="dashboard-container accounts-live-page"
+    data-live-url="{{ route('admin.accounts.live-signature') }}"
+    data-live-signature="{{ $accountsLiveSignature ?? '' }}">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -164,7 +166,7 @@ $activeTab = 'students';
 
                 <div class="header-title d-flex align-items-center justify-content-between mb-2">
                     <h5 class="mb-2 fw-semibold text-success">
-                        Manage Accounts
+                        Manage Account
                     </h5>
                     <!-- <div class="d-none d-lg-block">
                         <a href="{{ route('calendar.create') }}" class="btn btn-success btn-m">
@@ -175,21 +177,7 @@ $activeTab = 'students';
 
 
                 <!-- Flash Messages -->
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle"></i>
-                    <strong>Success!</strong> {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                @endif
 
-                @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-circle"></i>
-                    <strong>Error!</strong> {{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                @endif
 
                 <!-- Accounts Management -->
                 <div class="admissions-card">
@@ -197,7 +185,7 @@ $activeTab = 'students';
                         <ul class="nav nav-tabs" id="accountTabs" role="tablist">
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link {{ $activeTab === 'students' ? 'active' : '' }}" id="students-tab" data-bs-toggle="tab" data-bs-target="#students" type="button" role="tab" aria-controls="students" aria-selected="{{ $activeTab === 'students' ? 'true' : 'false' }}">
-                                    <i class="fas fa-user-graduate me-2"></i>Students
+                                    <i class="fas fa-user-graduate me-2"></i>Student
                                     <span class="badge bg-success ms-2">{{ $students->total() }}</span>
                                 </button>
                             </li>

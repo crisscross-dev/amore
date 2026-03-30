@@ -10,16 +10,10 @@
                 <p>Select your school level to begin the admission process</p>
             </div>
 
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
 
             <div class="selection-cards">
                 <!-- JHS Card -->
-                <div class="selection-card" onclick="window.location.href='{{ route('admissions.jhs') }}'">
+                <div class="selection-card" data-url="{{ route('admissions.jhs') }}" onclick="window.location.href=this.dataset.url">
                     <div class="selection-card-icon">
                         <i class="fas fa-graduation-cap"></i>
                     </div>
@@ -33,7 +27,7 @@
                 </div>
 
                 <!-- SHS Card -->
-                <div class="selection-card" onclick="window.location.href='{{ route('admissions.shs') }}'">
+                <div class="selection-card" data-url="{{ route('admissions.shs') }}" onclick="window.location.href=this.dataset.url">
                     <div class="selection-card-icon">
                         <i class="fas fa-user-graduate"></i>
                     </div>

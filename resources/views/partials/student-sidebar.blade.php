@@ -48,7 +48,7 @@
             <div class="nav-icon">
                 <i class="fas fa-bullhorn"></i>
             </div>
-            <div class="nav-label">Announcements</div>
+            <div class="nav-label">Announcement</div>
         </a>
 
         <div class="nav-section-title">Academic</div>
@@ -57,14 +57,14 @@
             <div class="nav-icon">
                 <i class="fas fa-book"></i>
             </div>
-            <div class="nav-label">My Subjects</div>
+            <div class="nav-label">Subject</div>
         </a>
 
         <a href="{{ route('student.grades.index') }}" class="nav-link {{ Request::routeIs('student.grades.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-graduation-cap"></i>
             </div>
-            <div class="nav-label">My Grades</div>
+            <div class="nav-label">Grade</div>
         </a>
 
         <a href="{{ route('student.enrollment.index') }}" class="nav-link {{ Request::routeIs('student.enrollment.*') ? 'active' : '' }}">

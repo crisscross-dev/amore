@@ -16,9 +16,6 @@
         <div class="row">
             <main class="col-12">
 
-                @if(session('success'))
-                <x-ui.alert type="success" :dismissible="true">{{ session('success') }}</x-ui.alert>
-                @endif
 
                 @if($errors->any())
                 <x-ui.alert type="danger" :dismissible="true">

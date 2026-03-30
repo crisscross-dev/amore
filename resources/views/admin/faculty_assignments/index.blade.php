@@ -11,7 +11,9 @@
 'resources/css/admin/faculty-management.css',
 ])
 
-<div class="dashboard-container">
+<div class="dashboard-container faculty-assignment-live-page"
+    data-live-url="{{ route('admin.faculty-assignments.live-signature') }}"
+    data-live-signature="{{ $facultyAssignmentsLiveSignature ?? '' }}">
     <div class="container-fluid px-4">
         <div class="row">
 
@@ -38,14 +40,30 @@
                             </option>
                             @endforeach
                         </select>
+
+                        <select name="department" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="">All departments</option>
+                            @foreach($departmentOptions as $department)
+                            <option value="{{ $department }}" {{ request('department') == $department ? 'selected' : '' }}>
+                                {{ $department }}
+                            </option>
+                            @endforeach
+                        </select>
+
+                        <select name="order_by" class="form-select form-select-sm" onchange="this.form.submit()">
+                            <option value="newest" {{ ($orderBy ?? request('order_by', 'newest')) === 'newest' ? 'selected' : '' }}>Newest to Oldest</option>
+                            <option value="oldest" {{ ($orderBy ?? request('order_by', 'newest')) === 'oldest' ? 'selected' : '' }}>Oldest to Newest</option>
+                            <option value="position_asc" {{ ($orderBy ?? request('order_by', 'newest')) === 'position_asc' ? 'selected' : '' }}>Position (Hierarchy: Higher to Lower)</option>
+                            <option value="position_desc" {{ ($orderBy ?? request('order_by', 'newest')) === 'position_desc' ? 'selected' : '' }}>Position (Hierarchy: Lower to Higher)</option>
+                            <option value="department_asc" {{ ($orderBy ?? request('order_by', 'newest')) === 'department_asc' ? 'selected' : '' }}>Department A-Z</option>
+                            <option value="department_desc" {{ ($orderBy ?? request('order_by', 'newest')) === 'department_desc' ? 'selected' : '' }}>Department Z-A</option>
+                        </select>
+
                         <input type="text" name="search" value="{{ request('search') }}" class="form-control form-control-sm" placeholder="Search name or email">
                     </form>
 
                 </div>
 
-                @if(session('success'))
-                <x-ui.alert type="success" :dismissible="true">{{ session('success') }}</x-ui.alert>
-                @endif
 
                 <div class="faculty-management-card faculty-management-table">
                     <div class="table-responsive">
@@ -141,7 +159,7 @@ $updateRouteTemplate = route('admin.faculty-assignments.update', ['user' => '__U
                     <div class="mb-3">
                         <label for="modalFacultyDepartment" class="form-label">Department</label>
                         <select id="modalFacultyDepartment" name="department" class="form-select">
-                            <option value="">No department</option>
+                            <option value="" selected>No Department</option>
                             @foreach($departmentOptions as $department)
                             <option value="{{ $department }}">{{ $department }}</option>
                             @endforeach
@@ -166,8 +184,14 @@ $updateRouteTemplate = route('admin.faculty-assignments.update', ['user' => '__U
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const livePageEl = document.querySelector('.faculty-assignment-live-page');
+        const liveUrl = livePageEl ? (livePageEl.getAttribute('data-live-url') || '') : '';
+        let liveSignature = livePageEl ? (livePageEl.getAttribute('data-live-signature') || '') : '';
+        let liveRequestInFlight = false;
+        let livePollTimer = null;
+        const livePollIntervalMs = 10000;
+
         const modal = document.getElementById('facultyAssignmentModal');
-        const modalInstance = bootstrap.Modal.getOrCreateInstance(modal);
         const form = document.getElementById('facultyAssignmentForm');
         const nameEl = document.getElementById('modalFacultyName');
         const positionEl = document.getElementById('modalFacultyPosition');
@@ -175,7 +199,170 @@ $updateRouteTemplate = route('admin.faculty-assignments.update', ['user' => '__U
         const currentPositionEl = document.getElementById('modalCurrentPosition');
         const currentAssignedEl = document.getElementById('modalCurrentAssigned');
         const currentAssignedByEl = document.getElementById('modalCurrentAssignedBy');
-        const updateRouteTemplate = form.getAttribute('data-route-template') || '';
+        const updateRouteTemplate = form ? (form.getAttribute('data-route-template') || '') : '';
+
+        if (!modal || !form || !nameEl || !positionEl || !departmentEl || !currentPositionEl || !currentAssignedEl || !currentAssignedByEl) {
+            return;
+        }
+
+        const getModalInstance = function() {
+            if (!window.bootstrap || !window.bootstrap.Modal) {
+                return null;
+            }
+
+            if (typeof window.bootstrap.Modal.getOrCreateInstance === 'function') {
+                return window.bootstrap.Modal.getOrCreateInstance(modal, {
+                    focus: false
+                });
+            }
+
+            if (typeof window.bootstrap.Modal.getInstance === 'function') {
+                const existingInstance = window.bootstrap.Modal.getInstance(modal);
+                if (existingInstance) {
+                    return existingInstance;
+                }
+            }
+
+            return new window.bootstrap.Modal(modal, {
+                focus: false
+            });
+        };
+
+        const showModalSafely = function() {
+            const instance = getModalInstance();
+            if (instance) {
+                instance.show();
+                return;
+            }
+
+            modal.classList.add('show');
+            modal.style.display = 'block';
+            modal.removeAttribute('aria-hidden');
+            modal.setAttribute('aria-modal', 'true');
+            document.body.classList.add('modal-open');
+
+            if (!document.querySelector('.modal-backdrop')) {
+                const backdrop = document.createElement('div');
+                backdrop.className = 'modal-backdrop fade show';
+                document.body.appendChild(backdrop);
+            }
+        };
+
+        const hideModalSafely = function() {
+            const instance = getModalInstance();
+            if (instance) {
+                instance.hide();
+            }
+
+            modal.classList.remove('show');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            modal.removeAttribute('aria-modal');
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+
+            Array.from(document.querySelectorAll('.modal-backdrop')).forEach(function(backdrop) {
+                backdrop.remove();
+            });
+        };
+
+        const buildLiveUrl = function() {
+            const url = new URL(liveUrl, window.location.origin);
+            const currentParams = new URLSearchParams(window.location.search);
+
+            currentParams.forEach(function(value, key) {
+                url.searchParams.set(key, value);
+            });
+
+            return url.toString();
+        };
+
+        const checkLiveSignature = async function() {
+            if (!liveUrl || liveRequestInFlight) {
+                return;
+            }
+
+            liveRequestInFlight = true;
+
+            try {
+                const response = await fetch(buildLiveUrl(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                const nextSignature = payload && payload.signature ? payload.signature : '';
+
+                if (!nextSignature) {
+                    return;
+                }
+
+                if (!liveSignature) {
+                    liveSignature = nextSignature;
+                    if (livePageEl) {
+                        livePageEl.setAttribute('data-live-signature', nextSignature);
+                    }
+                    return;
+                }
+
+                if (nextSignature !== liveSignature) {
+                    if (document.querySelector('.modal.show')) {
+                        return;
+                    }
+
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.debug('Faculty assignment live polling skipped:', error);
+            } finally {
+                liveRequestInFlight = false;
+            }
+        };
+
+        const startLivePolling = function() {
+            if (!liveUrl) {
+                return;
+            }
+
+            if (livePollTimer) {
+                clearInterval(livePollTimer);
+            }
+
+            livePollTimer = window.setInterval(function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            }, livePollIntervalMs);
+        };
+
+        const stopLivePolling = function() {
+            if (livePollTimer) {
+                clearInterval(livePollTimer);
+                livePollTimer = null;
+            }
+        };
+
+        if (liveUrl) {
+            startLivePolling();
+
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            });
+
+            window.addEventListener('beforeunload', function() {
+                stopLivePolling();
+            }, {
+                once: true
+            });
+        }
 
         const populateModalFromRow = function(row) {
             const userId = row.getAttribute('data-user-id') || '';
@@ -189,25 +376,49 @@ $updateRouteTemplate = route('admin.faculty-assignments.update', ['user' => '__U
             form.action = updateRouteTemplate.replace('__USER__', userId);
             nameEl.textContent = userName;
             positionEl.value = positionId;
-            departmentEl.value = department;
+            const hasDepartmentOption = Array.from(departmentEl.options).some(function(option) {
+                return option.value === department;
+            });
+            departmentEl.value = hasDepartmentOption ? department : '';
             currentPositionEl.textContent = currentPosition;
             currentAssignedEl.textContent = currentAssigned;
             currentAssignedByEl.textContent = currentAssignedBy;
         };
 
+        const openModalFromRow = function(row) {
+            populateModalFromRow(row);
+            showModalSafely();
+        };
+
         document.querySelectorAll('.faculty-row-clickable').forEach(function(row) {
             row.addEventListener('dblclick', function() {
-                populateModalFromRow(row);
-                modalInstance.show();
+                openModalFromRow(row);
             });
 
             row.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
+                if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
-                    populateModalFromRow(row);
-                    modalInstance.show();
+                    openModalFromRow(row);
                 }
             });
+        });
+
+        modal.querySelectorAll('[data-bs-dismiss="modal"]').forEach(function(closeTrigger) {
+            closeTrigger.addEventListener('click', function() {
+                hideModalSafely();
+            });
+        });
+
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                hideModalSafely();
+            }
+        });
+
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape' && modal.classList.contains('show')) {
+                hideModalSafely();
+            }
         });
     });
 </script>

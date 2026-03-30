@@ -9,19 +9,27 @@
 <!-- Faculty Edit Profile CSS -->
 @vite(['resources/css/faculty/dashboard-faculty-edit.css'])
 
-<div class="edit-profile-container">
+@php
+$liveUser = Auth::user()->loadMissing(['facultyPosition', 'positionAssignee']);
+$facultyProfileLiveSignature = implode('|', [
+    (int) ($liveUser->id ?? 0),
+    (int) ($liveUser->faculty_position_id ?? 0),
+    (string) ($liveUser->department ?? ''),
+    (int) ($liveUser->assigned_by ?? 0),
+    $liveUser->updated_at ? $liveUser->updated_at->timestamp : 0,
+    optional($liveUser->facultyPosition)->updated_at ? optional($liveUser->facultyPosition)->updated_at->timestamp : 0,
+    optional($liveUser->positionAssignee)->updated_at ? optional($liveUser->positionAssignee)->updated_at->timestamp : 0,
+]);
+@endphp
+
+<div class="edit-profile-container faculty-profile-live-page"
+    data-live-url="{{ route('profile.live-signature') }}"
+    data-live-signature="{{ $facultyProfileLiveSignature }}">
     <div class="container-fluid px-4 px-xl-5">
         <div class="row justify-content-center">
             <div class="col-12" style="max-width: 1600px;">
                 
                 <!-- Success Message -->
-                @if(session('success'))
-                    <div class="mb-3">
-                        <x-ui.alert type="success" :dismissible="true">
-                            <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                        </x-ui.alert>
-                    </div>
-                @endif
 
                 <!-- Error Messages -->
                 @if($errors->any())
@@ -110,8 +118,7 @@
                                         <x-form.input 
                                             id="middle_name" 
                                             name="middle_name" 
-                                            :value="old('middle_name', Auth::user()->middle_name)"
-                                            required 
+                                            :value="old('middle_name', Auth::user()->middle_name)" 
                                         />
                                     </div>
 
@@ -263,7 +270,7 @@
                                     <i class="fas fa-shield-alt"></i>
                                 </div>
                                 <h5 class="mb-4">
-                                    <i class="fas fa-lock me-2"></i>Security Settings
+                                    <i class="fas fa-lock me-2"></i>Security Setting
                                 </h5>
 
                                 <div class="alert alert-info border-0">
@@ -272,6 +279,22 @@
                                 </div>
 
                                 <div class="row g-3">
+                                    <!-- Old Password -->
+                                    <div class="col-12">
+                                        <x-form.label for="current_password">
+                                            <i class="fas fa-unlock-alt me-1"></i>Old Password
+                                        </x-form.label>
+                                        <x-form.input 
+                                            type="password"
+                                            id="current_password" 
+                                            name="current_password" 
+                                            placeholder="Enter your current password"
+                                        />
+                                        <small class="text-muted">
+                                            <i class="fas fa-shield-alt me-1"></i>Required before changing password
+                                        </small>
+                                    </div>
+
                                     <!-- New Password -->
                                     <div class="col-md-6">
                                         <x-form.label for="password">
@@ -344,6 +367,104 @@ document.getElementById('profilePictureInput').addEventListener('change', functi
             document.getElementById('profilePreview').src = e.target.result;
         }
         reader.readAsDataURL(file);
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const liveContainer = document.querySelector('.faculty-profile-live-page');
+    const liveUrl = liveContainer ? (liveContainer.getAttribute('data-live-url') || '') : '';
+    let liveSignature = liveContainer ? (liveContainer.getAttribute('data-live-signature') || '') : '';
+    let liveRequestInFlight = false;
+    let liveTimer = null;
+    let isFormDirty = false;
+
+    const profileForm = document.querySelector("form[action='{{ route('profile.update') }}']");
+    if (profileForm) {
+        profileForm.addEventListener('input', function() {
+            isFormDirty = true;
+        });
+
+        profileForm.addEventListener('change', function() {
+            isFormDirty = true;
+        });
+
+        profileForm.addEventListener('submit', function() {
+            isFormDirty = false;
+        });
+    }
+
+    const buildLiveUrl = function() {
+        const url = new URL(liveUrl, window.location.origin);
+        const currentParams = new URLSearchParams(window.location.search);
+
+        currentParams.forEach(function(value, key) {
+            url.searchParams.set(key, value);
+        });
+
+        return url.toString();
+    };
+
+    const checkLiveSignature = async function() {
+        if (!liveUrl || liveRequestInFlight) {
+            return;
+        }
+
+        liveRequestInFlight = true;
+
+        try {
+            const response = await fetch(buildLiveUrl(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const payload = await response.json();
+            const nextSignature = payload && payload.signature ? payload.signature : '';
+
+            if (!nextSignature) {
+                return;
+            }
+
+            if (nextSignature !== liveSignature) {
+                if (isFormDirty) {
+                    return;
+                }
+
+                window.location.reload();
+            }
+        } catch (error) {
+            console.debug('Faculty profile live polling skipped:', error);
+        } finally {
+            liveRequestInFlight = false;
+        }
+    };
+
+    if (liveUrl) {
+        liveTimer = window.setInterval(function() {
+            if (!document.hidden) {
+                checkLiveSignature();
+            }
+        }, 10000);
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkLiveSignature();
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (liveTimer) {
+                clearInterval(liveTimer);
+                liveTimer = null;
+            }
+        }, {
+            once: true
+        });
     }
 });
 </script>

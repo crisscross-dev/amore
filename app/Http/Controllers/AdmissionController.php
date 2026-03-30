@@ -40,6 +40,8 @@ class AdmissionController extends Controller
      */
     public function jhsStore(Request $request)
     {
+        $this->mergeAddressFromParts($request);
+
         $rules = $this->getValidationRules($request);
         $rules['grade_level'] = 'required|in:Grade 7,Grade 8,Grade 9,Grade 10';
 
@@ -59,6 +61,10 @@ class AdmissionController extends Controller
 
         // Save to database
         $admission = Admission::create($data);
+        if (empty($admission->applicant_id)) {
+            $admission->applicant_id = strtoupper($admission->school_level) . '-' . now()->format('Y') . '-' . str_pad((string) $admission->id, 4, '0', STR_PAD_LEFT);
+            $admission->save();
+        }
 
         // Redirect to requirements page with admission details
         return redirect()
@@ -71,6 +77,8 @@ class AdmissionController extends Controller
      */
     public function shsStore(Request $request)
     {
+        $this->mergeAddressFromParts($request);
+
         $rules = $this->getValidationRules($request);
         $rules['grade_level'] = 'required|in:Grade 11,Grade 12';
 
@@ -98,6 +106,10 @@ class AdmissionController extends Controller
 
         // Save to database
         $admission = Admission::create($data);
+        if (empty($admission->applicant_id)) {
+            $admission->applicant_id = strtoupper($admission->school_level) . '-' . now()->format('Y') . '-' . str_pad((string) $admission->id, 4, '0', STR_PAD_LEFT);
+            $admission->save();
+        }
 
         // Redirect to requirements page with admission details
         return redirect()
@@ -124,13 +136,16 @@ class AdmissionController extends Controller
             'last_name' => 'required|string|max:255',
             'first_name' => 'required|string|max:255',
             'middle_name' => 'nullable|string|max:255',
+            'suffix' => 'nullable|string|max:50',
             'dob' => 'required|date',
             'age' => 'required|integer|min:1|max:100',
             'gender' => 'required|in:Male,Female',
             'citizenship' => 'required|string|max:255',
             'religion' => 'required|string|max:255',
-            'height' => 'required|numeric|min:0|max:999.99',
-            'weight' => 'required|numeric|min:0|max:999.99',
+            'address_street' => 'required|string|max:255',
+            'address_barangay' => 'required|string|max:255',
+            'address_city' => 'required|string|max:255',
+            'address_province' => 'required|string|max:255',
             'address' => 'required|string|max:500',
             'phone' => 'required|string|max:20',
             'email' => 'required|email|max:255',
@@ -160,6 +175,25 @@ class AdmissionController extends Controller
         }
 
         return $rules;
+    }
+
+    private function mergeAddressFromParts(Request $request): void
+    {
+        $street = trim((string) $request->input('address_street', ''));
+        $barangay = trim((string) $request->input('address_barangay', ''));
+        $city = trim((string) $request->input('address_city', ''));
+        $province = trim((string) $request->input('address_province', ''));
+
+        $parts = [$street, $barangay, $city, $province];
+        $filledParts = array_filter($parts, static fn(string $part): bool => $part !== '');
+
+        $request->merge([
+            'address_street' => $street,
+            'address_barangay' => $barangay,
+            'address_city' => $city,
+            'address_province' => $province,
+            'address' => implode(', ', $filledParts),
+        ]);
     }
 
     public function showAdmissionForm()
@@ -198,8 +232,6 @@ class AdmissionController extends Controller
         if ($admissionType === 'shs') {
             $rules = array_merge($rules, [
                 'citizenship' => 'required|string|max:255',
-                'height' => 'nullable|numeric|min:100|max:250',
-                'weight' => 'nullable|numeric|min:20|max:200',
                 'phone_number' => 'required|string|max:20',
                 'email' => 'required|email|max:255',
                 'strand' => 'required|in:STEM,ABM,HUMSS,GAS,TVL',

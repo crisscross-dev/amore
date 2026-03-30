@@ -23,6 +23,7 @@ class Admission extends Model
         'last_name',
         'first_name',
         'middle_name',
+        'suffix',
         'dob',
         'age',
         'gender',
@@ -89,7 +90,7 @@ class Admission extends Model
      */
     public function getFullNameAttribute()
     {
-        return trim("{$this->first_name} {$this->middle_name} {$this->last_name}");
+        return trim("{$this->first_name} {$this->middle_name} {$this->last_name} {$this->suffix}");
     }
 
     /**
@@ -151,5 +152,17 @@ class Admission extends Model
     public function getSchoolLevelDisplayAttribute()
     {
         return strtoupper($this->school_level);
+    }
+
+    public function getApplicantIdDisplayAttribute(): string
+    {
+        if (! empty($this->applicant_id)) {
+            return (string) $this->applicant_id;
+        }
+
+        $prefix = strtoupper((string) ($this->school_level ?? 'adm'));
+        $year = $this->created_at ? $this->created_at->format('Y') : now()->format('Y');
+
+        return $prefix . '-' . $year . '-' . str_pad((string) $this->id, 4, '0', STR_PAD_LEFT);
     }
 }

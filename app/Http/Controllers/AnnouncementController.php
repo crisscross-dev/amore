@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Announcement;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -15,44 +16,13 @@ class AnnouncementController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
-        $query = Announcement::with(['createdBy', 'updatedBy'])
-            ->active()
-            ->orderBy('is_pinned', 'desc')
-            ->orderBy('created_at', 'desc');
 
-        // Filter based on user type and authentication status
-        if ($user) {
-            if ($user->account_type === 'student') {
-                $query->whereIn('target_audience', ['public', 'all', 'students']);
-            } elseif ($user->account_type === 'faculty') {
-                $query->whereIn('target_audience', ['public', 'all', 'faculty']);
-            }
-            // Admin sees all announcements - no filter needed
-        } else {
-            // Guests see only 'public' and 'all' announcements
-            $query->whereIn('target_audience', ['public', 'all']);
-        }
-
-        // Search functionality
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('title', 'like', '%' . $request->search . '%')
-                  ->orWhere('content', 'like', '%' . $request->search . '%');
-            });
-        }
-
-        // Filter by priority
-        if ($request->filled('priority')) {
-            $query->where('priority', $request->priority);
-        }
-
-        // Filter by audience
-        if ($request->filled('audience')) {
-            $query->where('audience', $request->audience);
-        }
+        $query = $this->buildAnnouncementsQuery($user, $request, true);
 
         $announcements = $query->paginate(10);
+        $announcementLiveSignature = $this->buildAnnouncementSignature(
+            $this->buildAnnouncementsQuery($user, $request, false)
+        );
         
         // Determine view based on role
         $view = match($user->account_type) {
@@ -62,7 +32,21 @@ class AnnouncementController extends Controller
             default => abort(403, 'Unauthorized access')
         };
 
-        return view($view, compact('announcements'));
+        return view($view, compact('announcements', 'announcementLiveSignature'));
+    }
+
+    /**
+     * Lightweight polling endpoint used to detect announcement list updates.
+     */
+    public function liveSignature(Request $request)
+    {
+        $user = Auth::user();
+        $query = $this->buildAnnouncementsQuery($user, $request, false);
+
+        return response()->json([
+            'signature' => $this->buildAnnouncementSignature($query),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     /**
@@ -230,5 +214,70 @@ class AnnouncementController extends Controller
             : 'Announcement unpinned successfully!';
 
         return redirect()->back()->with('success', $message);
+    }
+
+    private function buildAnnouncementsQuery($user, Request $request, bool $withRelations): Builder
+    {
+        $query = Announcement::query()
+            ->when($withRelations, function (Builder $builder) {
+                $builder->with(['createdBy', 'updatedBy']);
+            })
+            ->active()
+            ->orderBy('is_pinned', 'desc')
+            ->orderBy('created_at', 'desc');
+
+        if ($user) {
+            if ($user->account_type === 'student') {
+                $query->whereIn('target_audience', ['public', 'all', 'students']);
+            } elseif ($user->account_type === 'faculty') {
+                $query->whereIn('target_audience', ['public', 'all', 'faculty']);
+            }
+        } else {
+            $query->whereIn('target_audience', ['public', 'all']);
+        }
+
+        if ($request->filled('search')) {
+            $search = (string) $request->search;
+            $query->where(function (Builder $builder) use ($search) {
+                $builder->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('content', 'like', '%' . $search . '%');
+            });
+        }
+
+        if ($request->filled('priority')) {
+            $query->where('priority', $request->priority);
+        }
+
+        if ($request->filled('audience')) {
+            $query->where('audience', $request->audience);
+        }
+
+        return $query;
+    }
+
+    private function buildAnnouncementSignature(Builder $query): string
+    {
+        $count = (clone $query)->count();
+        $latestCreatedAt = (clone $query)->max('created_at');
+        $latestUpdatedAt = (clone $query)->max('updated_at');
+        $pinnedCount = (clone $query)->where('is_pinned', true)->count();
+
+        return implode('|', [
+            $count,
+            $pinnedCount,
+            $this->timestampOrZero($latestCreatedAt),
+            $this->timestampOrZero($latestUpdatedAt),
+        ]);
+    }
+
+    private function timestampOrZero($value): int
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        return $timestamp !== false ? $timestamp : 0;
     }
 }

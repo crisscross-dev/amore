@@ -84,12 +84,6 @@
 
       <main class="col-12">
 
-        @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-          {{ session('success') }}
-          <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-        @endif
 
         @if($errors->any())
         <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -103,111 +97,80 @@
         </div>
         @endif
 
-        <div class="faculty-management-card faculty-management-table">
-          @php
-          $mapehComponentNamesByGrade = [
-          7 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-          8 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-          9 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
-          10 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
-          ];
-
-          $groupedAssignments = $assignments
-          ->groupBy(function ($assignment) use ($mapehComponentNamesByGrade) {
-          $gradeNumber = null;
-          if (preg_match('/(7|8|9|10|11|12)/', (string) (optional($assignment->section)->grade_level ?? ''), $gradeMatch)) {
-          $gradeNumber = (int) $gradeMatch[1];
-          }
-
-          $subjectName = (string) (optional($assignment->subject)->name ?? '');
-          $mapehNames = $mapehComponentNamesByGrade[$gradeNumber] ?? [];
-          $normalizedSubject = !empty($mapehNames) && in_array($subjectName, $mapehNames, true)
-          ? 'MAPEH'
-          : strtolower(trim($subjectName ?: 'n/a'));
-
-          return ((int) $assignment->section_id) . '|' . $normalizedSubject;
-          })
-          ->map(function ($items) use ($mapehComponentNamesByGrade) {
-          $representative = $items->first(function ($assignment) {
-          return (bool) (optional($assignment)->day_of_week || optional($assignment)->start_time || optional($assignment)->room);
-          }) ?? $items->first();
-
-          $gradeNumber = null;
-          if (preg_match('/(7|8|9|10|11|12)/', (string) (optional($representative->section)->grade_level ?? ''), $gradeMatch)) {
-          $gradeNumber = (int) $gradeMatch[1];
-          }
-
-          $mapehNames = $mapehComponentNamesByGrade[$gradeNumber] ?? [];
-          $isMapeh = $items->contains(function ($assignment) use ($mapehNames) {
-          $name = (string) (optional($assignment->subject)->name ?? '');
-          return !empty($mapehNames) && in_array($name, $mapehNames, true);
-          });
-
-          return (object) [
-          'assignment' => $representative,
-          'subject_name' => $isMapeh ? 'MAPEH' : (optional($representative->subject)->name ?? 'N/A'),
-          ];
-          })
-          ->values();
-          @endphp
-
-          <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0 text-success">
-              <i class="fas fa-table me-2 text-success"></i>
-              Subject Grade Entry
-            </h5>
-            <span class="badge bg-success bg-opacity-75">{{ $groupedAssignments->count() }} assignment{{ $groupedAssignments->count() === 1 ? '' : 's' }}</span>
-          </div>
-
-          <div class="grade-cards-wrap">
-            @forelse($groupedAssignments as $grouped)
-            @php
-            $assignment = $grouped->assignment;
-            $section = $assignment->section;
-            $studentsTotal = (int) ($studentCounts[$assignment->section_id] ?? 0);
-            @endphp
-            <a href="{{ route('faculty.grades.assignment', $assignment) }}" class="grade-card">
-              <div class="grade-card-preview">
-                <div class="card-head">
-                  <div>
-                    <div class="hierarchy-label">Subject</div>
-                    <div class="hierarchy-value">{{ $grouped->subject_name }}</div>
-                  </div>
-                  <div class="text-md-end">
-                    <div class="hierarchy-label">Section</div>
-                    <div class="hierarchy-value">{{ $section->name ?? 'N/A' }}</div>
-                  </div>
-                </div>
-
-                <div class="meta-item">
-                  <div class="d-flex flex-wrap gap-3">
-                    <span><strong>Grade Level:</strong> {{ $section->grade_level ?? 'N/A' }}</span>
-                    <span><strong>Students:</strong> {{ $studentsTotal }}</span>
-                    <span><strong>Schedule:</strong>
-                      @if($assignment->day_of_week && $assignment->start_time && $assignment->end_time)
-                      {{ $assignment->day_of_week }}, {{ substr($assignment->start_time, 0, 5) }} - {{ substr($assignment->end_time, 0, 5) }}
-                      @else
-                      TBA
-                      @endif
-                    </span>
-                    <span><strong>Room:</strong> {{ $assignment->room ?: 'TBA' }}</span>
-                  </div>
-                </div>
-
-                <div class="open-hint"><i class="fas fa-arrow-right me-1"></i>Click card to manage student grades</div>
-              </div>
-            </a>
-            @empty
-            <div class="faculty-management-empty">
-              <i class="fas fa-graduation-cap"></i>
-              <h5 class="fw-semibold mb-2 text-success">No subject assignments found</h5>
-              <p class="mb-0">Ask admin to assign a section and subject to start grading.</p>
-            </div>
-            @endforelse
-          </div>
-        </div>
+        @include('faculty.grades.partials.index-live-section')
       </main>
     </div>
   </div>
 </div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    var liveSectionEl = document.getElementById('facultyManageGradesLiveSection');
+    var pollingTimerId = null;
+    var isRefreshing = false;
+
+    function refreshManageGradesSection() {
+      if (!liveSectionEl || isRefreshing || document.hidden) {
+        return;
+      }
+
+      var liveUrl = liveSectionEl.getAttribute('data-live-url');
+      if (!liveUrl) {
+        return;
+      }
+
+      isRefreshing = true;
+
+      fetch(liveUrl, {
+          headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+          }
+        })
+        .then(function(response) {
+          if (!response.ok) {
+            throw new Error('Live update request failed');
+          }
+
+          return response.json();
+        })
+        .then(function(payload) {
+          if (!payload || !payload.html) {
+            return;
+          }
+
+          var tempWrapper = document.createElement('div');
+          tempWrapper.innerHTML = payload.html.trim();
+          var freshSection = tempWrapper.firstElementChild;
+
+          if (!freshSection) {
+            return;
+          }
+
+          liveSectionEl.replaceWith(freshSection);
+          liveSectionEl = freshSection;
+        })
+        .catch(function() {
+          // Silently ignore polling failures to avoid interrupting navigation.
+        })
+        .finally(function() {
+          isRefreshing = false;
+        });
+    }
+
+    pollingTimerId = window.setInterval(refreshManageGradesSection, 10000);
+
+    document.addEventListener('visibilitychange', function() {
+      if (!document.hidden) {
+        refreshManageGradesSection();
+      }
+    });
+
+    window.addEventListener('beforeunload', function() {
+      if (pollingTimerId) {
+        window.clearInterval(pollingTimerId);
+      }
+    });
+  });
+</script>
 @endsection

@@ -8,6 +8,13 @@ import { Alert, Modal } from "bootstrap";
 class AdmissionsManager {
     constructor() {
         this.selectedAdmissions = new Set();
+        this.liveContainer = document.querySelector(".admissions-live-page");
+        this.liveUrl = this.liveContainer?.dataset.liveUrl || "";
+        this.liveSignature = this.liveContainer?.dataset.liveSignature || "";
+        this.liveMode = this.liveContainer?.dataset.liveMode || "pending";
+        this.liveRequestInFlight = false;
+        this.livePollTimer = null;
+        this.livePollIntervalMs = 10000;
         this.init();
     }
 
@@ -16,6 +23,109 @@ class AdmissionsManager {
         this.setupBulkActions();
         this.setupFilters();
         this.setupRowPreviewModals();
+        this.initLiveUpdates();
+    }
+
+    initLiveUpdates() {
+        if (!this.liveUrl || !this.liveContainer) {
+            return;
+        }
+
+        this.startLivePolling();
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                this.checkLiveSignature();
+            }
+        });
+
+        window.addEventListener(
+            "beforeunload",
+            () => {
+                this.stopLivePolling();
+            },
+            { once: true },
+        );
+    }
+
+    startLivePolling() {
+        this.stopLivePolling();
+
+        this.livePollTimer = window.setInterval(() => {
+            if (!document.hidden) {
+                this.checkLiveSignature();
+            }
+        }, this.livePollIntervalMs);
+    }
+
+    stopLivePolling() {
+        if (this.livePollTimer) {
+            clearInterval(this.livePollTimer);
+            this.livePollTimer = null;
+        }
+    }
+
+    buildLiveUrl() {
+        const url = new URL(this.liveUrl, window.location.origin);
+        const currentParams = new URLSearchParams(window.location.search);
+
+        currentParams.forEach((value, key) => {
+            url.searchParams.set(key, value);
+        });
+
+        url.searchParams.set("mode", this.liveMode === "approved" ? "approved" : "pending");
+
+        return url;
+    }
+
+    anyModalOpen() {
+        return !!document.querySelector(".modal.show");
+    }
+
+    async checkLiveSignature() {
+        if (!this.liveUrl || this.liveRequestInFlight) {
+            return;
+        }
+
+        this.liveRequestInFlight = true;
+
+        try {
+            const response = await fetch(this.buildLiveUrl(), {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    Accept: "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const payload = await response.json();
+            const nextSignature = payload?.signature || "";
+
+            if (!nextSignature) {
+                return;
+            }
+
+            if (!this.liveSignature) {
+                this.liveSignature = nextSignature;
+                this.liveContainer.dataset.liveSignature = nextSignature;
+                return;
+            }
+
+            if (nextSignature !== this.liveSignature) {
+                if (this.anyModalOpen()) {
+                    return;
+                }
+
+                window.location.reload();
+            }
+        } catch (error) {
+            console.debug("Admissions live polling skipped:", error);
+        } finally {
+            this.liveRequestInFlight = false;
+        }
     }
 
     /**

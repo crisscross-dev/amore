@@ -30,12 +30,20 @@
         <!-- Search Filter -->
         <div class="faculty-management-card mb-4 p-3">
           <form method="GET" class="row g-3">
-            <div class="col-md-10">
+            <div class="col-md-6">
               <input type="text" name="search" class="form-control" placeholder="Search by name or email..." value="{{ request('search') }}">
+            </div>
+            <div class="col-md-4">
+              <select name="department" class="form-select">
+                <option value="">All Departments</option>
+                @foreach($departments as $department)
+                  <option value="{{ $department }}" {{ request('department') === $department ? 'selected' : '' }}>{{ $department }}</option>
+                @endforeach
+              </select>
             </div>
             <div class="col-md-2">
               <button type="submit" class="btn btn-success w-100">
-                <i class="fas fa-search me-2"></i>Search
+                <i class="fas fa-filter me-2"></i>Filter
               </button>
             </div>
           </form>
@@ -43,8 +51,8 @@
 
         <div class="faculty-management-card faculty-management-table">
           <div class="d-flex justify-content-between align-items-center mb-3">
-            <h5 class="mb-0"><i class="fas fa-list me-2 text-success"></i>Faculty Members</h5>
-            <span class="badge bg-success bg-opacity-75">{{ $faculties->count() }} members</span>
+            <h5 class="mb-0 text-success"><i class="fas fa-list me-2"></i>Faculty Members</h5>
+            <span class="badge bg-success bg-opacity-75">{{ $faculties->total() }} Faculty</span>
           </div>
 
           <div class="table-responsive">
@@ -60,7 +68,7 @@
               <tbody>
                 @forelse($faculties as $index => $faculty)
                   <tr>
-                    <td>{{ $index + 1 }}</td>
+                    <td>{{ $faculties->firstItem() + $index }}</td>
                     <td>{{ $faculty->last_name }}, {{ $faculty->first_name }} {{ $faculty->middle_name }}</td>
                     <td>{{ $faculty->email }}</td>
                     <td>{{ $faculty->department ?? 'Not Assigned' }}</td>
@@ -79,6 +87,12 @@
               </tbody>
             </table>
           </div>
+
+          @if($faculties->hasPages())
+          <div class="mt-3 d-flex justify-content-center">
+            {{ $faculties->links('pagination::bootstrap-5') }}
+          </div>
+          @endif
         </div>
       </main>
     </div>
@@ -86,6 +100,16 @@
 </div>
 
 <style>
+.faculty-management-table h5,
+.faculty-management-table th,
+.faculty-management-table td {
+  color: #1f2937;
+}
+
+.faculty-management-table thead th {
+  font-weight: 700;
+}
+
 @media print {
   .welcome-card button,
   .welcome-card a,

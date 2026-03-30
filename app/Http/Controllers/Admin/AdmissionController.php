@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Admission;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -18,32 +19,22 @@ class AdmissionController extends Controller
      */
     public function approved(Request $request)
     {
-        $type = $request->get('type', 'all'); // all, jhs, shs
+        $type = $request->get('type', 'all');
         $search = $request->get('search', '');
-
-        // Fetch only approved admissions
-        $query = Admission::with(['user', 'approvedBy'])->where('status', 'approved');
-
-        // Apply type filter
-        if ($type === 'jhs') {
-            $query->where('school_level', 'jhs');
-        } elseif ($type === 'shs') {
-            $query->where('school_level', 'shs');
-        }
-
-        // Apply search filter
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('lrn', 'like', "%{$search}%")
-                    ->orWhere('applicant_id', 'like', "%{$search}%");
-            });
-        }
+        $query = $this->buildAdmissionsQuery($request, 'approved', true);
 
         $admissions = $query->latest()->paginate(15);
+        $admissionsLiveSignature = $this->buildAdmissionsLiveSignature(
+            $this->buildAdmissionsQuery($request, 'approved', false),
+            'approved'
+        );
 
-        return view('admin.admissions.approved', compact('admissions', 'type', 'search'));
+        return view('admin.admissions.approved', compact(
+            'admissions',
+            'type',
+            'search',
+            'admissionsLiveSignature'
+        ));
     }
 
     /**
@@ -51,32 +42,10 @@ class AdmissionController extends Controller
      */
     public function index(Request $request)
     {
-        $type = $request->get('type', 'all'); // all, jhs, shs
+        $type = $request->get('type', 'all');
         $search = $request->get('search', '');
         $status = $request->get('status', 'all');
-
-        // Only show pending and rejected admissions unless status filter is set
-        $statuses = ($status === 'all') ? ['pending', 'rejected'] : [$status];
-
-        // Base query
-        $query = Admission::with(['user', 'approvedBy'])->whereIn('status', $statuses);
-
-        // Apply type filter
-        if ($type === 'jhs') {
-            $query->where('school_level', 'jhs');
-        } elseif ($type === 'shs') {
-            $query->where('school_level', 'shs');
-        }
-
-        // Apply search filter
-        if (!empty($search)) {
-            $query->where(function ($q) use ($search) {
-                $q->where('first_name', 'like', "%{$search}%")
-                    ->orWhere('last_name', 'like', "%{$search}%")
-                    ->orWhere('lrn', 'like', "%{$search}%")
-                    ->orWhere('applicant_id', 'like', "%{$search}%");
-            });
-        }
+        $query = $this->buildAdmissionsQuery($request, 'pending', true);
 
         $admissions = $query->latest()->paginate(15);
 
@@ -90,7 +59,33 @@ class AdmissionController extends Controller
             'shs_total' => Admission::shs()->count(),
         ];
 
-        return view('admin.admissions.index', compact('admissions', 'stats', 'type', 'status', 'search'));
+        $admissionsLiveSignature = $this->buildAdmissionsLiveSignature(
+            $this->buildAdmissionsQuery($request, 'pending', false),
+            'pending'
+        );
+
+        return view('admin.admissions.index', compact(
+            'admissions',
+            'stats',
+            'type',
+            'status',
+            'search',
+            'admissionsLiveSignature'
+        ));
+    }
+
+    /**
+     * Lightweight polling endpoint for admissions queue updates.
+     */
+    public function liveSignature(Request $request)
+    {
+        $mode = $request->string('mode')->lower()->value() === 'approved' ? 'approved' : 'pending';
+        $query = $this->buildAdmissionsQuery($request, $mode, false);
+
+        return response()->json([
+            'signature' => $this->buildAdmissionsLiveSignature($query, $mode),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     /**
@@ -328,5 +323,73 @@ class AdmissionController extends Controller
             DB::rollBack();
             return back()->with('error', 'Bulk action failed: ' . $e->getMessage());
         }
+    }
+
+    private function buildAdmissionsQuery(Request $request, string $mode, bool $withRelations): Builder
+    {
+        $type = (string) $request->get('type', 'all');
+        $search = (string) $request->get('search', '');
+        $status = (string) $request->get('status', 'all');
+
+        $query = Admission::query();
+
+        if ($withRelations) {
+            $query->with(['user', 'approvedBy']);
+        }
+
+        if ($mode === 'approved') {
+            $query->where('status', 'approved');
+        } else {
+            $statuses = ($status === 'all') ? ['pending', 'rejected'] : [$status];
+            $query->whereIn('status', $statuses);
+        }
+
+        if ($type === 'jhs') {
+            $query->where('school_level', 'jhs');
+        } elseif ($type === 'shs') {
+            $query->where('school_level', 'shs');
+        }
+
+        if ($search !== '') {
+            $query->where(function (Builder $builder) use ($search) {
+                $builder->where('first_name', 'like', "%{$search}%")
+                    ->orWhere('last_name', 'like', "%{$search}%")
+                    ->orWhere('lrn', 'like', "%{$search}%")
+                    ->orWhere('applicant_id', 'like', "%{$search}%");
+            });
+        }
+
+        return $query;
+    }
+
+    private function buildAdmissionsLiveSignature(Builder $filteredQuery, string $mode): string
+    {
+        $filteredCount = (clone $filteredQuery)->count();
+        $filteredUpdatedStamp = $this->timestampOrZero((clone $filteredQuery)->max('updated_at'));
+        $pendingCount = Admission::query()->where('status', 'pending')->count();
+        $approvedCount = Admission::query()->where('status', 'approved')->count();
+        $rejectedCount = Admission::query()->where('status', 'rejected')->count();
+        $globalUpdatedStamp = $this->timestampOrZero(Admission::query()->max('updated_at'));
+
+        return implode('|', [
+            $mode,
+            $filteredCount,
+            $filteredUpdatedStamp,
+            $pendingCount,
+            $approvedCount,
+            $rejectedCount,
+            $globalUpdatedStamp,
+        ]);
+    }
+
+    private function timestampOrZero($value): int
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        return $timestamp !== false ? $timestamp : 0;
     }
 }

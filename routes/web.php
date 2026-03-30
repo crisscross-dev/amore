@@ -14,11 +14,11 @@ use App\Http\Controllers\Faculty\SubjectBrowseController;
 use App\Http\Controllers\Faculty\SectionBrowseController;
 use App\Http\Controllers\Admin\GradeApprovalController;
 use App\Http\Controllers\Faculty\GradeController as FacultyGradeController;
-use App\Http\Controllers\Faculty\GradeImportController;
 use App\Http\Controllers\Student\GradeController as StudentGradeController;
 use App\Http\Controllers\Student\SubjectController as StudentSubjectController;
 use App\Http\Controllers\Faculty\DepartmentHeadSubjectController;
 use App\Http\Controllers\Shared\ProfileController;
+use App\Http\Controllers\Shared\ProfilePictureController;
 use App\Http\Controllers\Admin\SectionController;
 use App\Http\Controllers\Admin\SectionAssignmentController;
 use App\Http\Controllers\Admin\StudentSectionController;
@@ -48,10 +48,15 @@ Route::post('/login/auth', [LoginController::class, 'login'])->name('loginAuth')
 
 // Registration Routes
 Route::get('/register', [RegistrationController::class, 'showRegistration'])->name('register');
+Route::post('/register/access-code', [RegistrationController::class, 'verifyFacultyAccess'])->name('register.access.verify');
 Route::post('/register', [RegistrationController::class, 'register'])->name('register.store');
 
 // LRN Validation API Route (for AJAX validation)
 Route::post('/api/validate-lrn', [RegistrationController::class, 'validateLRN'])->name('api.validate-lrn');
+
+Route::get('/uploads/profile_picture/{filename}', [ProfilePictureController::class, 'show'])
+    ->where('filename', '[A-Za-z0-9._-]+')
+    ->name('profile-picture.show');
 
 // Password Reset Routes
 Route::get('/forgot-password', [PasswordResetController::class, 'create'])->name('password.request');
@@ -77,6 +82,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard/student', [StudentDashboardController::class, 'index'])->name('dashboard.student');
     Route::get('/dashboard/faculty', [FacultyDashboardController::class, 'index'])->name('dashboard.faculty');
     Route::get('/dashboard/admin', [AdminDashboardController::class, 'index'])->name('dashboard.admin');
+    Route::get('/dashboard/admin/live-section', [AdminDashboardController::class, 'liveSection'])->name('dashboard.admin.live-section');
+    Route::get('/admin/sidebar-badges', [\App\Http\Controllers\Admin\AdminController::class, 'sidebarBadges'])
+        ->middleware('admin')
+        ->name('admin.sidebar-badges');
 
     // Calendar Routes (accessible by all authenticated users)
     Route::prefix('calendar')->name('calendar.')->group(function () {
@@ -84,6 +93,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/create', [CalendarController::class, 'create'])->name('create');
         Route::post('/store', [CalendarController::class, 'store'])->name('store');
         Route::get('/all', [CalendarController::class, 'allEvents'])->name('all');
+        Route::get('/live-signature', [CalendarController::class, 'liveSignature'])->name('live-signature');
         Route::get('/show/{year}/{month}/{day}', [CalendarController::class, 'show'])->name('show');
         Route::get('/{event}/edit', [CalendarController::class, 'edit'])->name('edit');
         Route::put('/{event}', [CalendarController::class, 'update'])->name('update');
@@ -96,6 +106,7 @@ Route::middleware(['auth'])->group(function () {
     // Announcement Routes (Admin only)
     Route::prefix('announcements')->name('announcements.')->group(function () {
         Route::get('/', [AnnouncementController::class, 'index'])->name('index');
+        Route::get('/live-signature', [AnnouncementController::class, 'liveSignature'])->name('live-signature');
         Route::get('/create', [AnnouncementController::class, 'create'])->name('create');
         Route::post('/', [AnnouncementController::class, 'store'])->name('store');
         Route::get('/{announcement}', [AnnouncementController::class, 'show'])->name('show');
@@ -109,6 +120,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('admin/admissions')->name('admin.admissions.')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\AdmissionController::class, 'index'])->name('index');
         Route::get('/approved', [\App\Http\Controllers\Admin\AdmissionController::class, 'approved'])->name('approved');
+        Route::get('/live-signature', [\App\Http\Controllers\Admin\AdmissionController::class, 'liveSignature'])->name('live-signature');
         Route::get('/{type}/{id}', [\App\Http\Controllers\Admin\AdmissionController::class, 'show'])->name('show');
         Route::patch('/{type}/{id}/approve', [\App\Http\Controllers\Admin\AdmissionController::class, 'approve'])->name('approve');
         Route::patch('/{type}/{id}/reject', [\App\Http\Controllers\Admin\AdmissionController::class, 'reject'])->name('reject');
@@ -119,6 +131,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin Account Management Routes
     Route::prefix('admin/accounts')->name('admin.accounts.')->group(function () {
         Route::get('/manage', [\App\Http\Controllers\Admin\AdminController::class, 'manageAccounts'])->name('manage');
+        Route::get('/live-signature', [\App\Http\Controllers\Admin\AdminController::class, 'liveSignature'])->name('live-signature');
         Route::patch('/{user}/approve', [\App\Http\Controllers\Admin\AdminController::class, 'approve'])->name('approve');
         Route::patch('/{user}/reject', [\App\Http\Controllers\Admin\AdminController::class, 'reject'])->name('reject');
         Route::get('/{user}', [\App\Http\Controllers\Admin\AdminController::class, 'show'])->name('show');
@@ -140,8 +153,10 @@ Route::middleware(['auth'])->group(function () {
     // Section Management (Admin only)
     Route::prefix('admin/sections')->name('admin.sections.')->middleware('admin')->group(function () {
         Route::get('/', [SectionController::class, 'index'])->name('index');
+        Route::get('/live-signature', [SectionController::class, 'liveSignatureIndex'])->name('live-signature');
         Route::get('/create', [SectionController::class, 'create'])->name('create');
         Route::post('/', [SectionController::class, 'store'])->name('store');
+        Route::get('/{section}/live-signature', [SectionController::class, 'liveSignatureShow'])->name('show.live-signature');
         Route::get('/{section}', [SectionController::class, 'show'])->name('show');
         Route::get('/{section}/edit', [SectionController::class, 'edit'])->name('edit');
         Route::put('/{section}', [SectionController::class, 'update'])->name('update');
@@ -176,6 +191,7 @@ Route::middleware(['auth'])->group(function () {
     // Faculty Assignment Management
     Route::prefix('admin/faculty-assignments')->name('admin.faculty-assignments.')->middleware('admin')->group(function () {
         Route::get('/', [\App\Http\Controllers\Admin\FacultyAssignmentController::class, 'index'])->name('index');
+        Route::get('/live-signature', [\App\Http\Controllers\Admin\FacultyAssignmentController::class, 'liveSignature'])->name('live-signature');
         Route::get('/{user}/edit', [\App\Http\Controllers\Admin\FacultyAssignmentController::class, 'edit'])->name('edit');
         Route::put('/{user}', [\App\Http\Controllers\Admin\FacultyAssignmentController::class, 'update'])->name('update');
     });
@@ -214,6 +230,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::prefix('admin/grade-approvals')->name('admin.grade-approvals.')->middleware('subject-manager')->group(function () {
         Route::get('/', [GradeApprovalController::class, 'index'])->name('index');
+        Route::get('/live-section', [GradeApprovalController::class, 'liveSection'])->name('live-section');
         Route::get('/{grade}', [GradeApprovalController::class, 'show'])->name('show');
         Route::patch('/{grade}', [GradeApprovalController::class, 'update'])->name('update');
         Route::patch('/{grade}/approve', [GradeApprovalController::class, 'approve'])->name('approve');
@@ -222,6 +239,7 @@ Route::middleware(['auth'])->group(function () {
     // Faculty Manage Grades
     Route::prefix('faculty/grades')->name('faculty.grades.')->group(function () {
         Route::get('/', [FacultyGradeController::class, 'index'])->name('index');
+        Route::get('/live-section', [FacultyGradeController::class, 'liveSection'])->name('live-section');
         Route::get('/assignment/{assignment}', [FacultyGradeController::class, 'assignment'])->name('assignment');
         Route::patch('/assignment/{assignment}', [FacultyGradeController::class, 'updateAssignmentSheet'])->name('assignment.update');
         Route::patch('/assignment/{assignment}/upload', [FacultyGradeController::class, 'uploadAssignmentSheet'])->name('assignment.upload');
@@ -232,32 +250,27 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{grade}', [FacultyGradeController::class, 'update'])->name('update');
         Route::delete('/{grade}', [FacultyGradeController::class, 'destroy'])->name('destroy');
         Route::patch('/{grade}/submit', [FacultyGradeController::class, 'submit'])->name('submit');
-
-        // Import (CSV for now)
-        Route::get('/import', [GradeImportController::class, 'create'])->name('import.create');
-        Route::post('/import', [GradeImportController::class, 'store'])->name('import.store');
-        Route::get('/import/result', function () {
-            return view('faculty.grades.import_result', [
-                'summary' => session('import_summary'),
-            ]);
-        })->name('import.result');
     });
 
     // Student View Grades
     Route::prefix('student/grades')->name('student.grades.')->group(function () {
+        Route::get('/live-signature', [StudentGradeController::class, 'liveSignature'])->name('live-signature');
         Route::get('/', [StudentGradeController::class, 'index'])->name('index');
     });
 
     // Student View Subjects
     Route::prefix('student/subjects')->name('student.subjects.')->middleware('student')->group(function () {
+        Route::get('/live-signature', [StudentSubjectController::class, 'liveSignature'])->name('live-signature');
         Route::get('/', [StudentSubjectController::class, 'index'])->name('index');
     });
 
     // Student Enrollment Routes
     Route::prefix('student/enrollment')->name('student.enrollment.')->middleware('student')->group(function () {
+        Route::get('/live-signature', [EnrollmentController::class, 'liveSignatureIndex'])->name('live-signature');
         Route::get('/', [EnrollmentController::class, 'index'])->name('index');
         Route::get('/create', [EnrollmentController::class, 'create'])->name('create');
         Route::post('/', [EnrollmentController::class, 'store'])->name('store');
+        Route::get('/{enrollment}/live-signature', [EnrollmentController::class, 'liveSignatureShow'])->name('show.live-signature');
         Route::get('/{enrollment}', [EnrollmentController::class, 'show'])->name('show');
     });
 
@@ -281,6 +294,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin Enrollment Approval
     Route::prefix('admin/enrollments')->name('admin.enrollments.')->middleware('admin')->group(function () {
         Route::get('/', [EnrollmentApprovalController::class, 'index'])->name('index');
+        Route::get('/live-signature', [EnrollmentApprovalController::class, 'liveSignature'])->name('live-signature');
         Route::get('/admissions/{admission}/review', [EnrollmentApprovalController::class, 'reviewApprovedAdmission'])->name('review-admission');
         Route::post('/admissions/{admission}/enroll', [EnrollmentApprovalController::class, 'enrollApprovedAdmission'])->name('enroll-admission');
         Route::get('/{enrollment}', [EnrollmentApprovalController::class, 'show'])->name('show');
@@ -291,6 +305,7 @@ Route::middleware(['auth'])->group(function () {
     // Admin Reports
     Route::prefix('admin/reports')->name('admin.reports.')->middleware('admin')->group(function () {
         Route::get('/', [ReportController::class, 'index'])->name('index');
+        Route::get('/print', [ReportController::class, 'printTab'])->name('print');
         Route::get('/faculty-list', [ReportController::class, 'facultyList'])->name('faculty-list');
         Route::get('/student-list', [ReportController::class, 'studentList'])->name('student-list');
         Route::get('/subject-assignments', [ReportController::class, 'subjectAssignments'])->name('subject-assignments');
@@ -300,6 +315,7 @@ Route::middleware(['auth'])->group(function () {
     // Profile Routes
     Route::get('/profile/edit', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::put('/profile/update', [ProfileController::class, 'update'])->name('profile.update');
+    Route::get('/profile/live-signature', [ProfileController::class, 'liveSignature'])->name('profile.live-signature');
 
     Route::post('/logout', [LoginController::class, 'logout'])->name('logout');
 });

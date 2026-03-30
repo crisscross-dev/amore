@@ -1,4 +1,6 @@
-<div class="profile-sidebar">
+<div class="profile-sidebar"
+    data-badge-live-url="{{ route('admin.sidebar-badges') }}"
+    data-badge-signature="">
     <!-- Navigation Menu -->
     <nav class="admin-nav-menu">
         <a href="{{ route('dashboard.admin') }}" class="nav-link {{ Request::routeIs('dashboard.admin') ? 'active' : '' }}">
@@ -21,7 +23,7 @@
             <div class="nav-icon">
                 <i class="fas fa-bullhorn"></i>
             </div>
-            <div class="nav-label">Announcements</div>
+            <div class="nav-label">Announcement</div>
         </a>
 
         <div class="nav-section-title">Academic</div>
@@ -30,42 +32,45 @@
             <div class="nav-icon">
                 <i class="fas fa-user-check"></i>
             </div>
-            <div class="nav-label">Admissions</div>
+            <div class="nav-label">Admission</div>
+            <span class="nav-badge d-none js-admin-sidebar-badge" data-badge-key="admissions_pending">0</span>
         </a>
 
         <a href="{{ route('admin.subjects.index') }}" class="nav-link {{ Request::routeIs('admin.subjects.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-book"></i>
             </div>
-            <div class="nav-label">Subjects</div>
+            <div class="nav-label">Subject</div>
         </a>
 
         <a href="{{ route('admin.grade-approvals.index') }}" class="nav-link {{ Request::routeIs('admin.grade-approvals.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-graduation-cap"></i>
             </div>
-            <div class="nav-label">Grade Approvals</div>
+            <div class="nav-label">Grade Approval</div>
+            <span class="nav-badge d-none js-admin-sidebar-badge" data-badge-key="grade_approvals_pending">0</span>
         </a>
 
         <a href="{{ route('admin.sections.index') }}" class="nav-link {{ Request::routeIs('admin.sections.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-layer-group"></i>
             </div>
-            <div class="nav-label">Sections</div>
+            <div class="nav-label">Section</div>
         </a>
 
         <a href="{{ route('admin.school-years.index') }}" class="nav-link {{ Request::routeIs('admin.school-years.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-calendar-check"></i>
             </div>
-            <div class="nav-label">School Years</div>
+            <div class="nav-label">School Year</div>
         </a>
 
         <a href="{{ route('admin.enrollments.index') }}" class="nav-link {{ Request::routeIs('admin.enrollments.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-user-plus"></i>
             </div>
-            <div class="nav-label">Enrollments</div>
+            <div class="nav-label">Enrollment</div>
+            <span class="nav-badge d-none js-admin-sidebar-badge" data-badge-key="enrollments_pending">0</span>
         </a>
 
         <div class="nav-section-title">Staff And Accounts</div>
@@ -74,21 +79,22 @@
             <div class="nav-icon">
                 <i class="fas fa-users-cog"></i>
             </div>
-            <div class="nav-label">Accounts</div>
+            <div class="nav-label">Account</div>
+            <span class="nav-badge d-none js-admin-sidebar-badge" data-badge-key="accounts_pending">0</span>
         </a>
 
         <a href="{{ route('admin.faculty-assignments.index') }}" class="nav-link {{ Request::routeIs('admin.faculty-assignments.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-user-tag"></i>
             </div>
-            <div class="nav-label">Faculty Assignments</div>
+            <div class="nav-label">Faculty Assignment</div>
         </a>
 
         <a href="{{ route('admin.faculty-positions.index') }}" class="nav-link {{ Request::routeIs('admin.faculty-positions.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-layer-group"></i>
             </div>
-            <div class="nav-label">Manage Positions</div>
+            <div class="nav-label">Manage Position</div>
         </a>
 
         <div class="nav-section-title">Analytics</div>
@@ -204,6 +210,22 @@
         flex: 1;
     }
 
+    .admin-nav-menu .nav-badge {
+        min-width: 20px;
+        height: 20px;
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.72rem;
+        font-weight: 700;
+        line-height: 1;
+        padding: 0 6px;
+        background: #ffc107;
+        color: #0f172a;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+    }
+
     .admin-nav-menu .logout-link {
         background: rgba(220, 53, 69, 0.15);
         margin-top: 4px;
@@ -223,3 +245,103 @@
         font-weight: 600;
     }
 </style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var sidebar = document.querySelector('.profile-sidebar[data-badge-live-url]');
+        if (!sidebar) {
+            return;
+        }
+
+        var liveUrl = sidebar.getAttribute('data-badge-live-url') || '';
+        var liveSignature = sidebar.getAttribute('data-badge-signature') || '';
+        var requestInFlight = false;
+        var pollTimer = null;
+
+        function applyBadges(badges) {
+            if (!badges || typeof badges !== 'object') {
+                return;
+            }
+
+            Object.keys(badges).forEach(function(key) {
+                var rawValue = badges[key];
+                var value = Number.isFinite(Number(rawValue)) ? Math.max(0, parseInt(rawValue, 10)) : 0;
+                var displayText = value > 99 ? '99+' : String(value);
+
+                document.querySelectorAll('.js-admin-sidebar-badge[data-badge-key="' + key + '"]').forEach(function(node) {
+                    node.textContent = displayText;
+                    node.classList.toggle('d-none', value < 1);
+                });
+            });
+        }
+
+        function fetchBadgeSnapshot() {
+            if (!liveUrl || requestInFlight) {
+                return;
+            }
+
+            requestInFlight = true;
+
+            fetch(liveUrl, {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return null;
+                    }
+
+                    return response.json();
+                })
+                .then(function(payload) {
+                    if (!payload) {
+                        return;
+                    }
+
+                    if (payload.badges) {
+                        applyBadges(payload.badges);
+                    }
+
+                    if (payload.signature) {
+                        liveSignature = payload.signature;
+                        sidebar.setAttribute('data-badge-signature', liveSignature);
+                    }
+                })
+                .catch(function(error) {
+                    console.debug('Admin sidebar badge polling skipped:', error);
+                })
+                .finally(function() {
+                    requestInFlight = false;
+                });
+        }
+
+        if (!liveUrl) {
+            return;
+        }
+
+        fetchBadgeSnapshot();
+
+        pollTimer = window.setInterval(function() {
+            if (!document.hidden) {
+                fetchBadgeSnapshot();
+            }
+        }, 10000);
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                fetchBadgeSnapshot();
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (pollTimer) {
+                clearInterval(pollTimer);
+                pollTimer = null;
+            }
+        }, {
+            once: true
+        });
+    });
+</script>

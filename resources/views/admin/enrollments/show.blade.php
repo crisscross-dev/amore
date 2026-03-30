@@ -18,17 +18,7 @@
                     <a href="{{ route('admin.enrollments.index') }}" class="btn btn-secondary"><i class="fas fa-arrow-left me-2"></i>Back to List</a>
                 </div>
 
-                @if(session('success'))
-                    <x-ui.alert type="success" :dismissible="true">
-                        {{ session('success') }}
-                    </x-ui.alert>
-                @endif
 
-                @if(session('error'))
-                    <x-ui.alert type="danger" :dismissible="true">
-                        {{ session('error') }}
-                    </x-ui.alert>
-                @endif
 
                 <div class="row">
         <div class="col-lg-8">

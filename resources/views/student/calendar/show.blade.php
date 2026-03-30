@@ -146,7 +146,7 @@
                                             <tr>
                                                 <td class="ps-3">
                                                     <div class="d-flex align-items-center">
-                                                        <div class="me-2" style="width: 4px; height: 30px; background-color: {{ $event->color }}; border-radius: 2px;"></div>
+                                                        <div class="me-2" style="width: 4px; height: 30px; border-radius: 2px;" data-bg-color="{{ $event->color }}"></div>
                                                         <strong class="text-success">{{ $event->title }}</strong>
                                                     </div>
                                                 </td>
@@ -213,6 +213,17 @@
     border-radius: 8px;
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-bg-color]').forEach(function (element) {
+        var color = element.getAttribute('data-bg-color');
+        if (color) {
+            element.style.backgroundColor = color;
+        }
+    });
+});
+</script>
 
 @endsection
 

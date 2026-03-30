@@ -75,7 +75,7 @@
 
     <div class="subject-form-section">
         <div class="row g-3">
-            <div class="col-lg-6">
+            <div class="col-lg-12">
                 <label class="form-label d-flex align-items-center gap-2">
                     <span>Grade Level <span class="text-danger">*</span></span>
                     <i class="fas fa-graduation-cap text-muted small" aria-hidden="true"></i>
@@ -99,24 +99,6 @@
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
                 @error('grade_levels')
-                <div class="invalid-feedback d-block">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="col-lg-6">
-                <label class="form-label">Hours per Week</label>
-                <div class="subject-input-icon-wrap">
-                    <i class="fas fa-clock subject-input-icon" aria-hidden="true"></i>
-                    <input
-                        type="number"
-                        name="hours_per_week"
-                        class="form-control subject-modal-control ps-5 @error('hours_per_week') is-invalid @enderror"
-                        value="{{ old('hours_per_week', $subject->hours_per_week) }}"
-                        min="1"
-                        max="40"
-                        placeholder="e.g. 5">
-                </div>
-                @error('hours_per_week')
                 <div class="invalid-feedback d-block">{{ $message }}</div>
                 @enderror
             </div>

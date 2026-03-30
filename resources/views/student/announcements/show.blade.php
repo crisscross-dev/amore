@@ -109,13 +109,13 @@
                 <div class="row">
                     <!-- Announcement Content -->
                     <div class="col-lg-8 mb-4">
-                        <div class="activity-card" style="border-left: 4px solid {{ $announcement->priority_color }};">
+                        <div class="activity-card" data-border-left-color="{{ $announcement->priority_color }}">
                             <div class="card-header d-flex justify-content-between align-items-center">
                                 <div class="d-flex align-items-center">
                                     @if($announcement->is_pinned)
                                         <i class="fas fa-thumbtack text-warning me-2"></i>
                                     @endif
-                                    <i class="fas {{ $announcement->priority_icon }} me-2" style="color: {{ $announcement->priority_color }};"></i>
+                                    <i class="fas {{ $announcement->priority_icon }} me-2" data-text-color="{{ $announcement->priority_color }}"></i>
                                     <strong>{{ ucfirst($announcement->priority) }} Priority</strong>
                                 </div>
                                 <span class="badge bg-info">{{ $announcement->audience_label }}</span>
@@ -216,7 +216,7 @@
                             </div>
                             <div class="card-body">
                                 <div class="d-flex align-items-center mb-3">
-                                    <i class="fas fa-flag fa-2x me-3" style="color: {{ $announcement->priority_color }};"></i>
+                                    <i class="fas fa-flag fa-2x me-3" data-text-color="{{ $announcement->priority_color }}"></i>
                                     <div>
                                         <small class="text-muted d-block">Priority Level</small>
                                         <strong>{{ ucfirst($announcement->priority) }}</strong>
@@ -261,6 +261,24 @@
     transform: translateX(5px);
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-border-left-color]').forEach(function (element) {
+        var color = element.getAttribute('data-border-left-color');
+        if (color) {
+            element.style.borderLeft = '4px solid ' + color;
+        }
+    });
+
+    document.querySelectorAll('[data-text-color]').forEach(function (element) {
+        var color = element.getAttribute('data-text-color');
+        if (color) {
+            element.style.color = color;
+        }
+    });
+});
+</script>
 
 @endsection
 

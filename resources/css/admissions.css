@@ -3,14 +3,14 @@
     Scoped to enrollment and selection views
 ================================= */
 
-@import './base/variables.css';
-@import './base/reset.css';
-@import './base/typography.css';
-@import './components/forms.css';
-@import './components/buttons.css';
-@import './utilities/colors.css';
-@import './utilities/spacing.css';
-@import './utilities/layout.css';
+@import "./base/variables.css";
+@import "./base/reset.css";
+@import "./base/typography.css";
+@import "./components/forms.css";
+@import "./components/buttons.css";
+@import "./utilities/colors.css";
+@import "./utilities/spacing.css";
+@import "./utilities/layout.css";
 
 /* Enrollment Form Shell */
 
@@ -79,7 +79,6 @@
     margin-bottom: 2.5rem;
 }
 
-
 .section-title {
     color: var(--color-slate-700);
     font-size: 1.5rem;
@@ -129,6 +128,12 @@
 .form-control:read-only {
     background-color: var(--color-surface-accent);
     cursor: not-allowed;
+}
+
+.form-control.date-picker-trigger-input:read-only {
+    background-color: #fff;
+    cursor: pointer;
+    pointer-events: auto;
 }
 
 /* Radio Group */
@@ -190,7 +195,11 @@
 
 .enrollment-card .btn-success,
 .form-actions .btn-success {
-    background: linear-gradient(135deg, var(--color-success-soft) 0%, var(--color-success-deep) 100%);
+    background: linear-gradient(
+        135deg,
+        var(--color-success-soft) 0%,
+        var(--color-success-deep) 100%
+    );
     color: #fff;
     box-shadow: 0 10px 20px rgba(56, 161, 105, 0.3);
 }
@@ -303,7 +312,6 @@
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 2rem;
 }
-
 
 .selection-card {
     background: #fff;

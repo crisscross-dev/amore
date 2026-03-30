@@ -14,14 +14,23 @@ class Subject extends Model
         'description',
         'subject_type',
         'grade_level',
-        'hours_per_week',
         'is_active',
     ];
 
     protected $casts = [
-        'hours_per_week' => 'integer',
         'is_active' => 'boolean',
     ];
+
+    public function setNameAttribute($value): void
+    {
+        if ($value === null) {
+            $this->attributes['name'] = null;
+            return;
+        }
+
+        $normalized = trim((string) $value);
+        $this->attributes['name'] = mb_strtoupper($normalized, 'UTF-8');
+    }
 
     public function gradeLevels()
     {

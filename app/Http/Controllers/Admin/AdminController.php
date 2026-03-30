@@ -3,14 +3,38 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Admission;
+use App\Models\GradeEntry;
+use App\Models\StudentEnrollment;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class AdminController extends Controller
 {
+    /**
+     * Realtime badge counts for admin sidebar navigation.
+     */
+    public function sidebarBadges(Request $request): JsonResponse
+    {
+        if (!Auth::check() || Auth::user()->account_type !== 'admin') {
+            abort(403, 'Unauthorized access to admin sidebar notifications');
+        }
+
+        $badges = $this->buildSidebarBadgeCounts();
+
+        return response()->json([
+            'badges' => $badges,
+            'signature' => hash('sha256', json_encode($badges)),
+            'generated_at' => now()->toIso8601String(),
+        ]);
+    }
+
     /**
      * Display the manage accounts page with separate student and faculty lists.
      *
@@ -33,52 +57,18 @@ class AdminController extends Controller
         }
 
         $gradeLevel = $request->query('student_grade_level');
-        // Get students with pagination
-        $students = User::where('account_type', 'student')
-            ->select([
-                'id',
-                'custom_id',
-                'first_name',
-                'middle_name',
-                'last_name',
-                'email',
-                'contact_number',
-                'grade_level',
-                'department',
-                'lrn',
-                'status',
-                'created_at',
-                'section_id',
-                'profile_picture',
-            ])
-            ->when($gradeLevel, fn($q) => $q->where('grade_level', $gradeLevel))
+
+        $students = $this->buildStudentsQuery($request)
             ->orderBy('created_at', 'desc')
-            ->paginate(15, ['*'], 'students_page')
+            ->paginate(10, ['*'], 'students_page')
             ->withQueryString();
 
-        // Get faculty with pagination
-        $faculty = User::where('account_type', 'faculty')
-            ->select([
-                'id',
-                'custom_id',
-                'first_name',
-                'middle_name',
-                'last_name',
-                'email',
-                'contact_number',
-                'grade_level',
-                'department',
-                'status',
-                'created_at',
-                'profile_picture',
-            ])
+        $faculty = $this->buildFacultyQuery()
             ->orderBy('created_at', 'desc')
-            ->paginate(15, ['*'], 'faculty_page')
+            ->paginate(10, ['*'], 'faculty_page')
             ->withQueryString();
 
-        // Get accounts pending approval (for both students and faculty)
-        $pending = User::where('status', 'for_approval')
-            ->select(['id', 'first_name', 'last_name', 'email', 'account_type', 'grade_level', 'lrn', 'department', 'status', 'created_at'])
+        $pending = $this->buildPendingQuery()
             ->orderBy('created_at', 'desc')
             ->paginate(15, ['*'], 'pending_page')
             ->withQueryString();
@@ -103,7 +93,32 @@ class AdminController extends Controller
             ->get()
             ->groupBy('grade_level');
 
-        return view('admin.accounts.manage', compact('students', 'faculty', 'pending', 'sectionsByGrade', 'gradeLevel', 'studentGradeLevels'));
+        $accountsLiveSignature = $this->buildAccountsLiveSignature($request);
+
+        return view('admin.accounts.manage', compact(
+            'students',
+            'faculty',
+            'pending',
+            'sectionsByGrade',
+            'gradeLevel',
+            'studentGradeLevels',
+            'accountsLiveSignature'
+        ));
+    }
+
+    /**
+     * Lightweight polling endpoint for admin accounts manage page.
+     */
+    public function liveSignature(Request $request)
+    {
+        if (!Auth::check() || Auth::user()->account_type !== 'admin') {
+            abort(403, 'Unauthorized access to admin accounts management');
+        }
+
+        return response()->json([
+            'signature' => $this->buildAccountsLiveSignature($request),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
     /**
@@ -205,13 +220,18 @@ class AdminController extends Controller
             'contact_number' => 'nullable|string|max:20',
             'grade_level' => 'nullable|string|max:50',
             'department' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:8|confirmed',
         ];
 
         if ($user->account_type === 'faculty') {
             $rules['department'] = 'required|string|in:elementary,junior high,senior high';
+            $rules['contact_number'] = ['required', 'regex:/^\d{11}$/'];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'contact_number.required' => 'Contact number is required.',
+            'contact_number.regex' => 'Contact number must be exactly 11 digits.',
+        ]);
 
         $user->first_name = $validated['first_name'];
         $user->middle_name = $validated['middle_name'] ?? null;
@@ -220,6 +240,11 @@ class AdminController extends Controller
         $user->contact_number = $validated['contact_number'] ?? null;
         $user->grade_level = $validated['grade_level'] ?? null;
         $user->department = $validated['department'] ?? null;
+
+        if (! empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+        }
+
         $user->save();
 
         if ($request->filled('tab')) {
@@ -243,5 +268,150 @@ class AdminController extends Controller
         $user->delete();
 
         return redirect()->route('admin.accounts.manage')->with('success', 'Account deleted successfully.');
+    }
+
+    private function buildStudentsQuery(Request $request): Builder
+    {
+        $gradeLevel = $request->query('student_grade_level');
+
+        return User::query()
+            ->where('account_type', 'student')
+            ->select([
+                'id',
+                'custom_id',
+                'first_name',
+                'middle_name',
+                'last_name',
+                'email',
+                'contact_number',
+                'grade_level',
+                'department',
+                'lrn',
+                'status',
+                'created_at',
+                'updated_at',
+                'section_id',
+                'profile_picture',
+            ])
+            ->when($gradeLevel, function (Builder $query) use ($gradeLevel) {
+                $query->where('grade_level', $gradeLevel);
+            });
+    }
+
+    private function buildFacultyQuery(): Builder
+    {
+        return User::query()
+            ->where('account_type', 'faculty')
+            ->select([
+                'id',
+                'custom_id',
+                'first_name',
+                'middle_name',
+                'last_name',
+                'email',
+                'contact_number',
+                'grade_level',
+                'department',
+                'status',
+                'created_at',
+                'updated_at',
+                'profile_picture',
+            ]);
+    }
+
+    private function buildPendingQuery(): Builder
+    {
+        return User::query()
+            ->where('status', 'for_approval')
+            ->select([
+                'id',
+                'first_name',
+                'last_name',
+                'email',
+                'account_type',
+                'grade_level',
+                'lrn',
+                'department',
+                'status',
+                'created_at',
+                'updated_at',
+            ]);
+    }
+
+    private function buildAccountsLiveSignature(Request $request): string
+    {
+        $studentsQuery = $this->buildStudentsQuery($request);
+        $facultyQuery = $this->buildFacultyQuery();
+        $pendingQuery = $this->buildPendingQuery();
+
+        $studentsCount = (clone $studentsQuery)->count();
+        $studentsStamp = $this->timestampOrZero((clone $studentsQuery)->max('updated_at'));
+        $facultyCount = (clone $facultyQuery)->count();
+        $facultyStamp = $this->timestampOrZero((clone $facultyQuery)->max('updated_at'));
+        $pendingCount = (clone $pendingQuery)->count();
+        $pendingStamp = $this->timestampOrZero((clone $pendingQuery)->max('updated_at'));
+
+        $globalUsersCount = User::query()->count();
+        $globalUsersStamp = $this->timestampOrZero(User::query()->max('updated_at'));
+
+        return implode('|', [
+            (string) ($request->query('tab', 'students')),
+            (string) ($request->query('student_grade_level', '')),
+            $studentsCount,
+            $studentsStamp,
+            $facultyCount,
+            $facultyStamp,
+            $pendingCount,
+            $pendingStamp,
+            $globalUsersCount,
+            $globalUsersStamp,
+        ]);
+    }
+
+    private function timestampOrZero($value): int
+    {
+        if (empty($value)) {
+            return 0;
+        }
+
+        $timestamp = strtotime((string) $value);
+
+        return $timestamp !== false ? $timestamp : 0;
+    }
+
+    private function buildSidebarBadgeCounts(): array
+    {
+        $pendingAdmissions = Admission::query()
+            ->where('status', 'pending')
+            ->count();
+
+        $pendingEnrollments = StudentEnrollment::query()
+            ->where('status', 'pending')
+            ->count();
+
+        $admissionsReadyForEnrollment = Admission::query()
+            ->where('status', 'approved')
+            ->whereNotNull('user_id')
+            ->whereHas('user', function (Builder $builder) {
+                $builder->whereNull('section_id');
+            })
+            ->count();
+
+        $pendingAccounts = User::query()
+            ->where('status', 'for_approval')
+            ->count();
+
+        $pendingGradeSheets = GradeEntry::query()
+            ->where('status', 'submitted')
+            ->select(['section_id', 'subject_id', 'term', 'created_by'])
+            ->distinct()
+            ->count();
+
+        return [
+            'admissions_pending' => $pendingAdmissions,
+            'enrollments_pending' => $pendingEnrollments + $admissionsReadyForEnrollment,
+            'accounts_pending' => $pendingAccounts,
+            'grade_approvals_pending' => $pendingGradeSheets,
+        ];
     }
 }

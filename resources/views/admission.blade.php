@@ -32,13 +32,6 @@
             </div>
             
             <!-- Success Message -->
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert" style="background: #d1fae5; border-left: 4px solid #10b981; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                    <strong><i class="fas fa-check-circle"></i> Success!</strong>
-                    <p class="mb-0 mt-2">{{ session('success') }}</p>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
 
             <!-- Application Status Search (Default Visible) -->
             <div class="application-status-search mb-4" id="searchSection">
@@ -193,13 +186,6 @@
             @endif
 
             <!-- Success Message -->
-            @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert" style="background: #d1fae5; border-left: 4px solid #10b981; padding: 1rem 1.25rem; border-radius: 8px; margin-bottom: 1.5rem;">
-                    <strong><i class="fas fa-check-circle"></i> Success!</strong>
-                    <p class="mb-0 mt-2">{{ session('success') }}</p>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            @endif
 
             <!-- Form -->
             <form method="POST" action="{{ route('admission.store') }}" id="admissionForm">

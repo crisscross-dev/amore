@@ -88,6 +88,7 @@
     .grade-column-cell {
         width: 110px;
         min-width: 110px;
+        text-align: center;
     }
 
     .grade-column-header {
@@ -104,6 +105,12 @@
     .average-column-cell {
         width: 110px;
         min-width: 110px;
+        text-align: center;
+    }
+
+    .remark-column-header,
+    .remark-column-cell {
+        text-align: center;
     }
 
     .average-entry-input {
@@ -147,12 +154,6 @@
             <main class="col-12">
 
 
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    {{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                @endif
 
                 @if($errors->any())
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -185,6 +186,16 @@
                 || ($entry->approved_by !== null && $entry->approved_at !== null));
                 });
                 $quarterApproved = $sheetLocked && $hasAnyApprovedEntry;
+                $sectionName = optional($assignment->section)->name ?? 'N/A';
+                $rawGradeLevel = optional($assignment->section)->grade_level;
+                $gradeLevelLabel = 'N/A';
+
+                if ($rawGradeLevel !== null && $rawGradeLevel !== '') {
+                $gradeLevelText = (string) $rawGradeLevel;
+                $gradeLevelLabel = preg_match('/(\d+)/', $gradeLevelText, $gradeMatch)
+                ? 'Grade ' . $gradeMatch[1]
+                : $gradeLevelText;
+                }
                 @endphp
 
                 <div class="faculty-management-card p-4 mb-3">
@@ -235,9 +246,16 @@
 
                 <div class="faculty-management-card faculty-management-table">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="mb-0 text-success">
-                            <i class="fas fa-users me-2"></i>Student Grades in {{ $isMapehGroup ? 'MAPEH' : ($assignment->subject->name ?? 'N/A') }}
-                        </h5>
+                        <div>
+                            <h5 class="mb-0 text-success">
+                                <i class="fas fa-users me-2"></i>Student Grade in {{ $isMapehGroup ? 'MAPEH' : ($assignment->subject->name ?? 'N/A') }}
+                            </h5>
+                            <div class="small text-muted mt-1">
+                                <strong>Grade Level:</strong> {{ $gradeLevelLabel }}
+                                <span class="mx-2">|</span>
+                                <strong>Section:</strong> {{ $sectionName }}
+                            </div>
+                        </div>
                         <span class="badge bg-success bg-opacity-75">{{ $students->count() }} student{{ $students->count() === 1 ? '' : 's' }}</span>
                     </div>
 
@@ -268,7 +286,7 @@
                                         @else
                                         <th class="grade-column-header">{{ $assignment->subject->name ?? ($gradeSubjects->first()->name ?? 'Subject') }}</th>
                                         @endif
-                                        <th>Remark</th>
+                                        <th class="remark-column-header">Remark</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -337,11 +355,11 @@
                                                 {{ $fieldLocked ? 'disabled data-lock="1"' : 'disabled' }}>
                                         </td>
                                         @endif
-                                        <td>
+                                        <td class="remark-column-cell">
                                             <input
                                                 type="text"
                                                 name="faculty_remarks[{{ $student->id }}]"
-                                                class="form-control form-control-sm js-sheet-field grade-sheet-input {{ $quarterApproved ? 'quarter-approved' : '' }}"
+                                            class="form-control form-control-sm js-sheet-field grade-sheet-input text-center {{ $quarterApproved ? 'quarter-approved' : '' }}"
                                                 value="{{ old('faculty_remarks.' . $student->id, $remarkSource->faculty_remark ?? '') }}"
                                                 {{ $rowLocked ? 'disabled data-lock="1"' : 'disabled' }}>
                                         </td>

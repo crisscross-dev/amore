@@ -14,9 +14,19 @@
 $currentUser = Auth::user()->loadMissing(['facultyPosition']);
 $positionName = optional($currentUser->facultyPosition)->name;
 $department = $currentUser->department ?? 'No department assigned';
+$facultyProfileLiveSignature = implode('|', [
+    (int) ($currentUser->id ?? 0),
+    (int) ($currentUser->faculty_position_id ?? 0),
+    (string) ($currentUser->department ?? ''),
+    (int) ($currentUser->assigned_by ?? 0),
+    $currentUser->updated_at ? $currentUser->updated_at->timestamp : 0,
+    optional($currentUser->facultyPosition)->updated_at ? optional($currentUser->facultyPosition)->updated_at->timestamp : 0,
+]);
 @endphp
 
-<div class="dashboard-container">
+<div class="dashboard-container faculty-profile-live-page"
+    data-live-url="{{ route('profile.live-signature') }}"
+    data-live-signature="{{ $facultyProfileLiveSignature }}">
     <div class="container-fluid px-4">
         <div class="row">
             <!-- Left Profile Sidebar -->
@@ -304,6 +314,82 @@ $department = $currentUser->department ?? 'No department assigned';
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        const liveContainer = document.querySelector('.faculty-profile-live-page');
+        const liveUrl = liveContainer ? (liveContainer.getAttribute('data-live-url') || '') : '';
+        let liveSignature = liveContainer ? (liveContainer.getAttribute('data-live-signature') || '') : '';
+        let liveRequestInFlight = false;
+        let liveTimer = null;
+
+        const buildLiveUrl = function() {
+            const url = new URL(liveUrl, window.location.origin);
+            const currentParams = new URLSearchParams(window.location.search);
+
+            currentParams.forEach(function(value, key) {
+                url.searchParams.set(key, value);
+            });
+
+            return url.toString();
+        };
+
+        const checkLiveSignature = async function() {
+            if (!liveUrl || liveRequestInFlight) {
+                return;
+            }
+
+            liveRequestInFlight = true;
+
+            try {
+                const response = await fetch(buildLiveUrl(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    return;
+                }
+
+                const payload = await response.json();
+                const nextSignature = payload && payload.signature ? payload.signature : '';
+
+                if (!nextSignature) {
+                    return;
+                }
+
+                if (nextSignature !== liveSignature) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                console.debug('Faculty profile live polling skipped:', error);
+            } finally {
+                liveRequestInFlight = false;
+            }
+        };
+
+        if (liveUrl) {
+            liveTimer = window.setInterval(function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            }, 10000);
+
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            });
+
+            window.addEventListener('beforeunload', function() {
+                if (liveTimer) {
+                    clearInterval(liveTimer);
+                    liveTimer = null;
+                }
+            }, {
+                once: true
+            });
+        }
+
         var toastEl = document.getElementById('popupToast');
         if (toastEl) {
             var toast = new bootstrap.Toast(toastEl, {

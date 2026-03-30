@@ -40,27 +40,65 @@
         padding-top: 0.35rem;
         padding-bottom: 0.35rem;
     }
+
+    .assignment-schedule-trigger {
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: space-between;
+        border-color: #198754;
+        color: #198754;
+        min-height: 42px;
+        padding: 0.5rem 0.85rem;
+        font-size: 0.95rem;
+    }
+
+    .assignment-schedule-trigger .label {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .assignment-schedule-trigger:hover {
+        background-color: #e8f6ee;
+        color: #146c43;
+        border-color: #146c43;
+    }
+
+    #subjectTeacherAssignmentsForm.is-edit-mode .js-schedule-col-day,
+    #subjectTeacherAssignmentsForm.is-edit-mode .js-schedule-col-room,
+    #subjectTeacherAssignmentsForm.is-edit-mode .js-schedule-col-day-cell,
+    #subjectTeacherAssignmentsForm.is-edit-mode .js-schedule-col-room-cell {
+        display: none;
+    }
+
+    #subjectTeacherAssignmentsForm.is-edit-mode .js-time-title-readonly {
+        display: none;
+    }
+
+    #subjectTeacherAssignmentsForm:not(.is-edit-mode) .js-time-title-edit {
+        display: none;
+    }
+
+    #subjectTeacherAssignmentsForm.is-edit-mode .js-schedule-col-time {
+        width: 32% !important;
+    }
+
+    #subjectTeacherAssignmentsForm:not(.is-edit-mode) .js-schedule-col-time {
+        width: 16% !important;
+    }
 </style>
 @endpush
 
-<div class="dashboard-container" data-section-id="{{ $section->id }}">
+<div class="dashboard-container sections-show-live-page"
+    data-section-id="{{ $section->id }}"
+    data-live-url="{{ route('admin.sections.show.live-signature', $section) }}"
+    data-live-signature="{{ $sectionShowLiveSignature ?? '' }}">
     <div class="container-fluid px-4">
         <div class="row">
             <main class="col-12">
 
-                @if(session('success'))
-                <div class="alert alert-success alert-dismissible fade show">
-                    <i class="fas fa-check-circle me-2"></i>{{ session('success') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                @endif
 
-                @if(session('error'))
-                <div class="alert alert-danger alert-dismissible fade show">
-                    <i class="fas fa-exclamation-circle me-2"></i>{{ session('error') }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                @endif
 
                 @if($errors->has('schedule'))
                 <div class="alert alert-danger alert-dismissible fade show section-schedule-error">
@@ -97,6 +135,14 @@
                         @else
                         @php
                         $dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                        $dayShortMap = [
+                        'Monday' => 'Mon',
+                        'Tuesday' => 'Tue',
+                        'Wednesday' => 'Wed',
+                        'Thursday' => 'Thu',
+                        'Friday' => 'Fri',
+                        'Saturday' => 'Sat',
+                        ];
                         $timeOptions = [];
                         for ($hour = 7; $hour <= 17; $hour++) {
                             foreach ([0, 30] as $minute) {
@@ -114,10 +160,10 @@
                             }
 
                             $mapehComponentNamesByGrade = [
-                            7 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-                            8 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-                            9 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
-                            10 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
+                            7 => ['MAPEH - MUSIC & ARTS', 'MAPEH - PE & HEALTH', 'MUSIC & ARTS', 'PE & HEALTH'],
+                            8 => ['MAPEH - MUSIC & ARTS', 'MAPEH - PE & HEALTH', 'MUSIC & ARTS', 'PE & HEALTH'],
+                            9 => ['MAPEH - MUSIC', 'MAPEH - ARTS', 'MAPEH - PE', 'MAPEH - HEALTH', 'MUSIC', 'ARTS', 'PE', 'HEALTH'],
+                            10 => ['MAPEH - MUSIC', 'MAPEH - ARTS', 'MAPEH - PE', 'MAPEH - HEALTH', 'MUSIC', 'ARTS', 'PE', 'HEALTH'],
                             ];
 
                             $mapehDisplayPartsByGrade = [
@@ -133,7 +179,7 @@
 
                             if (!empty($mapehComponentNames)) {
                             $mapehSubjects = $subjects->filter(function ($subject) use ($mapehComponentNames) {
-                            return in_array($subject->name, $mapehComponentNames, true);
+                            return in_array(mb_strtoupper((string) $subject->name, 'UTF-8'), $mapehComponentNames, true);
                             })->values();
 
                             if ($mapehSubjects->isNotEmpty()) {
@@ -162,7 +208,7 @@
                             }
 
                             foreach ($subjects as $subject) {
-                            if ($mapehGrouped && in_array($subject->name, $mapehComponentNames, true)) {
+                            if ($mapehGrouped && in_array(mb_strtoupper((string) $subject->name, 'UTF-8'), $mapehComponentNames, true)) {
                             continue;
                             }
 
@@ -187,14 +233,15 @@
                                 id="subjectTeacherAssignmentsForm"
                                 action="{{ route('admin.sections.assign-subject-teachers', $section) }}"
                                 method="POST"
-                                data-has-errors="{{ $hasAssignmentErrors ? '1' : '0' }}">
+                                data-has-errors="{{ $hasAssignmentErrors ? '1' : '0' }}"
+                                data-section-id="{{ $section->id }}">
                                 @csrf
                                 <div class="d-flex justify-content-end gap-2 mb-3">
-                                    <button type="button" class="btn btn-outline-success" id="toggleAssignmentsEditBtn">
-                                        <i class="fas fa-pen me-1"></i>Edit
-                                    </button>
                                     <button type="submit" class="btn btn-success d-none" id="saveAssignmentsBtn">
                                         <i class="fas fa-save me-1"></i>Save All
+                                    </button>
+                                    <button type="button" class="btn btn-outline-success" id="toggleAssignmentsEditBtn">
+                                        <i class="fas fa-pen me-1"></i>Edit
                                     </button>
                                 </div>
                                 <div class="row g-3 align-items-end mb-3">
@@ -236,14 +283,16 @@
                                 </div>
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle">
-                                        <thead>
+                                        <thead class="text-center">
                                             <tr>
-                                                <th style="width: 20%;">Subject</th>
-                                                <th style="width: 25%;">Assigned Teacher</th>
-                                                <th style="width: 12%;">Day</th>
-                                                <th style="width: 10%;">Start</th>
-                                                <th style="width: 10%;">End</th>
-                                                <th style="width: 10%;">Room</th>
+                                                <th style="width: 25%;">Subject</th>
+                                                <th style="width: 30%;">Assigned Teacher</th>
+                                                <th class="js-schedule-col-day" style="width: 8%;">Day</th>
+                                                <th class="js-schedule-col-room" style="width: 8%;">Room</th>
+                                                <th class="js-schedule-col-time" style="width: 16%;">
+                                                    <span class="js-time-title-readonly">Time</span>
+                                                    <span class="js-time-title-edit">Day / Room / Time</span>
+                                                </th>
                                                 <th class="text-center" style="width: 13%;">Status</th>
                                             </tr>
                                         </thead>
@@ -262,10 +311,9 @@
                                             $startSelected = old('start_times.' . $subject->id, $normalizedStart);
                                             $endSelected = old('end_times.' . $subject->id, $normalizedEnd);
                                             @endphp
-                                            <tr>
+                                            <tr class="js-assignment-row" data-subject-id="{{ $subject->id }}" data-group-subject-ids="{{ implode(',', $subject->component_ids) }}">
                                                 <td>
                                                     <div class="fw-semibold">{{ $subject->name }}</div>
-                                                    <small class="text-muted">{{ $subject->description ?: 'No description provided' }}</small>
                                                     @if(count($subject->component_ids) > 1)
                                                     @foreach($subject->component_ids as $componentId)
                                                     <input type="hidden" name="group_subject_ids[{{ $subject->id }}][]" value="{{ $componentId }}">
@@ -276,7 +324,7 @@
                                                     @php
                                                     $teacherDisplay = optional($assignment->teacher)
                                                     ? trim(optional($assignment->teacher)->first_name . ' ' . optional($assignment->teacher)->last_name)
-                                                    : 'No teacher';
+                                                    : '';
                                                     @endphp
                                                     <select name="teacher_ids[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" style="min-width: 200px;" disabled>
                                                         <option value="">No teacher</option>
@@ -288,54 +336,27 @@
                                                     </select>
                                                     <input type="text" class="form-control js-assignment-readonly" style="min-width: 200px;" value="{{ $teacherDisplay }}" readonly>
                                                 </td>
-                                                <td>
+                                                <td class="js-schedule-col-day-cell">
                                                     @php
-                                                    $dayDisplay = old('days.' . $subject->id, optional($assignment)->day_of_week) ?: 'No day';
+                                                    $dayValue = old('days.' . $subject->id, optional($assignment)->day_of_week) ?: '';
+                                                    $dayDisplay = $dayValue !== '' ? ($dayShortMap[$dayValue] ?? $dayValue) : '';
                                                     @endphp
-                                                    <select name="days[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
+                                                    <select name="days[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select js-assignment-day js-assignment-schedule-select" disabled>
                                                         <option value="">Select day</option>
                                                         @foreach($dayOptions as $day)
                                                         <option value="{{ $day }}" {{ old('days.' . $subject->id, optional($assignment)->day_of_week) === $day ? 'selected' : '' }}>
-                                                            {{ $day }}
+                                                            {{ $dayShortMap[$day] ?? $day }}
                                                         </option>
                                                         @endforeach
                                                     </select>
-                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $dayDisplay }}" readonly>
+                                                    <input type="text" class="form-control js-assignment-readonly js-assignment-schedule-readonly" value="{{ $dayDisplay }}" readonly>
                                                 </td>
-                                                <td>
-                                                    @php
-                                                    $startDisplay = $startSelected ?: 'No start time';
-                                                    @endphp
-                                                    <select name="start_times[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
-                                                        <option value="">Start time</option>
-                                                        @foreach($timeOptions as $time)
-                                                        <option value="{{ $time }}" {{ $startSelected === $time ? 'selected' : '' }}>
-                                                            {{ $time }}
-                                                        </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $startDisplay }}" readonly>
-                                                </td>
-                                                <td>
-                                                    @php
-                                                    $endDisplay = $endSelected ?: 'No end time';
-                                                    @endphp
-                                                    <select name="end_times[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
-                                                        <option value="">End time</option>
-                                                        @foreach($timeOptions as $time)
-                                                        <option value="{{ $time }}" {{ $endSelected === $time ? 'selected' : '' }}>
-                                                            {{ $time }}
-                                                        </option>
-                                                        @endforeach
-                                                    </select>
-                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $endDisplay }}" readonly>
-                                                </td>
-                                                <td>
+                                                <td class="js-schedule-col-room-cell">
                                                     @php
                                                     $currentRoom = old('rooms.' . $subject->id, optional($assignment)->room);
-                                                    $roomDisplay = $currentRoom ?: 'No room';
+                                                    $roomDisplay = $currentRoom ?: '';
                                                     @endphp
-                                                    <select name="rooms[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select" disabled>
+                                                    <select name="rooms[{{ $subject->id }}]" class="form-select js-assignment-field js-assignment-select js-assignment-room js-assignment-schedule-select" disabled>
                                                         <option value="">Select room</option>
                                                         @foreach($roomOptions as $room)
                                                         <option value="{{ $room }}" {{ $currentRoom == $room ? 'selected' : '' }}>
@@ -346,7 +367,24 @@
                                                         <option value="{{ $currentRoom }}" selected>{{ $currentRoom }}</option>
                                                         @endif
                                                     </select>
-                                                    <input type="text" class="form-control js-assignment-readonly" value="{{ $roomDisplay }}" readonly>
+                                                    <input type="text" class="form-control js-assignment-readonly js-assignment-schedule-readonly" value="{{ $roomDisplay }}" readonly>
+                                                </td>
+                                                <td class="js-schedule-col-time-cell">
+                                                    @php
+                                                    $startDisplay = $startSelected ?: '';
+                                                    $endDisplay = $endSelected ?: '';
+                                                    $timeDisplay = ($startDisplay && $endDisplay) ? ($startDisplay . ' - ' . $endDisplay) : '';
+                                                    @endphp
+                                                    <div class="js-assignment-time-select-wrap js-assignment-editonly d-none">
+                                                        <input type="hidden" name="start_times[{{ $subject->id }}]" class="js-assignment-field js-assignment-start" value="{{ $startSelected }}" disabled>
+                                                        <input type="hidden" name="end_times[{{ $subject->id }}]" class="js-assignment-field js-assignment-end" value="{{ $endSelected }}" disabled>
+                                                        <button type="button" class="btn assignment-schedule-trigger js-assignment-field js-assignment-schedule-trigger" data-bs-toggle="modal" data-bs-target="#assignmentTimePickerModal">
+                                                            <span class="label js-assignment-schedule-trigger-label">{{ $timeDisplay ?: 'Set Day / Room / Time' }}</span>
+                                                            <i class="fas fa-clock ms-2"></i>
+                                                        </button>
+                                                    </div>
+                                                    <input type="text" class="form-control js-assignment-readonly js-assignment-time-readonly" value="{{ $timeDisplay }}" readonly>
+                                                    <div class="text-muted small mt-1 d-none js-assignment-time-hint"></div>
                                                 </td>
                                                 <td class="text-center">
                                                     @if(optional($assignment)->teacher)
@@ -377,7 +415,7 @@
                         @if($section->students->count() > 0)
                         <div class="table-responsive">
                             <table class="table table-hover align-middle">
-                                <thead>
+                                <thead class="text-center">
                                     <tr>
                                         <th>Student ID</th>
                                         <th>Name</th>
@@ -436,11 +474,175 @@
 </div>
 
 @push('scripts')
+<script id="section-occupied-schedules" type="application/json">
+    {
+        !!json_encode($occupiedSchedules ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!
+    }
+</script>
+<script id="section-time-options" type="application/json">
+    {
+        !!json_encode($timeOptions ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!
+    }
+</script>
+<script id="section-day-options" type="application/json">
+    {
+        !!json_encode($dayOptions ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!
+    }
+</script>
+<script id="section-room-options" type="application/json">
+    {
+        !!json_encode($roomOptions ?? [], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!
+    }
+</script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        var liveContainer = document.querySelector('.sections-show-live-page');
+        var liveUrl = liveContainer ? (liveContainer.getAttribute('data-live-url') || '') : '';
+        var liveSignature = liveContainer ? (liveContainer.getAttribute('data-live-signature') || '') : '';
+        var liveRequestInFlight = false;
+        var livePollTimer = null;
+
+        function isUnsafeToReload() {
+            if (document.querySelector('.modal.show')) {
+                return true;
+            }
+
+            var assignmentForm = document.getElementById('subjectTeacherAssignmentsForm');
+            return !!(assignmentForm && assignmentForm.classList.contains('is-edit-mode'));
+        }
+
+        function buildLiveUrl() {
+            var url = new URL(liveUrl, window.location.origin);
+            var currentParams = new URLSearchParams(window.location.search);
+
+            currentParams.forEach(function(value, key) {
+                url.searchParams.set(key, value);
+            });
+
+            return url.toString();
+        }
+
+        function checkLiveSignature() {
+            if (!liveUrl || liveRequestInFlight) {
+                return;
+            }
+
+            liveRequestInFlight = true;
+
+            fetch(buildLiveUrl(), {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        return null;
+                    }
+
+                    return response.json();
+                })
+                .then(function(payload) {
+                    if (!payload || !payload.signature) {
+                        return;
+                    }
+
+                    var nextSignature = payload.signature;
+
+                    if (!liveSignature) {
+                        liveSignature = nextSignature;
+                        if (liveContainer) {
+                            liveContainer.setAttribute('data-live-signature', nextSignature);
+                        }
+                        return;
+                    }
+
+                    if (nextSignature !== liveSignature) {
+                        if (isUnsafeToReload()) {
+                            return;
+                        }
+
+                        window.location.reload();
+                    }
+                })
+                .catch(function(error) {
+                    console.debug('Sections show live polling skipped:', error);
+                })
+                .finally(function() {
+                    liveRequestInFlight = false;
+                });
+        }
+
+        if (liveUrl) {
+            livePollTimer = window.setInterval(function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            }, 10000);
+
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    checkLiveSignature();
+                }
+            });
+
+            window.addEventListener('beforeunload', function() {
+                if (livePollTimer) {
+                    clearInterval(livePollTimer);
+                    livePollTimer = null;
+                }
+            }, {
+                once: true
+            });
+        }
+
         var form = document.getElementById('subjectTeacherAssignmentsForm');
         var toggleBtn = document.getElementById('toggleAssignmentsEditBtn');
         var saveBtn = document.getElementById('saveAssignmentsBtn');
+        var occupiedSchedulesPayload = document.getElementById('section-occupied-schedules');
+        var timeOptionsPayload = document.getElementById('section-time-options');
+        var dayOptionsPayload = document.getElementById('section-day-options');
+        var roomOptionsPayload = document.getElementById('section-room-options');
+        var scheduleModalElement = document.getElementById('assignmentTimePickerModal');
+        var scheduleApplyButton = document.getElementById('assignmentTimePickerApplyBtn');
+        var schedulePicker = null;
+        var activeScheduleRow = null;
+        var occupiedSchedules = [];
+        var timeOptions = [];
+        var dayOptions = [];
+        var roomOptions = [];
+
+        if (occupiedSchedulesPayload) {
+            try {
+                occupiedSchedules = JSON.parse(occupiedSchedulesPayload.textContent || '[]');
+            } catch (error) {
+                occupiedSchedules = [];
+            }
+        }
+
+        if (timeOptionsPayload) {
+            try {
+                timeOptions = JSON.parse(timeOptionsPayload.textContent || '[]');
+            } catch (error) {
+                timeOptions = [];
+            }
+        }
+
+        if (dayOptionsPayload) {
+            try {
+                dayOptions = JSON.parse(dayOptionsPayload.textContent || '[]');
+            } catch (error) {
+                dayOptions = [];
+            }
+        }
+
+        if (roomOptionsPayload) {
+            try {
+                roomOptions = JSON.parse(roomOptionsPayload.textContent || '[]');
+            } catch (error) {
+                roomOptions = [];
+            }
+        }
 
         if (!form || !toggleBtn || !saveBtn) {
             return;
@@ -449,10 +651,297 @@
         var fields = Array.from(form.querySelectorAll('.js-assignment-field'));
         var selectFields = Array.from(form.querySelectorAll('.js-assignment-select'));
         var readonlyFields = Array.from(form.querySelectorAll('.js-assignment-readonly'));
+        var timeTriggerFields = Array.from(form.querySelectorAll('.js-assignment-schedule-trigger'));
+        var editOnlyFields = Array.from(form.querySelectorAll('.js-assignment-editonly'));
         var isEditMode = form.getAttribute('data-has-errors') === '1';
         var initialValues = new Map(fields.map(function(field) {
             return [field.name, field.value];
         }));
+
+        function getDraftSchedules(excludedRow) {
+            var drafts = [];
+
+            Array.from(form.querySelectorAll('.js-assignment-row')).forEach(function(row) {
+                if (excludedRow && row === excludedRow) {
+                    return;
+                }
+
+                var dayField = row.querySelector('.js-assignment-day');
+                var roomField = row.querySelector('.js-assignment-room');
+                var startField = row.querySelector('.js-assignment-start');
+                var endField = row.querySelector('.js-assignment-end');
+
+                if (!dayField || !roomField || !startField || !endField) {
+                    return;
+                }
+
+                var dayValue = dayField.value || '';
+                var roomValue = roomField.value || '';
+                var startValue = startField.value || '';
+                var endValue = endField.value || '';
+                var startMinutes = toMinutes(startValue);
+                var endMinutes = toMinutes(endValue);
+
+                if (!dayValue || !roomValue || startMinutes === null || endMinutes === null || startMinutes >= endMinutes) {
+                    return;
+                }
+
+                drafts.push({
+                    day: dayValue,
+                    room: roomValue,
+                    start: startMinutes,
+                    end: endMinutes
+                });
+            });
+
+            return drafts;
+        }
+
+        function getModalOccupiedRangesFor(row, dayValue, roomValue) {
+            if (!row || !dayValue || !roomValue) {
+                return [];
+            }
+
+            var sectionId = parseInt(form.getAttribute('data-section-id'), 10);
+            var ignoredSubjectIds = getIgnoredSubjectIds(row);
+
+            var dbRanges = occupiedSchedules.filter(function(slot) {
+                if ((slot.day || '') !== dayValue || (slot.room || '') !== roomValue) {
+                    return false;
+                }
+
+                var slotSectionId = parseInt(slot.section_id, 10);
+                var slotSubjectId = parseInt(slot.subject_id, 10);
+                if (slotSectionId === sectionId && ignoredSubjectIds.indexOf(slotSubjectId) !== -1) {
+                    return false;
+                }
+
+                var slotStart = toMinutes(slot.start || '');
+                var slotEnd = toMinutes(slot.end || '');
+                return slotStart !== null && slotEnd !== null && slotEnd > slotStart;
+            }).map(function(slot) {
+                return {
+                    start: toMinutes(slot.start || ''),
+                    end: toMinutes(slot.end || '')
+                };
+            });
+
+            var draftRanges = getDraftSchedules(row).filter(function(slot) {
+                return slot.day === dayValue && slot.room === roomValue;
+            }).map(function(slot) {
+                return {
+                    start: slot.start,
+                    end: slot.end
+                };
+            });
+
+            return dbRanges.concat(draftRanges);
+        }
+
+        function syncTimeTriggerLabel(row) {
+            var dayField = row.querySelector('.js-assignment-day');
+            var roomField = row.querySelector('.js-assignment-room');
+            var startField = row.querySelector('.js-assignment-start');
+            var endField = row.querySelector('.js-assignment-end');
+            var labels = row.querySelectorAll('.js-assignment-schedule-trigger-label');
+            if (!dayField || !roomField || !startField || !endField || !labels.length) {
+                return;
+            }
+
+            var dayValue = dayField.value ? dayField.value.trim() : '';
+            var roomValue = roomField.value ? roomField.value.trim() : '';
+            var startValue = startField.value ? startField.value.trim() : '';
+            var endValue = endField.value ? endField.value.trim() : '';
+            var timeValue = startValue && endValue ? (startValue + ' - ' + endValue) : '';
+            var labelValue = [dayValue, roomValue, timeValue].filter(function(value) {
+                return !!value;
+            }).join(' | ');
+
+            if (!labelValue) {
+                labelValue = 'Set Day / Room / Time';
+            }
+
+            labels.forEach(function(label) {
+                label.textContent = labelValue;
+            });
+        }
+
+        function getModalSelectedRange() {
+            if (!scheduleModalElement) {
+                return {
+                    start: '',
+                    end: ''
+                };
+            }
+
+            var selectedSlots = Array.from(scheduleModalElement.querySelectorAll('#assignmentTimePickerList .time-slot.is-edge, #assignmentTimePickerList .time-slot.is-in-range'));
+            if (!selectedSlots.length) {
+                return {
+                    start: '',
+                    end: ''
+                };
+            }
+
+            var sortedSlots = selectedSlots.slice().sort(function(a, b) {
+                var indexA = parseInt(a.getAttribute('data-index'), 10);
+                var indexB = parseInt(b.getAttribute('data-index'), 10);
+                if (!Number.isFinite(indexA)) {
+                    indexA = -1;
+                }
+                if (!Number.isFinite(indexB)) {
+                    indexB = -1;
+                }
+
+                return indexA - indexB;
+            });
+
+            var first = sortedSlots[0];
+            var last = sortedSlots[sortedSlots.length - 1];
+
+            return {
+                start: first ? (first.textContent || '').trim() : '',
+                end: last ? (last.textContent || '').trim() : ''
+            };
+        }
+
+        function resolveActiveScheduleRow() {
+            if (activeScheduleRow && form.contains(activeScheduleRow)) {
+                return activeScheduleRow;
+            }
+
+            if (!scheduleModalElement) {
+                return null;
+            }
+
+            var subjectId = scheduleModalElement.getAttribute('data-active-subject-id') || '';
+            if (!subjectId) {
+                return null;
+            }
+
+            var rows = Array.from(form.querySelectorAll('.js-assignment-row'));
+            for (var i = 0; i < rows.length; i++) {
+                if ((rows[i].getAttribute('data-subject-id') || '') === subjectId) {
+                    return rows[i];
+                }
+            }
+
+            return null;
+        }
+
+        function hideScheduleModalSafely() {
+            if (!scheduleModalElement) {
+                return;
+            }
+
+            var modalInstance = null;
+            if (window.bootstrap && window.bootstrap.Modal) {
+                if (typeof window.bootstrap.Modal.getInstance === 'function') {
+                    modalInstance = window.bootstrap.Modal.getInstance(scheduleModalElement);
+                }
+                if (!modalInstance && typeof window.bootstrap.Modal.getOrCreateInstance === 'function') {
+                    modalInstance = window.bootstrap.Modal.getOrCreateInstance(scheduleModalElement);
+                }
+            }
+
+            if (modalInstance) {
+                modalInstance.hide();
+                return;
+            }
+
+            scheduleModalElement.classList.remove('show');
+            scheduleModalElement.style.display = 'none';
+            scheduleModalElement.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+            Array.from(document.querySelectorAll('.modal-backdrop')).forEach(function(backdrop) {
+                backdrop.remove();
+            });
+        }
+
+        function applyScheduleModalFallback() {
+            var row = resolveActiveScheduleRow();
+            if (!row || !scheduleModalElement) {
+                return;
+            }
+
+            var dayButton = scheduleModalElement.querySelector('#assignmentTimePickerDayList .picker-option.is-selected');
+            var roomButton = scheduleModalElement.querySelector('#assignmentTimePickerRoomList .picker-option.is-selected');
+            var selectedRange = getModalSelectedRange();
+            var dayValue = dayButton ? ((dayButton.getAttribute('data-value') || dayButton.textContent || '').trim()) : '';
+            var roomValue = roomButton ? ((roomButton.getAttribute('data-value') || roomButton.textContent || '').trim()) : '';
+            var startValue = selectedRange.start || '';
+            var endValue = selectedRange.end || '';
+
+            if (!dayValue || !roomValue || !startValue || !endValue) {
+                return;
+            }
+
+            var startMinutes = toMinutes(startValue);
+            var endMinutes = toMinutes(endValue);
+            if (startMinutes === null || endMinutes === null || startMinutes >= endMinutes) {
+                return;
+            }
+
+            var rowDayField = row.querySelector('.js-assignment-day');
+            var rowRoomField = row.querySelector('.js-assignment-room');
+            var rowStartField = row.querySelector('.js-assignment-start');
+            var rowEndField = row.querySelector('.js-assignment-end');
+            if (!rowDayField || !rowRoomField || !rowStartField || !rowEndField) {
+                return;
+            }
+
+            rowDayField.value = dayValue;
+            rowRoomField.value = roomValue;
+            rowStartField.value = startValue;
+            rowEndField.value = endValue;
+            updateRowFlow(row);
+            syncReadonlyFields();
+            hideScheduleModalSafely();
+        }
+
+        function openTimePickerForRow(row, retryCount) {
+            var currentRetry = typeof retryCount === 'number' ? retryCount : 0;
+
+            if (!isEditMode) {
+                return;
+            }
+
+            initSchedulePicker();
+            if (!schedulePicker) {
+                if (currentRetry < 20) {
+                    window.setTimeout(function() {
+                        openTimePickerForRow(row, currentRetry + 1);
+                    }, 100);
+                } else if (window.AppSwal && typeof window.AppSwal.showError === 'function') {
+                    window.AppSwal.showError('Schedule picker did not load. Please refresh the page.');
+                }
+
+                return;
+            }
+
+            var dayField = row.querySelector('.js-assignment-day');
+            var roomField = row.querySelector('.js-assignment-room');
+            var startField = row.querySelector('.js-assignment-start');
+            var endField = row.querySelector('.js-assignment-end');
+
+            if (!dayField || !roomField || !startField || !endField) {
+                return;
+            }
+
+            activeScheduleRow = row;
+            if (scheduleModalElement) {
+                scheduleModalElement.setAttribute('data-active-subject-id', row.getAttribute('data-subject-id') || '');
+            }
+
+            schedulePicker.open(row, {
+                day: dayField.value || '',
+                room: roomField.value || '',
+                start: startField.value || '',
+                end: endField.value || ''
+            }, {
+                showModal: false
+            });
+        }
 
         function resetToInitialValues() {
             fields.forEach(function(field) {
@@ -470,28 +959,282 @@
                 }
 
                 var selectedOption = selectField.options[selectField.selectedIndex];
-                readonlyField.value = selectedOption ? selectedOption.text.trim() : 'N/A';
+                var selectedValue = selectField.value ? selectField.value.trim() : '';
+                readonlyField.value = selectedValue && selectedOption ? selectedOption.text.trim() : '';
+            });
+
+            Array.from(form.querySelectorAll('.js-assignment-row')).forEach(function(row) {
+                var startField = row.querySelector('.js-assignment-start');
+                var endField = row.querySelector('.js-assignment-end');
+                var timeReadonly = row.querySelector('.js-assignment-time-readonly');
+
+                if (!startField || !endField || !timeReadonly) {
+                    return;
+                }
+
+                var startValue = startField.value ? startField.value.trim() : '';
+                var endValue = endField.value ? endField.value.trim() : '';
+                timeReadonly.value = startValue && endValue ? (startValue + ' - ' + endValue) : '';
+                syncTimeTriggerLabel(row);
+            });
+        }
+
+        function toMinutes(timeValue) {
+            if (!timeValue || timeValue.indexOf(':') === -1) {
+                return null;
+            }
+
+            var parts = timeValue.split(':');
+            var hours = parseInt(parts[0], 10);
+            var minutes = parseInt(parts[1], 10);
+
+            if (!Number.isFinite(hours) || !Number.isFinite(minutes)) {
+                return null;
+            }
+
+            return (hours * 60) + minutes;
+        }
+
+        function rangesOverlap(startA, endA, startB, endB) {
+            return startA < endB && endA > startB;
+        }
+
+        function getIgnoredSubjectIds(row) {
+            var raw = row.getAttribute('data-group-subject-ids') || row.getAttribute('data-subject-id') || '';
+            return raw.split(',').map(function(part) {
+                return parseInt((part || '').trim(), 10);
+            }).filter(function(value) {
+                return Number.isFinite(value) && value > 0;
+            });
+        }
+
+        function getConflicts(row, day, room, start, end) {
+            var sectionId = parseInt(form.getAttribute('data-section-id'), 10);
+            var ignoredSubjectIds = getIgnoredSubjectIds(row);
+            var startMinutes = toMinutes(start);
+            var endMinutes = toMinutes(end);
+
+            if (!day || !room || startMinutes === null || endMinutes === null) {
+                return [];
+            }
+
+            var dbConflicts = occupiedSchedules.filter(function(slot) {
+                if ((slot.day || '') !== day || (slot.room || '') !== room) {
+                    return false;
+                }
+
+                var slotSectionId = parseInt(slot.section_id, 10);
+                var slotSubjectId = parseInt(slot.subject_id, 10);
+                if (slotSectionId === sectionId && ignoredSubjectIds.indexOf(slotSubjectId) !== -1) {
+                    return false;
+                }
+
+                var slotStart = toMinutes(slot.start || '');
+                var slotEnd = toMinutes(slot.end || '');
+                if (slotStart === null || slotEnd === null) {
+                    return false;
+                }
+
+                return rangesOverlap(startMinutes, endMinutes, slotStart, slotEnd);
+            });
+
+            var draftConflicts = getDraftSchedules(row).filter(function(slot) {
+                if (slot.day !== day || slot.room !== room) {
+                    return false;
+                }
+
+                return rangesOverlap(startMinutes, endMinutes, slot.start, slot.end);
+            });
+
+            return dbConflicts.concat(draftConflicts);
+        }
+
+        function initSchedulePicker() {
+            if (schedulePicker) {
+                return true;
+            }
+
+            if (!window.SchedulePickerModal || typeof window.SchedulePickerModal.create !== 'function') {
+                return false;
+            }
+
+            schedulePicker = window.SchedulePickerModal.create({
+                dayOptions: dayOptions,
+                roomOptions: roomOptions,
+                timeOptions: timeOptions,
+                toMinutes: toMinutes,
+                getOccupiedRanges: function(payload) {
+                    return getModalOccupiedRangesFor(payload.row, payload.day, payload.room);
+                },
+                onApply: function(payload) {
+                    var rowDayField = payload.row.querySelector('.js-assignment-day');
+                    var rowRoomField = payload.row.querySelector('.js-assignment-room');
+                    var rowStartField = payload.row.querySelector('.js-assignment-start');
+                    var rowEndField = payload.row.querySelector('.js-assignment-end');
+
+                    if (!rowDayField || !rowRoomField || !rowStartField || !rowEndField) {
+                        return;
+                    }
+
+                    rowDayField.value = payload.day || '';
+                    rowRoomField.value = payload.room || '';
+                    rowStartField.value = payload.start || '';
+                    rowEndField.value = payload.end || '';
+                    updateRowFlow(payload.row);
+                    syncReadonlyFields();
+                },
+                onError: function(message) {
+                    if (window.AppSwal && typeof window.AppSwal.showError === 'function') {
+                        window.AppSwal.showError(message);
+                    }
+                }
+            });
+
+            return !!schedulePicker;
+        }
+
+        function bootstrapSchedulePickerWhenReady(attempt) {
+            var currentAttempt = typeof attempt === 'number' ? attempt : 0;
+
+            if (initSchedulePicker()) {
+                return;
+            }
+
+            if (currentAttempt >= 100) {
+                return;
+            }
+
+            window.setTimeout(function() {
+                bootstrapSchedulePickerWhenReady(currentAttempt + 1);
+            }, 100);
+        }
+
+        function buildTimeHint(row) {
+            var hint = row.querySelector('.js-assignment-time-hint');
+            var dayField = row.querySelector('.js-assignment-day');
+            var roomField = row.querySelector('.js-assignment-room');
+            var startField = row.querySelector('.js-assignment-start');
+            var endField = row.querySelector('.js-assignment-end');
+
+            if (!hint || !dayField || !roomField || !startField || !endField) {
+                return;
+            }
+
+            hint.classList.add('d-none');
+            hint.classList.remove('text-danger');
+            hint.classList.add('text-muted');
+            hint.textContent = '';
+
+            if (!isEditMode) {
+                return;
+            }
+
+            var conflicts = getConflicts(row, dayField.value, roomField.value, startField.value, endField.value);
+            if (conflicts.length > 0) {
+                hint.textContent = 'Selected time is occupied for this room and day.';
+                hint.classList.remove('text-muted');
+                hint.classList.add('text-danger');
+                hint.classList.remove('d-none');
+                return;
+            }
+
+        }
+
+        function updateRowFlow(row) {
+            var dayField = row.querySelector('.js-assignment-day');
+            var roomField = row.querySelector('.js-assignment-room');
+            var startField = row.querySelector('.js-assignment-start');
+            var endField = row.querySelector('.js-assignment-end');
+            var timeTriggers = Array.from(row.querySelectorAll('.js-assignment-schedule-trigger'));
+
+            if (!dayField || !roomField || !startField || !endField || !timeTriggers.length) {
+                return;
+            }
+
+            if (!isEditMode) {
+                roomField.disabled = true;
+                startField.disabled = true;
+                endField.disabled = true;
+                timeTriggers.forEach(function(trigger) {
+                    trigger.disabled = true;
+                });
+                buildTimeHint(row);
+                return;
+            }
+
+            roomField.disabled = !dayField.value;
+
+            if (!dayField.value) {
+                roomField.value = '';
+                startField.value = '';
+                endField.value = '';
+            }
+
+            var canChooseTime = !!dayField.value && !!roomField.value;
+            startField.disabled = !canChooseTime;
+            endField.disabled = !canChooseTime;
+            timeTriggers.forEach(function(trigger) {
+                trigger.disabled = false;
+            });
+
+            if (!canChooseTime) {
+                startField.value = '';
+                endField.value = '';
+            }
+
+            if (startField.value && endField.value) {
+                var startMinutes = toMinutes(startField.value);
+                var endMinutes = toMinutes(endField.value);
+                if (startMinutes !== null && endMinutes !== null && startMinutes >= endMinutes) {
+                    endField.value = '';
+                }
+            }
+
+            buildTimeHint(row);
+        }
+
+        function updateAllRowsFlow() {
+            Array.from(form.querySelectorAll('.js-assignment-row')).forEach(function(row) {
+                updateRowFlow(row);
             });
         }
 
         function applyEditMode() {
             fields.forEach(function(field) {
+                if (field.classList.contains('js-assignment-schedule-trigger')) {
+                    return;
+                }
                 field.disabled = !isEditMode;
             });
 
             selectFields.forEach(function(selectField) {
+                if (selectField.classList.contains('js-assignment-schedule-select')) {
+                    selectField.classList.add('d-none');
+                    return;
+                }
                 selectField.classList.toggle('d-none', !isEditMode);
             });
 
+            editOnlyFields.forEach(function(editOnlyField) {
+                editOnlyField.classList.toggle('d-none', !isEditMode);
+            });
+
             readonlyFields.forEach(function(readonlyField) {
+                if (readonlyField.classList.contains('js-assignment-schedule-readonly')) {
+                    readonlyField.classList.remove('d-none');
+                    return;
+                }
                 readonlyField.classList.toggle('d-none', isEditMode);
             });
+
+            form.classList.toggle('is-edit-mode', isEditMode);
 
             toggleBtn.innerHTML = isEditMode ?
                 '<i class="fas fa-times me-1"></i>Cancel Edit' :
                 '<i class="fas fa-pen me-1"></i>Edit';
 
             saveBtn.classList.toggle('d-none', !isEditMode);
+            updateAllRowsFlow();
         }
 
         toggleBtn.addEventListener('click', function() {
@@ -505,15 +1248,87 @@
 
         form.addEventListener('change', function(event) {
             if (event.target && event.target.classList.contains('js-assignment-select')) {
+                var changedRow = event.target.closest('.js-assignment-row');
+                if (changedRow) {
+                    updateRowFlow(changedRow);
+                }
                 syncReadonlyFields();
+                if (schedulePicker && typeof schedulePicker.refresh === 'function') {
+                    schedulePicker.refresh();
+                }
             }
         });
 
+        timeTriggerFields.forEach(function(trigger) {
+            trigger.addEventListener('click', function() {
+                var row = trigger.closest('.js-assignment-row');
+                if (row) {
+                    openTimePickerForRow(row);
+                }
+            });
+        });
+
+        if (scheduleApplyButton) {
+            scheduleApplyButton.addEventListener('click', function() {
+                window.setTimeout(function() {
+                    if (scheduleModalElement && scheduleModalElement.classList.contains('show')) {
+                        applyScheduleModalFallback();
+                    }
+                }, 0);
+            });
+        }
+
+        if (scheduleModalElement) {
+            scheduleModalElement.addEventListener('hidden.bs.modal', function() {
+                activeScheduleRow = null;
+                scheduleModalElement.removeAttribute('data-active-subject-id');
+            });
+        }
+
+        form.addEventListener('submit', function(event) {
+            if (!isEditMode) {
+                return;
+            }
+
+            var hasConflict = false;
+
+            Array.from(form.querySelectorAll('.js-assignment-row')).forEach(function(row) {
+                var dayField = row.querySelector('.js-assignment-day');
+                var roomField = row.querySelector('.js-assignment-room');
+                var startField = row.querySelector('.js-assignment-start');
+                var endField = row.querySelector('.js-assignment-end');
+
+                if (!dayField || !roomField || !startField || !endField) {
+                    return;
+                }
+
+                if (!dayField.value || !roomField.value || !startField.value || !endField.value) {
+                    return;
+                }
+
+                var conflicts = getConflicts(row, dayField.value, roomField.value, startField.value, endField.value);
+                if (conflicts.length > 0) {
+                    hasConflict = true;
+                    buildTimeHint(row);
+                }
+            });
+
+            if (hasConflict) {
+                event.preventDefault();
+                if (window.AppSwal && typeof window.AppSwal.showError === 'function') {
+                    window.AppSwal.showError('One or more selected schedules are occupied. Please pick a free time slot.');
+                }
+            }
+        });
+
+        bootstrapSchedulePickerWhenReady();
         syncReadonlyFields();
         applyEditMode();
     });
 </script>
 @endpush
+
+@include('admin.sections.partials.schedule_picker_modal')
 
 <!-- Add Student Modal -->
 <div class="modal fade" id="addStudentModal" tabindex="-1" aria-labelledby="addStudentModalLabel" aria-hidden="true">

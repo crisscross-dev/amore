@@ -96,7 +96,7 @@
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="mb-0 text-success">
                             <i class="fas fa-layer-group me-2 text-success"></i>
-                            Sections Overview
+                            Section Overview
                         </h5>
                         <span class="badge bg-success bg-opacity-75">{{ $sections->total() }} section{{ $sections->total() === 1 ? '' : 's' }}</span>
                     </div>

@@ -62,7 +62,7 @@
             <div class="nav-icon">
                 <i class="fas fa-bullhorn"></i>
             </div>
-            <div class="nav-label">Announcements</div>
+            <div class="nav-label">Announcement</div>
         </a>
 
         <div class="nav-section-title">Academic</div>
@@ -72,7 +72,7 @@
             <div class="nav-icon">
                 <i class="fas fa-book"></i>
             </div>
-            <div class="nav-label">Manage Subjects</div>
+            <div class="nav-label">Manage Subject</div>
         </a>
         @elseif($isFaculty)
 
@@ -80,23 +80,16 @@
             <div class="nav-icon">
                 <i class="fas fa-layer-group"></i>
             </div>
-            <div class="nav-label">View Sections</div>
+            <div class="nav-label">View Section</div>
         </a>
         @endif
 
         @if($isDepartmentHead || $isFaculty)
-        <a href="{{ route('faculty.grades.index') }}" class="nav-link {{ (Request::routeIs('faculty.grades.*') && !Request::routeIs('faculty.grades.import.*')) ? 'active' : '' }}">
+        <a href="{{ route('faculty.grades.index') }}" class="nav-link {{ Request::routeIs('faculty.grades.*') ? 'active' : '' }}">
             <div class="nav-icon">
                 <i class="fas fa-graduation-cap"></i>
             </div>
-            <div class="nav-label">Manage Grades</div>
-        </a>
-
-        <a href="{{ route('faculty.grades.import.create') }}" class="nav-link {{ Request::routeIs('faculty.grades.import.*') ? 'active' : '' }}">
-            <div class="nav-icon">
-                <i class="fas fa-file-import"></i>
-            </div>
-            <div class="nav-label">Import Grades</div>
+            <div class="nav-label">Manage Grade</div>
         </a>
         @endif
 

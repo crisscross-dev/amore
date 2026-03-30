@@ -7,17 +7,30 @@ class AdminCalendar {
     constructor() {
         this.currentYear = null;
         this.currentMonth = null;
+        this.pageElement = null;
+        this.liveUrl = null;
+        this.liveSignature = null;
+        this.liveIntervalId = null;
+        this.isCheckingLive = false;
         this.init();
     }
 
     init() {
         // Get current month/year from page
-        const monthElement = document.querySelector('[data-calendar-month]');
-        const yearElement = document.querySelector('[data-calendar-year]');
+        const calendarPage = document.getElementById('admin-calendar-page') ||
+            document.getElementById('faculty-calendar-page') ||
+            document.getElementById('student-calendar-page');
+
+        this.pageElement = calendarPage || document.querySelector('[data-calendar-month][data-calendar-year]');
+
+        const monthElement = this.pageElement;
+        const yearElement = this.pageElement;
         
         if (monthElement && yearElement) {
             this.currentMonth = parseInt(monthElement.dataset.calendarMonth);
             this.currentYear = parseInt(yearElement.dataset.calendarYear);
+            this.liveUrl = monthElement.dataset.liveUrl || null;
+            this.liveSignature = monthElement.dataset.liveSignature || null;
         } else {
             // Fallback to current date
             const now = new Date();
@@ -29,6 +42,9 @@ class AdminCalendar {
         
         // Check URL for highlight parameter
         this.checkHighlightFromUrl();
+
+        // Start lightweight live update checks for cross-role calendar refresh.
+        this.startLivePolling();
         
         console.log('Admin Calendar initialized:', this.currentYear, this.currentMonth);
     }
@@ -49,6 +65,76 @@ class AdminCalendar {
                 }, 100);
             }
         }
+    }
+
+    startLivePolling() {
+        if (!this.liveUrl) {
+            return;
+        }
+
+        this.liveIntervalId = window.setInterval(() => {
+            this.checkForLiveUpdates(false);
+        }, 10000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) {
+                this.checkForLiveUpdates(true);
+            }
+        });
+
+        window.addEventListener('beforeunload', () => {
+            if (this.liveIntervalId) {
+                window.clearInterval(this.liveIntervalId);
+            }
+        });
+    }
+
+    checkForLiveUpdates(forceCheck) {
+        if (!this.liveUrl || this.isCheckingLive) {
+            return;
+        }
+
+        if (!forceCheck && document.hidden) {
+            return;
+        }
+
+        this.isCheckingLive = true;
+
+        const url = new URL(this.liveUrl, window.location.origin);
+        url.searchParams.set('year', String(this.currentYear));
+        url.searchParams.set('month', String(this.currentMonth));
+
+        fetch(url.toString(), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        })
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error('Calendar live check failed');
+                }
+
+                return response.json();
+            })
+            .then((payload) => {
+                if (!payload || !payload.signature) {
+                    return;
+                }
+
+                if (this.liveSignature && payload.signature !== this.liveSignature) {
+                    window.location.reload();
+                    return;
+                }
+
+                this.liveSignature = payload.signature;
+            })
+            .catch(() => {
+                // Ignore transient polling errors to keep calendar interactions smooth.
+            })
+            .finally(() => {
+                this.isCheckingLive = false;
+            });
     }
 
     bindEvents() {

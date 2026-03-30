@@ -162,6 +162,7 @@
                     title: "Success",
                     text: message || "Operation completed successfully.",
                     timer: 1800,
+                    showCancelButton: false,
                     showConfirmButton: false,
                 }),
             );

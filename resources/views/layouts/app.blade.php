@@ -123,6 +123,41 @@ $isLoggedIn = auth()->check();
 
   <script src="{{ asset('js/bootstrap.bundle.min.js') }}"></script>
   @vite(['resources/js/app.js', 'resources/js/swal.js'])
+  @php
+  $appFlashData = [
+  'success' => session('success'),
+  'error' => session('error'),
+  ];
+  @endphp
+  <script id="app-flash-data" type="application/json">{!! json_encode($appFlashData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var flashDataElement = document.getElementById('app-flash-data');
+      if (!flashDataElement || !window.AppSwal) {
+        return;
+      }
+
+      var flashData = {
+        success: null,
+        error: null
+      };
+
+      try {
+        flashData = JSON.parse(flashDataElement.textContent || '{}');
+      } catch (error) {
+        flashData = {
+          success: null,
+          error: null
+        };
+      }
+
+      if (flashData.success) {
+        window.AppSwal.showSuccess(flashData.success);
+      } else if (flashData.error) {
+        window.AppSwal.showError(flashData.error);
+      }
+    });
+  </script>
 
   @stack('scripts')
 </body>

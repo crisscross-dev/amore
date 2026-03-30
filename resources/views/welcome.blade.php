@@ -40,7 +40,7 @@
         <a href="{{ route('admissions.selection') }}" class="content_homepage btn btn-primary rounded-pill button" style="min-width: 220px;">
           <i class="fas fa-file-alt me-2"></i>Apply for Admission
         </a>
-        <a href="#" id="registerAccessTrigger" class="content_homepage btn btn-outline-light rounded-pill button" style="min-width: 220px;">
+        <a href="{{ route('register') }}" id="registerAccessTrigger" class="content_homepage btn btn-outline-light rounded-pill button" style="min-width: 220px;">
           <i class="fas fa-user-plus me-2"></i>Create Account
         </a>
       </div>
@@ -307,6 +307,13 @@
 @endsection
 
 @push('scripts')
+<div
+  id="welcome-runtime-data"
+  class="d-none"
+  data-register-url="{{ route('register') }}"
+  data-verify-url="{{ route('register.access.verify') }}"
+  data-csrf-token="{{ csrf_token() }}"
+></div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
   const registerBtn = document.getElementById('registerAccessTrigger');
@@ -314,15 +321,23 @@ document.addEventListener('DOMContentLoaded', function () {
   const accessForm = document.getElementById('facultyAccessForm');
   const codeInput = document.getElementById('facultyAccessCode');
   const errorEl = document.getElementById('facultyAccessError');
-  const FACULTY_ACCESS_CODE = @json(config('app.faculty_registration_code', 'FACULTY-ACCESS-2026'));
+  const runtimeData = document.getElementById('welcome-runtime-data');
+  const registerUrl = runtimeData ? (runtimeData.dataset.registerUrl || '') : '';
+  const verifyUrl = runtimeData ? (runtimeData.dataset.verifyUrl || '') : '';
+  const csrfToken = runtimeData ? (runtimeData.dataset.csrfToken || '') : '';
+  const defaultErrorText = errorEl ? errorEl.textContent : '';
   let modalInstance = null;
 
   if (modalEl && window.bootstrap && window.bootstrap.Modal) {
     modalInstance = bootstrap.Modal.getOrCreateInstance(modalEl);
   }
 
-  if (registerBtn && modalInstance) {
+  if (registerBtn) {
     registerBtn.addEventListener('click', function (event) {
+      if (!modalInstance) {
+        return;
+      }
+
       event.preventDefault();
       codeInput.value = '';
       codeInput.classList.remove('is-invalid');
@@ -332,20 +347,52 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   if (accessForm) {
-    accessForm.addEventListener('submit', function (event) {
+    accessForm.addEventListener('submit', async function (event) {
       event.preventDefault();
       const enteredCode = codeInput.value.trim();
-      if (enteredCode && enteredCode.toUpperCase() === FACULTY_ACCESS_CODE.toUpperCase()) {
-        codeInput.classList.remove('is-invalid');
-        errorEl.classList.add('d-none');
-        if (modalInstance) {
-          modalInstance.hide();
-        }
-        window.location.href = @json(route('register'));
-      } else {
+
+      if (!enteredCode || !verifyUrl || !registerUrl) {
         codeInput.classList.add('is-invalid');
+        errorEl.textContent = 'Access code is required.';
+        errorEl.classList.remove('d-none');
+        return;
+      }
+
+      try {
+        const response = await fetch(verifyUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken,
+          },
+          body: JSON.stringify({ access_code: enteredCode }),
+        });
+
+        if (response.ok) {
+          codeInput.classList.remove('is-invalid');
+          if (defaultErrorText) {
+            errorEl.textContent = defaultErrorText;
+          }
+          errorEl.classList.add('d-none');
+          if (modalInstance) {
+            modalInstance.hide();
+          }
+          window.location.href = registerUrl;
+          return;
+        }
+
+        const payload = await response.json().catch(() => ({}));
+        codeInput.classList.add('is-invalid');
+        errorEl.textContent = payload.message || 'Invalid access code. Please contact the registrar.';
+        errorEl.classList.remove('d-none');
+      } catch (error) {
+        codeInput.classList.add('is-invalid');
+        errorEl.textContent = 'Unable to verify access code right now. Please try again.';
         errorEl.classList.remove('d-none');
       }
+
     });
   }
 });

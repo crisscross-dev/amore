@@ -15,10 +15,10 @@ $modalContext = $modalContext ?? null;
 $gradeLevels = ['Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12'];
 
 $mapehComponentNamesByGrade = [
-7 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-8 => ['MAPEH - Music & Arts', 'MAPEH - PE & Health', 'Music & Arts', 'PE & Health'],
-9 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
-10 => ['MAPEH - Music', 'MAPEH - Arts', 'MAPEH - PE', 'MAPEH - Health', 'Music', 'Arts', 'PE', 'Health'],
+7 => ['MAPEH - MUSIC & ARTS', 'MAPEH - PE & HEALTH', 'MUSIC & ARTS', 'PE & HEALTH'],
+8 => ['MAPEH - MUSIC & ARTS', 'MAPEH - PE & HEALTH', 'MUSIC & ARTS', 'PE & HEALTH'],
+9 => ['MAPEH - MUSIC', 'MAPEH - ARTS', 'MAPEH - PE', 'MAPEH - HEALTH', 'MUSIC', 'ARTS', 'PE', 'HEALTH'],
+10 => ['MAPEH - MUSIC', 'MAPEH - ARTS', 'MAPEH - PE', 'MAPEH - HEALTH', 'MUSIC', 'ARTS', 'PE', 'HEALTH'],
 ];
 
 $mapehDisplayPartsByGrade = [
@@ -42,7 +42,7 @@ if (!isset($mapehComponentNamesByGrade[$gradeNumber])) {
 continue;
 }
 
-if (!in_array($subjectItem->name, $mapehComponentNamesByGrade[$gradeNumber], true)) {
+if (!in_array(mb_strtoupper((string) $subjectItem->name, 'UTF-8'), $mapehComponentNamesByGrade[$gradeNumber], true)) {
 continue;
 }
 
@@ -211,7 +211,7 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
                 $gradeNumberInt = $subjectGradeNumber !== '' ? (int) $subjectGradeNumber : null;
                 $isMapehComponent = $gradeNumberInt !== null
                 && isset($mapehComponentNamesByGrade[$gradeNumberInt])
-                && in_array($subject->name, $mapehComponentNamesByGrade[$gradeNumberInt], true);
+                && in_array(mb_strtoupper((string) $subject->name, 'UTF-8'), $mapehComponentNamesByGrade[$gradeNumberInt], true);
 
                 if ($isMapehComponent) {
                 $representativeId = $mapehRepresentativeByGrade[$gradeNumberInt] ?? null;
@@ -220,7 +220,7 @@ $mapehRepresentativeByGrade[$gradeNumber] = (int) $subjectItem->id;
                 }
                 }
 
-                if (strcasecmp($subject->name, 'MAPEH') === 0) {
+                if (mb_strtoupper((string) $subject->name, 'UTF-8') === 'MAPEH') {
                 continue;
                 }
 

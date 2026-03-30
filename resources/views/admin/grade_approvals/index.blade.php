@@ -13,17 +13,50 @@
 ])
 
 <style>
-    .grade-approval-card {
-        padding: 1rem 1.1rem;
+    .grade-approvals-table thead th {
+        white-space: nowrap;
     }
 
-    .grade-approval-card h5,
-    .grade-approval-card h6 {
-        margin-bottom: 0.25rem;
+    .grade-approvals-table {
+        margin-bottom: 0;
     }
 
-    .grade-approval-card .small {
-        line-height: 1.25;
+    .grade-approvals-table thead th {
+        padding-top: 0.65rem;
+    }
+
+    .grade-approvals-row {
+        cursor: pointer;
+    }
+
+    .grade-approvals-row:hover {
+        background-color: rgba(25, 135, 84, 0.06);
+    }
+
+    .sheet-filter-tabs .btn {
+        min-width: 110px;
+    }
+
+    .sheet-filter-tabs .grade-filter-btn {
+        color: #fff !important;
+        background: transparent;
+        border: 1px solid rgba(255, 255, 255, 0.65);
+    }
+
+    .sheet-filter-tabs .grade-filter-btn:hover,
+    .sheet-filter-tabs .grade-filter-btn:focus {
+        color: #fff !important;
+        background: rgba(255, 255, 255, 0.14);
+        border-color: rgba(255, 255, 255, 0.8);
+    }
+
+    .sheet-filter-tabs .grade-filter-btn.active {
+        background: #198754;
+        border-color: #198754;
+    }
+
+    .grade-approvals-body {
+        padding-top: 0.5rem;
     }
 </style>
 
@@ -35,7 +68,7 @@
                 <div class="header-title d-flex align-items-center justify-content-between mb-2">
                     <h5 class="mb-2 fw-semibold text-success">
                         <i class="fas fa-graduation-cap me-2"></i>
-                        Grade Approvals
+                        Grade Approval
                     </h5>
                     <!-- <div class="d-none d-lg-block">
                         <a href="{{ route('admin.sections.create') }}" class="btn btn-primary btn-m">
@@ -44,47 +77,98 @@
                     </div> -->
                 </div>
 
-                <div class="faculty-management-card">
-                    <div class="card-body">
-                        <h5 class="mb-3 d-flex align-items-center gap-2">
-                            <i class="fas fa-clipboard-check"></i>
-                            Submitted Grade Sheets Awaiting Approval
-                        </h5>
-
-                        @if($sheetGroups->isEmpty())
-                        <div class="faculty-management-empty">
-                            <i class="fas fa-hourglass-half"></i>
-                            <h5 class="fw-semibold mb-2">No submitted grades</h5>
-                            <p class="mb-0">Grade sheets from faculty will appear here for review and approval.</p>
-                        </div>
-                        @else
-                        <div class="row g-3">
-                            @foreach($sheetGroups as $sheet)
-                            <div class="col-12">
-                                <a href="{{ route('admin.grade-approvals.show', $sheet['representative']) }}" class="assignment-summary grade-approval-card d-block text-decoration-none h-100">
-                                    <div class="d-flex justify-content-between align-items-start gap-2 flex-wrap">
-                                        <div>
-                                            <h5 class="mb-1 text-success">{{ $sheet['grade_level'] }} - {{ $sheet['section_name'] }}</h5>
-                                            <div class="small text-muted">{{ $sheet['subject_name'] }}</div>
-                                            <div class="small text-muted">{{ $sheet['teacher_name'] }}</div>
-                                        </div>
-                                        <div class="text-end">
-                                            <span class="badge bg-success text-uppercase">{{ $sheet['student_count'] }} students</span>
-                                            <div class="small text-muted mt-1">{{ $sheet['term'] }}</div>
-                                        </div>
-                                    </div>
-                                    <div class="mt-2 small text-muted">
-                                        <i class="fas fa-clock me-1"></i>{{ $sheet['submitted_at'] }}
-                                    </div>
-                                </a>
-                            </div>
-                            @endforeach
-                        </div>
-                        @endif
-                    </div>
-                </div>
+                @include('admin.grade_approvals.partials.sheet-card')
             </main>
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var liveSectionEl = document.getElementById('gradeApprovalLiveSection');
+        var pollingTimerId = null;
+        var isRefreshing = false;
+
+        document.addEventListener('dblclick', function(event) {
+            var row = event.target.closest('.grade-approvals-row[data-url]');
+            if (!row) {
+                return;
+            }
+
+            var url = row.getAttribute('data-url');
+            if (url) {
+                window.location.href = url;
+            }
+        });
+
+        function refreshGradeApprovalsSection() {
+            if (!liveSectionEl || isRefreshing || document.hidden) {
+                return;
+            }
+
+            var liveUrl = liveSectionEl.getAttribute('data-live-url');
+            if (!liveUrl) {
+                return;
+            }
+
+            var activeSheet = liveSectionEl.getAttribute('data-sheet') || 'pending';
+            var requestUrl = new URL(liveUrl, window.location.origin);
+            requestUrl.searchParams.set('sheet', activeSheet);
+
+            isRefreshing = true;
+
+            fetch(requestUrl.toString(), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('Live grade approvals request failed');
+                    }
+
+                    return response.json();
+                })
+                .then(function(payload) {
+                    if (!payload || !payload.html) {
+                        return;
+                    }
+
+                    var tempWrapper = document.createElement('div');
+                    tempWrapper.innerHTML = payload.html.trim();
+                    var freshSection = tempWrapper.firstElementChild;
+
+                    if (!freshSection) {
+                        return;
+                    }
+
+                    liveSectionEl.replaceWith(freshSection);
+                    liveSectionEl = freshSection;
+                })
+                .catch(function() {
+                    // Ignore intermittent polling failures.
+                })
+                .finally(function() {
+                    isRefreshing = false;
+                });
+        }
+
+        pollingTimerId = window.setInterval(refreshGradeApprovalsSection, 10000);
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                refreshGradeApprovalsSection();
+            }
+        });
+
+        window.addEventListener('beforeunload', function() {
+            if (pollingTimerId) {
+                window.clearInterval(pollingTimerId);
+            }
+        });
+    });
+</script>
+@endpush
 @endsection

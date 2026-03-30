@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\StudentEnrollment;
 use App\Models\SchoolYear;
 use App\Models\StudentEnrollmentDocument;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -15,7 +16,7 @@ class EnrollmentController extends Controller
     /**
      * Display enrollment history and current status
      */
-    public function index()
+    public function index(Request $request)
     {
         $student = Auth::user();
         $enrollments = StudentEnrollment::where('student_id', $student->id)
@@ -34,11 +35,14 @@ class EnrollmentController extends Controller
                 ->exists();
         }
 
+        $enrollmentLiveSignature = $this->buildEnrollmentLiveSignature($student);
+
         return view('student.enrollment.index', compact(
             'enrollments',
             'activeSchoolYear',
             'canEnroll',
-            'hasEnrolled'
+            'hasEnrolled',
+            'enrollmentLiveSignature'
         ));
     }
 
@@ -131,7 +135,7 @@ class EnrollmentController extends Controller
     /**
      * Show enrollment details
      */
-    public function show(StudentEnrollment $enrollment)
+    public function show(Request $request, StudentEnrollment $enrollment)
     {
         // Ensure student can only view their own enrollment
         if ($enrollment->student_id !== Auth::id()) {
@@ -140,7 +144,35 @@ class EnrollmentController extends Controller
 
         $enrollment->load(['schoolYear', 'section', 'documents', 'approvedBy']);
 
-        return view('student.enrollment.show', compact('enrollment'));
+        $enrollmentShowLiveSignature = $this->buildEnrollmentLiveSignature($request->user(), $enrollment);
+
+        return view('student.enrollment.show', compact('enrollment', 'enrollmentShowLiveSignature'));
+    }
+
+    public function liveSignatureIndex(Request $request): JsonResponse
+    {
+        $student = $request->user();
+        abort_unless($student && $student->account_type === 'student', 403);
+
+        return response()->json([
+            'signature' => $this->buildEnrollmentLiveSignature($student),
+            'generated_at' => now()->toIso8601String(),
+        ]);
+    }
+
+    public function liveSignatureShow(Request $request, StudentEnrollment $enrollment): JsonResponse
+    {
+        $student = $request->user();
+        abort_unless($student && $student->account_type === 'student', 403);
+
+        if ((int) $enrollment->student_id !== (int) $student->id) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        return response()->json([
+            'signature' => $this->buildEnrollmentLiveSignature($student, $enrollment),
+            'generated_at' => now()->toIso8601String(),
+        ]);
     }
 
 
@@ -158,5 +190,65 @@ class EnrollmentController extends Controller
         ];
 
         return $gradeLevels[$currentGradeLevel] ?? $currentGradeLevel;
+    }
+
+    private function buildEnrollmentLiveSignature($student, ?StudentEnrollment $enrollment = null): string
+    {
+        $enrollmentBaseQuery = StudentEnrollment::query()->where('student_id', $student->id);
+
+        $statusCounts = (clone $enrollmentBaseQuery)
+            ->selectRaw('LOWER(status) as status_key, COUNT(*) as total')
+            ->groupBy('status_key')
+            ->pluck('total', 'status_key')
+            ->toArray();
+        ksort($statusCounts);
+
+        $activeSchoolYear = SchoolYear::active()->first();
+        $hasEnrolledInActiveYear = false;
+        if ($activeSchoolYear) {
+            $hasEnrolledInActiveYear = (clone $enrollmentBaseQuery)
+                ->where('school_year_id', $activeSchoolYear->id)
+                ->exists();
+        }
+
+        $payload = [
+            'student_id' => (int) $student->id,
+            'student_section_id' => (int) ($student->section_id ?? 0),
+            'student_updated_at' => $this->timestampOrZero($student->updated_at),
+            'enrollment_count' => (clone $enrollmentBaseQuery)->count(),
+            'enrollment_updated_at' => $this->timestampOrZero((clone $enrollmentBaseQuery)->max('updated_at')),
+            'status_counts' => $statusCounts,
+            'active_school_year_id' => (int) optional($activeSchoolYear)->id,
+            'active_school_year_updated_at' => $this->timestampOrZero(optional($activeSchoolYear)->updated_at),
+            'active_enrollment_start' => $this->timestampOrZero(optional($activeSchoolYear)->enrollment_start),
+            'active_enrollment_end' => $this->timestampOrZero(optional($activeSchoolYear)->enrollment_end),
+            'active_can_enroll' => $activeSchoolYear ? (int) $activeSchoolYear->canEnrollNow() : 0,
+            'has_enrolled_in_active_year' => (int) $hasEnrolledInActiveYear,
+        ];
+
+        if ($enrollment) {
+            $payload['focus_enrollment_id'] = (int) $enrollment->id;
+            $payload['focus_enrollment_updated_at'] = $this->timestampOrZero($enrollment->updated_at);
+            $payload['focus_enrollment_status'] = (string) ($enrollment->status ?? '');
+            $payload['focus_enrollment_section_id'] = (int) ($enrollment->section_id ?? 0);
+            $payload['focus_enrollment_approved_at'] = $this->timestampOrZero($enrollment->approved_at);
+            $payload['focus_enrollment_remarks_hash'] = md5((string) ($enrollment->admin_remarks ?? ''));
+        }
+
+        return hash('sha256', json_encode($payload));
+    }
+
+    private function timestampOrZero(mixed $value): string
+    {
+        if (empty($value)) {
+            return '0';
+        }
+
+        if ($value instanceof \DateTimeInterface) {
+            return (string) $value->getTimestamp();
+        }
+
+        $timestamp = strtotime((string) $value);
+        return $timestamp ? (string) $timestamp : '0';
     }
 }

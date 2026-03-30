@@ -2,6 +2,15 @@
 document.addEventListener("DOMContentLoaded", function () {
     console.log("Admin Accounts JS loaded");
 
+    const liveContainer = document.querySelector(".accounts-live-page");
+    const liveUrl = liveContainer ? (liveContainer.dataset.liveUrl || "") : "";
+    let liveSignature = liveContainer
+        ? (liveContainer.dataset.liveSignature || "")
+        : "";
+    let liveRequestInFlight = false;
+    let livePollTimer = null;
+    const livePollIntervalMs = 10000;
+
     const setTabInUrl = (tabId) => {
         const url = new URL(window.location.href);
         url.searchParams.set("tab", tabId);
@@ -217,6 +226,92 @@ document.addEventListener("DOMContentLoaded", function () {
             // Update hidden input value based on checkbox state
             sendEmailInput.value = this.checked ? "1" : "0";
         });
+    }
+
+    const anyModalOpen = () => !!document.querySelector(".modal.show");
+
+    const buildLiveUrl = () => {
+        const url = new URL(liveUrl, window.location.origin);
+        const currentParams = new URLSearchParams(window.location.search);
+
+        currentParams.forEach((value, key) => {
+            url.searchParams.set(key, value);
+        });
+
+        return url;
+    };
+
+    const checkLiveSignature = async () => {
+        if (!liveUrl || liveRequestInFlight) {
+            return;
+        }
+
+        liveRequestInFlight = true;
+
+        try {
+            const response = await fetch(buildLiveUrl(), {
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    Accept: "application/json",
+                },
+            });
+
+            if (!response.ok) {
+                return;
+            }
+
+            const payload = await response.json();
+            const nextSignature = payload?.signature || "";
+
+            if (!nextSignature) {
+                return;
+            }
+
+            if (!liveSignature) {
+                liveSignature = nextSignature;
+                if (liveContainer) {
+                    liveContainer.dataset.liveSignature = nextSignature;
+                }
+                return;
+            }
+
+            if (nextSignature !== liveSignature) {
+                if (anyModalOpen()) {
+                    return;
+                }
+
+                window.location.reload();
+            }
+        } catch (error) {
+            console.debug("Admin accounts live polling skipped:", error);
+        } finally {
+            liveRequestInFlight = false;
+        }
+    };
+
+    if (liveUrl) {
+        livePollTimer = window.setInterval(() => {
+            if (!document.hidden) {
+                checkLiveSignature();
+            }
+        }, livePollIntervalMs);
+
+        document.addEventListener("visibilitychange", () => {
+            if (!document.hidden) {
+                checkLiveSignature();
+            }
+        });
+
+        window.addEventListener(
+            "beforeunload",
+            () => {
+                if (livePollTimer) {
+                    clearInterval(livePollTimer);
+                    livePollTimer = null;
+                }
+            },
+            { once: true },
+        );
     }
 
     // Add search functionality (if needed in future)
