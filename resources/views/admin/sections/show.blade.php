@@ -644,6 +644,27 @@
             }
         }
 
+        if (!Array.isArray(dayOptions) || dayOptions.length === 0) {
+            dayOptions = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        }
+
+        if (!Array.isArray(roomOptions) || roomOptions.length === 0) {
+            roomOptions = ['201', '202', '203', '204', '205'];
+        }
+
+        if (!Array.isArray(timeOptions) || timeOptions.length === 0) {
+            timeOptions = [];
+            for (var hour = 7; hour <= 17; hour++) {
+                [0, 30].forEach(function(minute) {
+                    if (hour === 17 && minute === 30) {
+                        return;
+                    }
+
+                    timeOptions.push(String(hour).padStart(2, '0') + ':' + String(minute).padStart(2, '0'));
+                });
+            }
+        }
+
         if (!form || !toggleBtn || !saveBtn) {
             return;
         }
